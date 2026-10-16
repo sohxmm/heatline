@@ -1,0 +1,16 @@
+Target Definition,Positives (Test),Model,Threshold,F1 Score,Precision,Recall,ROC-AUC,PR-AUC
+Primary (imd_reanalysis_plains),37/248 (14.92%),Persistence Baseline,0.5,0.7568,0.7568,0.7568,0.8571,0.609
+Primary (imd_reanalysis_plains),37/248 (14.92%),Logistic Regression,0.5,0.6897,0.6,0.8108,0.9636,0.8476
+Primary (imd_reanalysis_plains),37/248 (14.92%),10-Seed Deep MLP Ensemble,0.5,0.7143,0.6383,0.8108,0.9649,0.8749
+Primary (imd_reanalysis_plains),37/248 (14.92%),Mamdani Fuzzy (CO4),0.5,0.6875,0.5593,0.8919,0.96,0.7584
+Primary (imd_reanalysis_plains),37/248 (14.92%),GA Neuro-Fuzzy Hybrid (CO5),0.4979,0.7342,0.6905,0.7838,0.9668,0.8583
+Candidate B (climatology_p85_42c),19/248 (7.66%),Persistence Baseline,0.5,0.5714,0.4324,0.8421,0.8752,0.3763
+Candidate B (climatology_p85_42c),19/248 (7.66%),Logistic Regression,0.5,0.4928,0.34,0.8947,0.94,0.5149
+Candidate B (climatology_p85_42c),19/248 (7.66%),10-Seed Deep MLP Ensemble,0.5,0.5152,0.3617,0.8947,0.9384,0.495
+Candidate B (climatology_p85_42c),19/248 (7.66%),Mamdani Fuzzy (CO4),0.5,0.4359,0.2881,0.8947,0.936,0.4946
+Candidate B (climatology_p85_42c),19/248 (7.66%),GA Neuro-Fuzzy Hybrid (CO5),0.4979,0.5574,0.4048,0.8947,0.9354,0.4513
+Reference (imd_strict_raw),8/248 (3.23%),Persistence Baseline,0.5,0.3556,0.2162,1.0,0.9396,0.2162
+Reference (imd_strict_raw),8/248 (3.23%),Logistic Regression,0.5,0.2759,0.16,1.0,0.9359,0.2983
+Reference (imd_strict_raw),8/248 (3.23%),10-Seed Deep MLP Ensemble,0.5,0.2909,0.1702,1.0,0.9589,0.3561
+Reference (imd_strict_raw),8/248 (3.23%),Mamdani Fuzzy (CO4),0.5,0.2388,0.1356,1.0,0.9328,0.2487
+Reference (imd_strict_raw),8/248 (3.23%),GA Neuro-Fuzzy Hybrid (CO5),0.4979,0.32,0.1905,1.0,0.9552,0.327
