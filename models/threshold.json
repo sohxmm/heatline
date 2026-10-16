@@ -1,0 +1,11 @@
+{
+  "w_ann": 0.4082,
+  "w_ebpa": 0.391,
+  "w_fuzzy": 0.2007,
+  "threshold": 0.4979,
+  "val_f1": 0.8495,
+  "val_precision": 0.8061,
+  "val_recall": 0.8977,
+  "val_pr_auc": 0.8647,
+  "val_roc_auc": 0.926
+}
