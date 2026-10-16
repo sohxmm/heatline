@@ -20,7 +20,10 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 import numpy as np
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None
 import yaml
 
 from src.split import get_splits

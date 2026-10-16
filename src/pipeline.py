@@ -109,6 +109,15 @@ def run_phase_5(config: dict):
     print(">>> Phase 5 completed successfully. All 12 figures and tables generated.")
 
 
+def run_phase_6(config: dict):
+    """Execute Phase 6: Launch Interactive Streamlit Application."""
+    print(">>> Starting Phase 6: Launching Streamlit Web Application...")
+    import subprocess
+    cmd = [sys.executable, "-m", "streamlit", "run", "app/streamlit_app.py", "--server.port", "8501"]
+    print(f"Executing: {' '.join(cmd)}")
+    subprocess.run(cmd)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Nagpur May Heat Wave Prediction CLI Pipeline (KJSCE Soft Computing Lab)",
@@ -155,6 +164,9 @@ def main():
 
     if args.phase in ["5", "all"]:
         run_phase_5(config)
+
+    if args.phase == "6":
+        run_phase_6(config)
 
     if args.phase == "0":
         print("Phase 0 (Scaffold & Environment) verified.")
