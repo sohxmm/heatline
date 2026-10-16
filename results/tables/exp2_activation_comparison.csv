@@ -1,0 +1,4 @@
+activation,final_train_loss,val_loss,val_f1,val_pr_auc,val_roc_auc,epochs_trained
+binary_sigmoid,0.5626,0.8043,0.7831,0.8652,0.9241,96
+bipolar_sigmoid,0.5595,0.7231,0.8047,0.8566,0.9241,63
+relu,0.5054,0.9114,0.8049,0.8434,0.9141,96
