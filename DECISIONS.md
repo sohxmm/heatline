@@ -50,3 +50,12 @@ This document records key design choices, scientific justifications, and trade-o
   - **Grid Elevation:** 311.0 m (matches Nagpur's plateau elevation of ~310 m)
 - **Completeness:** All 8 requested hourly variables are 100% available with zero missing values across 1981–2026.
 
+---
+
+## Decision D006: Reanalysis Model Selection (ERA5 for Full 8-Variable Coverage)
+- **Status:** Accepted
+- **Context:** `PROJECT_SPEC.md` Section 2.1 specifies: *"Probe hourly variables (temperature_2m, relative_humidity_2m, dew_point_2m, apparent_temperature, surface_pressure, wind_speed_10m, shortwave_radiation, soil_moisture_0_to_7cm). If any variable is missing in ERA5-Land, fetch from ERA5 and log it in DECISIONS.md."*
+- **Observation:** Probing the Open-Meteo ERA5-Land archive endpoint revealed that `apparent_temperature`, `surface_pressure`, `wind_speed_10m`, and `shortwave_radiation` return `null` in the Open-Meteo ERA5-Land dataset for this region. Conversely, Open-Meteo `era5` (0.25° resolution, grid lat 21.25°, lon 79.00°, elevation 311.0 m) provides 100% non-null coverage for all 8 variables.
+- **Decision:** As prescribed in `PROJECT_SPEC.md`, switched the reanalysis model to `era5` to obtain 100% complete hourly records for all 8 variables across all 46 years (1981–2026).
+
+

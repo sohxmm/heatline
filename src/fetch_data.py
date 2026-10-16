@@ -176,6 +176,11 @@ def fetch_all_data(config: dict, force: bool = False) -> Path:
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Fetch Open-Meteo meteorological reanalysis data.")
+    parser.add_argument("--force", action="store_true", help="Force refetch and overwrite cached files.")
+    args = parser.parse_args()
+
     with open("config.yaml", "r", encoding="utf-8") as cfg_f:
         config_data = yaml.safe_load(cfg_f)
-    fetch_all_data(config_data)
+    fetch_all_data(config_data, force=args.force)
