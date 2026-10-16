@@ -570,44 +570,74 @@ class EBPANetwork:
         return (proba >= threshold).astype(np.int64)
 
     def save_weights(self, filepath: str) -> None:
-        """Export model weights and architecture configuration to JSON."""
+        """Export model weights and architecture configuration to real NPZ or JSON."""
         dest = Path(filepath)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        data = {
-            "n_input": self.n_input,
-            "n_hidden": self.n_hidden,
-            "n_output": self.n_output,
-            "activation": self.activation,
-            "learning_rate": self.learning_rate,
-            "momentum": self.momentum,
-            "seed": self.seed,
-            "V": self.V.tolist(),
-            "v0": self.v0.tolist(),
-            "W": self.W.tolist(),
-            "w0": self.w0.tolist(),
-        }
-        with open(dest, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+        if dest.suffix == ".npz":
+            np.savez_compressed(
+                dest,
+                V=self.V,
+                v0=self.v0,
+                W=self.W,
+                w0=self.w0,
+                n_input=np.array(self.n_input),
+                n_hidden=np.array(self.n_hidden),
+                n_output=np.array(self.n_output),
+                activation=np.array(self.activation, dtype="<U32"),
+                learning_rate=np.array(self.learning_rate),
+                momentum=np.array(self.momentum),
+                seed=np.array(self.seed),
+            )
+        else:
+            data = {
+                "n_input": self.n_input,
+                "n_hidden": self.n_hidden,
+                "n_output": self.n_output,
+                "activation": self.activation,
+                "learning_rate": self.learning_rate,
+                "momentum": self.momentum,
+                "seed": self.seed,
+                "V": self.V.tolist(),
+                "v0": self.v0.tolist(),
+                "W": self.W.tolist(),
+                "w0": self.w0.tolist(),
+            }
+            with open(dest, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
         logger.info("Saved EBPANetwork model to %s", filepath)
 
     def load_weights(self, filepath: str) -> None:
-        """Load model weights and architecture configuration from JSON."""
+        """Load model weights and architecture configuration from real NPZ or JSON."""
         dest = Path(filepath)
         if not dest.exists():
             raise FileNotFoundError(f"Model file not found: {filepath}")
-        with open(dest, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        self.n_input = data["n_input"]
-        self.n_hidden = data["n_hidden"]
-        self.n_output = data["n_output"]
-        self.activation = data["activation"]
-        self.learning_rate = data["learning_rate"]
-        self.momentum = data["momentum"]
-        self.seed = data.get("seed", 42)
-        self.V = np.array(data["V"], dtype=np.float64)
-        self.v0 = np.array(data["v0"], dtype=np.float64)
-        self.W = np.array(data["W"], dtype=np.float64)
-        self.w0 = np.array(data["w0"], dtype=np.float64)
+        if dest.suffix == ".npz":
+            with np.load(dest) as data:
+                self.n_input = int(data["n_input"])
+                self.n_hidden = int(data["n_hidden"])
+                self.n_output = int(data["n_output"])
+                self.activation = str(data["activation"])
+                self.learning_rate = float(data["learning_rate"])
+                self.momentum = float(data["momentum"])
+                self.seed = int(data["seed"]) if "seed" in data else 42
+                self.V = np.array(data["V"], dtype=np.float64)
+                self.v0 = np.array(data["v0"], dtype=np.float64)
+                self.W = np.array(data["W"], dtype=np.float64)
+                self.w0 = np.array(data["w0"], dtype=np.float64)
+        else:
+            with open(dest, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self.n_input = data["n_input"]
+            self.n_hidden = data["n_hidden"]
+            self.n_output = data["n_output"]
+            self.activation = data["activation"]
+            self.learning_rate = data["learning_rate"]
+            self.momentum = data["momentum"]
+            self.seed = data.get("seed", 42)
+            self.V = np.array(data["V"], dtype=np.float64)
+            self.v0 = np.array(data["v0"], dtype=np.float64)
+            self.W = np.array(data["W"], dtype=np.float64)
+            self.w0 = np.array(data["w0"], dtype=np.float64)
         logger.info("Loaded EBPANetwork model from %s", filepath)
 
 
