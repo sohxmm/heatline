@@ -1,0 +1,11 @@
+Model,Split,Accuracy,Precision,Recall,F1,ROC_AUC,PR_AUC
+Persistence,Validation,0.875,0.8276,0.8182,0.8229,0.8622,0.7416
+Persistence,Test,0.9274,0.7568,0.7568,0.7568,0.8571,0.609
+McCulloch-Pitts (Exp 1),Validation,0.754,0.6134,0.8295,0.7053,0.7513,0.5762
+McCulloch-Pitts (Exp 1),Test,0.8226,0.4521,0.8919,0.6,0.8445,0.4374
+Perceptron Rule (Exp 4),Validation,0.7137,0.6,0.5795,0.5896,0.7797,0.6523
+Perceptron Rule (Exp 4),Test,0.8508,0.5,0.7838,0.6105,0.9199,0.6879
+ADALINE Delta Rule (Exp 5),Validation,0.871,0.8333,0.7955,0.814,0.9238,0.851
+ADALINE Delta Rule (Exp 5),Test,0.9315,0.7941,0.7297,0.7606,0.962,0.8293
+Logistic Regression (Balanced),Validation,0.8508,0.7476,0.875,0.8063,0.913,0.8396
+Logistic Regression (Balanced),Test,0.8911,0.6,0.8108,0.6897,0.9636,0.8476

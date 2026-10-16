@@ -71,6 +71,16 @@ def run_phase_2(config: dict):
     print(">>> Phase 2 completed successfully. Features and splits ready.")
 
 
+def run_phase_3(config: dict):
+    """Execute Phase 3: Evaluate Soft Computing Baselines (M-P, Perceptron, ADALINE, Persistence, LogReg)."""
+    print(">>> Starting Phase 3: Soft Computing Baselines & Statistical Benchmarks...")
+    from src.baselines import evaluate_all_baselines
+
+    df_results = evaluate_all_baselines(config)
+    print("\n" + df_results.to_string(index=False))
+    print(">>> Phase 3 completed successfully. Results saved to results/tables/baseline_comparison.csv.")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Nagpur May Heat Wave Prediction CLI Pipeline (KJSCE Soft Computing Lab)",
@@ -108,6 +118,9 @@ def main():
 
     if args.phase in ["2", "all"]:
         run_phase_2(config)
+
+    if args.phase in ["3", "all"]:
+        run_phase_3(config)
 
     if args.phase == "0":
         print("Phase 0 (Scaffold & Environment) verified.")
