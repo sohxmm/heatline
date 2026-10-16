@@ -81,6 +81,34 @@ def run_phase_3(config: dict):
     print(">>> Phase 3 completed successfully. Results saved to results/tables/baseline_comparison.csv.")
 
 
+def run_phase_4(config: dict):
+    """Execute Phase 4: Core Soft Computing Models (EBPA, Deep MLP, Fuzzy, GA)."""
+    print(">>> Starting Phase 4: Core Soft Computing Training & Hybrid Optimization...")
+    from src.train_ann import train_mlp_ensemble
+    from src.fuzzy_controller import evaluate_fuzzy_controller
+    from src.ga_optimizer import run_ga_optimization
+    from src.export_model import export_torch_ensemble_to_numpy, verify_inference_equivalence
+
+    print("[1/4] Training 10-Seed Regularized Deep MLP Ensemble...")
+    train_mlp_ensemble(config)
+    print("[2/4] Evaluating Mamdani Fuzzy Inference System...")
+    evaluate_fuzzy_controller(config)
+    print("[3/4] Running Genetic Algorithm Neuro-Fuzzy Optimization...")
+    run_ga_optimization(config)
+    print("[4/4] Exporting Lightweight Pure-NumPy Weights & Verifying Equivalence...")
+    export_torch_ensemble_to_numpy()
+    verify_inference_equivalence(config)
+    print(">>> Phase 4 completed successfully.")
+
+
+def run_phase_5(config: dict):
+    """Execute Phase 5: Comprehensive Evaluation and Figure Generation."""
+    print(">>> Starting Phase 5: Evaluation & Publication Figures...")
+    from src.evaluate import run_full_evaluation
+    run_full_evaluation(config)
+    print(">>> Phase 5 completed successfully. All 12 figures and tables generated.")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Nagpur May Heat Wave Prediction CLI Pipeline (KJSCE Soft Computing Lab)",
@@ -122,6 +150,12 @@ def main():
     if args.phase in ["3", "all"]:
         run_phase_3(config)
 
+    if args.phase in ["4", "all"]:
+        run_phase_4(config)
+
+    if args.phase in ["5", "all"]:
+        run_phase_5(config)
+
     if args.phase == "0":
         print("Phase 0 (Scaffold & Environment) verified.")
 
@@ -130,3 +164,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
