@@ -1,0 +1,2 @@
+model,n_seeds,architecture,val_pr_auc,val_roc_auc,val_brier_score,val_f1_thresh_05,val_precision_thresh_05,val_recall_thresh_05
+10-Seed Deep MLP Ensemble,10,"Input(26) -> Dense(32, ReLU, BN, Drop(0.2)) -> Dense(32, ReLU, Drop) -> Dense(1, Sigmoid)",0.868,0.9259,0.1079,0.8229,0.7596,0.8977
