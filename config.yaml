@@ -1,0 +1,76 @@
+project:
+  name: "nagpur-heatwave-ann"
+  title: "Heat Wave Prediction in May for Nagpur (Vidarbha) using Error Backpropagation ANN, Fuzzy Logic & Genetic Optimization"
+  course: "Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech COMP)"
+  institution: "K. J. Somaiya School of Engineering"
+
+location:
+  name: "Nagpur Urban Agglomeration"
+  region: "Vidarbha, Central Maharashtra, India"
+  zone: "Core Heatwave Zone (CHZ)"
+  target_latitude: 21.1458
+  target_longitude: 79.0882
+  timezone: "Asia/Kolkata"
+  grid:
+    actual_latitude: null
+    actual_longitude: null
+    elevation: null
+
+data:
+  years:
+    start: 1981
+    end: 2026
+  months:
+    april: 4
+    may: 5
+  open_meteo:
+    base_url: "https://archive-api.open-meteo.com/v1/archive"
+    primary_model: "era5_land"
+    fallback_model: "era5"
+    hourly_variables:
+      - "temperature_2m"
+      - "relative_humidity_2m"
+      - "dew_point_2m"
+      - "apparent_temperature"
+      - "surface_pressure"
+      - "wind_speed_10m"
+      - "shortwave_radiation"
+      - "soil_moisture_0_to_7cm"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  daily_file: "data/processed/daily.csv"
+  features_file: "data/processed/features.csv"
+
+climatology:
+  baseline_start: 1991
+  baseline_end: 2020
+  window_days: 7  # +/- 7 calendar days (15-day window centered on day of year)
+
+splits:
+  train:
+    start_year: 1981
+    end_year: 2010
+  val:
+    start_year: 2011
+    end_year: 2018
+  test:
+    start_year: 2019
+    end_year: 2026
+
+labels:
+  primary: "climatology_p85_42c"  # Evaluated and selected in Phase 1
+  candidates:
+    imd_reanalysis_plains:
+      description: "Reanalysis calibrated equivalent of 45C or normal+3.5C departure"
+      absolute_threshold: 43.5
+      departure_base: 40.0
+      departure_threshold: 3.5
+    climatology_p85_42c:
+      description: "Tmax >= max(42.0C, P85 calendar day normal 1991-2020)"
+      floor_threshold: 42.0
+      percentile: 85
+    imd_strict_raw:
+      description: "Unadjusted station rule 45.0C or normal+4.5C departure"
+      absolute_threshold: 45.0
+      departure_base: 40.0
+      departure_threshold: 4.5
