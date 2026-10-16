@@ -13,6 +13,12 @@ Supports end-to-end execution across all phases:
 import argparse
 import sys
 from pathlib import Path
+
+# Ensure project root is on sys.path for direct script execution
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 import yaml
 
 
@@ -51,6 +57,20 @@ def run_phase_1(config: dict):
         print(f"Phase 1 modules not fully imported yet: {e}")
 
 
+def run_phase_2(config: dict):
+    """Execute Phase 2: Feature Engineering, Chronological Splitting, Scaler Export."""
+    print(">>> Starting Phase 2: Feature Engineering & Dataset Splitting...")
+    from src.features import build_and_save_features
+    from src.split import get_splits
+
+    print("[1/2] Computing lag, rolling, trend, and climatological features...")
+    build_and_save_features(config)
+
+    print("[2/2] Generating chronological splits (Train/Val/Test) and fitting scaler...")
+    get_splits(config)
+    print(">>> Phase 2 completed successfully. Features and splits ready.")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Nagpur May Heat Wave Prediction CLI Pipeline (KJSCE Soft Computing Lab)",
@@ -85,6 +105,9 @@ def main():
 
     if args.phase in ["1", "all"]:
         run_phase_1(config)
+
+    if args.phase in ["2", "all"]:
+        run_phase_2(config)
 
     if args.phase == "0":
         print("Phase 0 (Scaffold & Environment) verified.")
