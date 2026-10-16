@@ -149,6 +149,7 @@ def test_baseline_comparison_table():
         "Perceptron Rule (Exp 4)",
         "ADALINE Delta Rule (Exp 5)",
         "Logistic Regression (Balanced)",
+        "Random Forest (Balanced)",
     }
     assert set(df["Model"].unique()) == expected_models
 
