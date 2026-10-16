@@ -58,4 +58,16 @@ This document records key design choices, scientific justifications, and trade-o
 - **Observation:** Probing the Open-Meteo ERA5-Land archive endpoint revealed that `apparent_temperature`, `surface_pressure`, `wind_speed_10m`, and `shortwave_radiation` return `null` in the Open-Meteo ERA5-Land dataset for this region. Conversely, Open-Meteo `era5` (0.25° resolution, grid lat 21.25°, lon 79.00°, elevation 311.0 m) provides 100% non-null coverage for all 8 variables.
 - **Decision:** As prescribed in `PROJECT_SPEC.md`, switched the reanalysis model to `era5` to obtain 100% complete hourly records for all 8 variables across all 46 years (1981–2026).
 
+---
+
+## Decision D007: Primary Target Heat Wave Label Selection
+- **Status:** Accepted
+- **Context:** `PROJECT_SPEC.md` Section 2.3 defines a selection protocol among Candidate A (`imd_reanalysis_plains`), Candidate B (`climatology_p85_42c`), and Reference (`imd_strict_raw`). The primary target must yield a Training split (1981–2010) positive rate between 15% and 35%, ideally closest to 22%.
+- **Evaluation Results:**
+  - Candidate A (`imd_reanalysis_plains`): **24.30% positive rate (226/930 days in Train)**, 35.48% in Val, 14.92% in Test, 24.61% overall.
+  - Candidate B (`climatology_p85_42c`): 14.95% positive rate in Train (below the 15% floor).
+  - Reference (`imd_strict_raw`): 5.91% positive rate in Train (severe class imbalance, unsuitable for stable ANN training without heavy synthetic sampling).
+- **Decision:** Selected **`imd_reanalysis_plains`** as the primary `heatwave_day` target. It satisfies all criteria, sits within 2.3% of the 22% ideal target, and provides balanced positive cases across historical decades.
+
+
 

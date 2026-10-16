@@ -54,7 +54,7 @@ splits:
     start_year: 2019
     end_year: 2026
 labels:
-  primary: climatology_p85_42c
+  primary: imd_reanalysis_plains
   candidates:
     imd_reanalysis_plains:
       description: Reanalysis calibrated equivalent of 45C or normal+3.5C departure
