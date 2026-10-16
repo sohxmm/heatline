@@ -1,22 +1,15 @@
 """
-Nagpur May Heat Wave Prediction — Interactive Soft Computing System.
-KJSCE Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech COMP).
-Location: Nagpur Urban Agglomeration (Vidarbha, Central India Core Heatwave Zone).
+Interactive Streamlit Web Application for Nagpur May Heat Wave Prediction using ANNs.
+Course: Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech COMP), K. J. Somaiya School of Engineering.
 
-Pure lightweight implementation: Zero PyTorch imports at runtime.
-Uses:
-- NumpyMLPEnsemble (src.export_model)
-- EBPANetwork (src.ann_numpy)
-- MamdaniFuzzyController (src.fuzzy_controller)
-- McCullochPittsNeuron (src.sc_baselines)
+Implements the demo application (Replay, Leakage-Safe Day T-1 What-If Simulator,
+Model & Method Evaluation, and KJSCE Syllabus & Viva Guide) using 100% pure-NumPy inference.
 """
 
 import json
 from pathlib import Path
 import sys
-from typing import Dict, Any, Tuple
 
-# Ensure project root is on sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -27,755 +20,418 @@ import pandas as pd
 import streamlit as st
 import yaml
 
-from src.export_model import NumpyMLPEnsemble
 from src.ann_numpy import EBPANetwork
+from src.export_model import NumpyMLPEnsemble
+from src.features import FEATURE_COLS
 from src.fuzzy_controller import MamdaniFuzzyController
 from src.sc_baselines import McCullochPittsNeuron
 
-# Page Configuration
 st.set_page_config(
-    page_title="Nagpur Heatwave Soft Computing System",
-    page_icon="🔥",
+    page_title="Nagpur May Heatwave ANN Predictor",
+    page_icon="☀️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# Custom Styling
-st.markdown(
-    """
-    <style>
-    .metric-card {
-        background-color: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 12px;
-        text-align: center;
-    }
-    .metric-title {
-        font-size: 0.85rem;
-        color: #6c757d;
-        margin-bottom: 4px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .metric-value {
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: #212529;
-    }
-    .metric-sub {
-        font-size: 0.8rem;
-        color: #495057;
-        margin-top: 4px;
-    }
-    .badge-alert {
-        display: inline-block;
-        background-color: #dc3545;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-    .badge-normal {
-        display: inline-block;
-        background-color: #28a745;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-    .badge-synapse-active {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-    .badge-synapse-inactive {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-
-@st.cache_data
-def load_datasets():
-    """Load preprocessed features, daily meteorological records, and normal climatology."""
-    features_df = pd.read_csv(PROJECT_ROOT / "data" / "processed" / "features.csv")
-    daily_df = pd.read_csv(PROJECT_ROOT / "data" / "processed" / "daily.csv")
-    with open(PROJECT_ROOT / "models" / "scaler.json", "r", encoding="utf-8") as f:
-        scaler = json.load(f)
-    with open(PROJECT_ROOT / "models" / "threshold.json", "r", encoding="utf-8") as f:
-        threshold_cfg = json.load(f)
-    return features_df, daily_df, scaler, threshold_cfg
-
 
 @st.cache_resource
-def load_models():
-    """Load lightweight pure-NumPy inference engines (zero PyTorch imports)."""
+def load_artifacts():
+    """Load configuration, datasets, scaler parameters, and pure-NumPy ANN models."""
+    with open(PROJECT_ROOT / "config.yaml", "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+
+    df_daily = pd.read_csv(PROJECT_ROOT / "data" / "processed" / "daily.csv")
+    df_features = pd.read_csv(PROJECT_ROOT / "data" / "processed" / "features.csv")
+    df_normals = pd.read_csv(PROJECT_ROOT / "data" / "processed" / "climatology_normals.csv")
+
+    with open(PROJECT_ROOT / "models" / "scaler.json", "r", encoding="utf-8") as f:
+        scaler_data = json.load(f)
+
+    with open(PROJECT_ROOT / "models" / "threshold.json", "r", encoding="utf-8") as f:
+        threshold_data = json.load(f)
+
     mlp_ensemble = NumpyMLPEnsemble(str(PROJECT_ROOT / "models" / "ensemble_weights.npz"))
-    
-    ebpa_net = EBPANetwork(n_input=26)
+
+    ebpa_net = EBPANetwork(n_input=len(FEATURE_COLS), n_hidden=32, activation="bipolar_sigmoid")
     ebpa_net.load_weights(str(PROJECT_ROOT / "models" / "ebpa_weights.npz"))
-    
+
     fuzzy_ctrl = MamdaniFuzzyController()
     mp_neuron = McCullochPittsNeuron()
-    return mlp_ensemble, ebpa_net, fuzzy_ctrl, mp_neuron
 
-
-features_df, daily_df, scaler, threshold_cfg = load_datasets()
-mlp_ensemble, ebpa_net, fuzzy_ctrl, mp_neuron = load_models()
-
-FEATURE_COLS = scaler["feature_names"]
-SCALER_MEAN = np.array(scaler["mean"], dtype=np.float64)
-SCALER_SCALE = np.array(scaler["scale"], dtype=np.float64)
-
-W_ANN = threshold_cfg["w_ann"]
-W_EBPA = threshold_cfg["w_ebpa"]
-W_FUZZY = threshold_cfg["w_fuzzy"]
-TAU_STAR = threshold_cfg["threshold"]
-
-
-def standardize_vector(feat_dict: Dict[str, float]) -> np.ndarray:
-    """Standardize a single dictionary of features according to training scaler."""
-    vec = np.array([feat_dict[col] for col in FEATURE_COLS], dtype=np.float64)
-    return (vec - SCALER_MEAN) / SCALER_SCALE
-
-
-# Sidebar Header
-st.sidebar.image("https://img.shields.io/badge/KJSCE-Soft_Computing_Lab-blue.svg")
-st.sidebar.title("Nagpur Heatwave ANN")
-st.sidebar.markdown(
-    """
-    **Autonomous Soft Computing System for Extreme Weather Forecasting**  
-    *Location:* Nagpur Plateau, Central India (21.1458°N, 79.0882°E)  
-    *Primary Climatology:* WMO 1991–2020 Normals  
-    *Lead Time:* Next-Day Operational Warning (T+1)
-    """
-)
-st.sidebar.markdown("---")
-st.sidebar.markdown(
-    f"""
-    **GA Neuro-Fuzzy Ensembling Parameters:**
-    - $w_{{\\text{{ANN}}}}$: `{W_ANN:.4f}`
-    - $w_{{\\text{{EBPA}}}}$: `{W_EBPA:.4f}`
-    - $w_{{\\text{{Fuzzy}}}}$: `{W_FUZZY:.4f}`
-    - Decision Threshold $\\tau^*$: `{TAU_STAR:.4f}`
-    """
-)
-st.sidebar.markdown("---")
-st.sidebar.info(
-    "💡 Built with 100% pure NumPy inference. No PyTorch / CUDA runtime overhead required."
-)
-
-# App Header
-st.title("🔥 Nagpur May Heat Wave Prediction System")
-st.markdown(
-    "**Course Project: Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech Computer Engineering)**  \n"
-    "Integrating McCulloch-Pitts Logic, Error Backpropagation (EBPA), Deep MLP Ensembles, Mamdani Fuzzy Inference, and Genetic Algorithms."
-)
-
-tab1, tab2, tab3, tab4 = st.tabs(
-    [
-        "📅 Historical May Replay (1981–2026)",
-        "🧪 Interactive What-If Simulator",
-        "📊 KJSCE Soft Computing Lab Explorer",
-        "📐 Mathematical Foundations & Viva Guide",
-    ]
-)
-
-# ---------------------------------------------------------------------------
-# TAB 1: Historical May Replay
-# ---------------------------------------------------------------------------
-with tab1:
-    st.subheader("Historical May Replay: Observation vs Soft Computing Forecasts")
-    st.markdown(
-        "Select any year and day between **1981 and 2026** to inspect atmospheric conditions, "
-        "verify ground-truth thermal outcomes, and observe model alert consensus."
-    )
-
-    c_year, c_day, c_space = st.columns([2, 2, 4])
-    with c_year:
-        year_sel = st.selectbox(
-            "Select Historical Year",
-            options=sorted(features_df["year"].unique(), reverse=True),
-            index=2,  # Default to 2024
-        )
-    with c_day:
-        day_sel = st.slider("Select Day of May", min_value=1, max_value=31, value=24)
-
-    target_date = f"{year_sel}-05-{day_sel:02d}"
-    row_feat = features_df[features_df["date"] == target_date]
-    row_daily = daily_df[daily_df["date"] == target_date]
-
-    if row_feat.empty or row_daily.empty:
-        st.warning(f"No meteorological records found for date {target_date}.")
-    else:
-        feat_data = row_feat.iloc[0].to_dict()
-        daily_data = row_daily.iloc[0].to_dict()
-
-        # Compute model inference
-        X_scaled = standardize_vector(feat_data).reshape(1, -1)
-        p_mlp = float(mlp_ensemble.predict_proba(X_scaled)[0])
-        p_ebpa = float(ebpa_net.predict_proba(X_scaled)[0])
-        fuzzy_risk, p_fuzzy = fuzzy_ctrl.evaluate_sample(
-            tmax_lag1=float(feat_data["tmax_lag1"]),
-            tmax_anomaly_lag1=float(feat_data["tmax_anomaly_lag1"]),
-            rh_min_lag1=float(feat_data["rh_min_lag1"]),
-        )
-        p_hybrid = W_ANN * p_mlp + W_EBPA * p_ebpa + W_FUZZY * p_fuzzy
-        is_hybrid_alert = p_hybrid >= TAU_STAR
-
-        actual_tmax = float(daily_data["tmax"])
-        actual_hw = bool(feat_data["imd_reanalysis_plains"])
-        wmo_norm = float(feat_data["normal_tmax_T"])
-
-        # Display Metrics Cards
-        m1, m2, m3, m4, m5 = st.columns(5)
-        with m1:
-            hw_badge = (
-                '<span class="badge-alert">🔥 HEATWAVE DAY</span>'
-                if actual_hw
-                else '<span class="badge-normal">✅ NORMAL DAY</span>'
-            )
-            st.markdown(
-                f"""
-                <div class="metric-card">
-                    <div class="metric-title">Actual Day Tmax (Day T)</div>
-                    <div class="metric-value">{actual_tmax:.1f} °C</div>
-                    <div class="metric-sub">{hw_badge}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        with m2:
-            st.markdown(
-                f"""
-                <div class="metric-card">
-                    <div class="metric-title">Deep MLP Ensemble</div>
-                    <div class="metric-value">{p_mlp * 100:.1f}%</div>
-                    <div class="metric-sub">10-Seed Average Prob</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        with m3:
-            st.markdown(
-                f"""
-                <div class="metric-card">
-                    <div class="metric-title">Pure-NumPy EBPA</div>
-                    <div class="metric-value">{p_ebpa * 100:.1f}%</div>
-                    <div class="metric-sub">Bipolar Sigmoid (Exp 2)</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        with m4:
-            st.markdown(
-                f"""
-                <div class="metric-card">
-                    <div class="metric-title">Mamdani Fuzzy Risk</div>
-                    <div class="metric-value">{fuzzy_risk:.1f}/100</div>
-                    <div class="metric-sub">Centroid Prob: {p_fuzzy * 100:.1f}%</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        with m5:
-            alert_badge = (
-                '<span class="badge-alert">🚨 ALERT TRIGGERED</span>'
-                if is_hybrid_alert
-                else '<span class="badge-normal">🛡️ SAFE (NO ALERT)</span>'
-            )
-            st.markdown(
-                f"""
-                <div class="metric-card">
-                    <div class="metric-title">GA Neuro-Fuzzy Hybrid</div>
-                    <div class="metric-value">{p_hybrid * 100:.1f}%</div>
-                    <div class="metric-sub">{alert_badge}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        st.markdown("---")
-
-        # Historical Trajectory Visualization
-        st.subheader(f"May {year_sel} Temperature Trajectory (Nagpur 21.15°N, 79.09°E)")
-
-        month_daily = daily_df[
-            (daily_df["year"] == year_sel) & (daily_df["month"] == 5)
-        ].sort_values("day")
-
-        fig, ax = plt.subplots(figsize=(12, 4.5), dpi=150)
-        ax.plot(
-            month_daily["day"],
-            month_daily["tmax"],
-            marker="o",
-            color="#d9534f",
-            linewidth=2,
-            label="Actual Daily Tmax (°C)",
-        )
-        
-        # Merge normal_tmax_T from features
-        month_feat = features_df[
-            (features_df["year"] == year_sel) & (features_df["month"] == 5)
-        ].sort_values("day")
-        if not month_feat.empty:
-            ax.plot(
-                month_feat["day"],
-                month_feat["normal_tmax_T"],
-                linestyle="--",
-                color="#0275d8",
-                linewidth=1.8,
-                label="WMO 1991–2020 Normal",
-            )
-
-        ax.axhline(
-            43.5,
-            color="#d9534f",
-            linestyle=":",
-            alpha=0.8,
-            linewidth=1.5,
-            label="IMD Severe Heatwave Benchmark (43.5°C)",
-        )
-
-        # Highlight selected day
-        ax.scatter(
-            [day_sel],
-            [actual_tmax],
-            color="#292b2c" if not actual_hw else "#b02a37",
-            s=180,
-            zorder=5,
-            edgecolors="black",
-            linewidth=2,
-            label=f"Selected Day ({target_date})",
-        )
-
-        ax.set_title(
-            f"May {year_sel} Thermal Regime & Selected Forecast Verification Day",
-            fontsize=12,
-            fontweight="bold",
-        )
-        ax.set_xlabel("Day of May", fontsize=10)
-        ax.set_ylabel("Maximum Temperature (°C)", fontsize=10)
-        ax.set_xticks(range(1, 32, 2))
-        ax.set_ylim(32, 50)
-        ax.grid(True, linestyle="--", alpha=0.5)
-        ax.legend(loc="upper left", frameon=True, fontsize=9)
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
-
-        # Lagged Atmospheric Features Table
-        with st.expander(f"📋 Prior-Day Meteorological Inputs (T-1 Conditions) for {target_date}"):
-            c_f1, c_f2, c_f3 = st.columns(3)
-            with c_f1:
-                st.write(f"**Tmax (T-1):** `{feat_data['tmax_lag1']:.1f} °C`")
-                st.write(f"**Tmin (T-1):** `{feat_data['tmin_lag1']:.1f} °C`")
-                st.write(f"**Diurnal Range (DTR):** `{feat_data['dtr_lag1']:.1f} °C`")
-                st.write(f"**Climatological Anomaly:** `{feat_data['tmax_anomaly_lag1']:+.2f} °C`")
-            with c_f2:
-                st.write(f"**Minimum Relative Humidity:** `{feat_data['rh_min_lag1']:.1f} %`")
-                st.write(f"**Mean Relative Humidity:** `{feat_data['rh_mean_lag1']:.1f} %`")
-                st.write(f"**Mean Wind Speed:** `{feat_data['wind_mean_lag1']:.1f} km/h`")
-                st.write(f"**Mean Surface Pressure:** `{feat_data['pressure_mean_lag1']:.1f} hPa`")
-            with c_f3:
-                st.write(f"**Accumulated Solar Radiation:** `{feat_data['solar_sum_lag1']:.0f} kJ/m²`")
-                st.write(f"**Soil Moisture (0-7 cm):** `{feat_data['soil_moisture_lag1']:.3f} m³/m³`")
-                st.write(f"**Consecutive Hot Streak:** `{int(feat_data['hot_streak_len'])} days`")
-                st.write(f"**WMO Baseline Normal:** `{feat_data['normal_tmax_T']:.1f} °C`")
-
-
-# ---------------------------------------------------------------------------
-# TAB 2: Interactive What-If Simulator
-# ---------------------------------------------------------------------------
-with tab2:
-    st.subheader("Interactive Atmospheric Simulator: What-If Stress Testing")
-    st.markdown(
-        "Manipulate critical land-atmosphere boundary layer parameters to simulate advection, "
-        "turbulent ventilation, or prolonged desiccation over the Vidarbha plateau."
-    )
-
-    c_s1, c_s2, c_s3 = st.columns(3)
-    with c_s1:
-        sim_tmax = st.slider("Prior-Day Tmax (tmax_lag1) [°C]", 35.0, 48.0, 43.5, 0.1)
-        sim_tmin = st.slider("Prior-Day Tmin (tmin_lag1) [°C]", 20.0, 35.0, 28.5, 0.1)
-    with c_s2:
-        sim_rh = st.slider("Prior-Day Min Humidity (rh_min_lag1) [%]", 4.0, 60.0, 16.0, 0.5)
-        sim_wind = st.slider("Prior-Day Mean Wind (wind_mean_lag1) [km/h]", 5.0, 30.0, 11.0, 0.5)
-    with c_s3:
-        sim_streak = st.slider("Hot Streak Length [Days >= 42°C]", 0, 10, 3, 1)
-        sim_normal = st.slider("WMO Baseline Normal Tmax [°C]", 40.0, 44.5, 42.6, 0.1)
-
-    # Dynamically derive dependent features
-    sim_anomaly = sim_tmax - sim_normal
-    sim_dtr = sim_tmax - sim_tmin
-    sim_tmean = (sim_tmax + sim_tmin) / 2.0
-    sim_rh_mean = min(100.0, sim_rh + 20.0)
-
-    # Synthesize complete 26-feature dictionary from baseline reference
-    sim_dict = {
-        "tmax_lag1": sim_tmax,
-        "tmin_lag1": sim_tmin,
-        "tmean_lag1": sim_tmean,
-        "rh_mean_lag1": sim_rh_mean,
-        "rh_min_lag1": sim_rh,
-        "dewpoint_mean_lag1": 14.0,
-        "apparent_tmax_lag1": sim_tmax + 1.2,
-        "wind_mean_lag1": sim_wind,
-        "pressure_mean_lag1": 968.5,
-        "solar_sum_lag1": 7100.0,
-        "soil_moisture_lag1": 0.15,
-        "tmax_lag2": sim_tmax - 0.4,
-        "tmax_lag3": sim_tmax - 0.8,
-        "apparent_tmax_lag2": sim_tmax + 0.8,
-        "apparent_tmax_lag3": sim_tmax + 0.4,
-        "tmax_roll3": (sim_tmax * 3 - 1.2) / 3.0,
-        "tmax_roll7": (sim_tmax * 7 - 3.5) / 7.0,
-        "solar_roll3": 7050.0,
-        "tmax_trend3": 0.8,
-        "tmax_anomaly_lag1": sim_anomaly,
-        "dtr_lag1": sim_dtr,
-        "pressure_tendency": -0.8,
-        "hot_streak_len": float(sim_streak),
-        "normal_tmax_T": sim_normal,
-        "day_sin": np.sin(2 * np.pi * 140 / 365.25),
-        "day_cos": np.cos(2 * np.pi * 140 / 365.25),
+    return {
+        "config": config,
+        "daily": df_daily,
+        "features": df_features,
+        "normals": df_normals,
+        "scaler_mean": np.array(scaler_data["mean"], dtype=np.float64),
+        "scaler_scale": np.array(scaler_data["scale"], dtype=np.float64),
+        "threshold_data": threshold_data,
+        "mlp": mlp_ensemble,
+        "ebpa": ebpa_net,
+        "fuzzy": fuzzy_ctrl,
+        "mp": mp_neuron,
     }
 
-    # Standardize feature vector
-    X_sim_scaled = standardize_vector(sim_dict).reshape(1, -1)
 
-    # 1. McCulloch-Pitts Neuron Evaluation
-    e1 = sim_tmax >= mp_neuron.tmax_threshold
-    e2 = sim_anomaly >= mp_neuron.anomaly_threshold
-    e3 = sim_rh <= mp_neuron.rh_min_threshold
-    inh = sim_wind >= mp_neuron.wind_threshold
-    net_mp = (float(e1) + float(e2) + float(e3)) - (mp_neuron.inhibitory_weight * float(inh))
-    mp_fired = net_mp >= mp_neuron.theta
+def scale_feature_vector(x_raw: np.ndarray, mean: np.ndarray, scale: np.ndarray) -> np.ndarray:
+    """Standardize a raw 26-feature vector using Training split (1981-2010) statistics."""
+    return (np.asarray(x_raw, dtype=np.float64) - mean) / scale
 
-    # 2. Continuous Soft Computing Models
-    sim_p_mlp = float(mlp_ensemble.predict_proba(X_sim_scaled)[0])
-    sim_p_ebpa = float(ebpa_net.predict_proba(X_sim_scaled)[0])
-    sim_fuzzy_risk, sim_p_fuzzy = fuzzy_ctrl.evaluate_sample(
-        tmax_lag1=sim_tmax,
-        tmax_anomaly_lag1=sim_anomaly,
-        rh_min_lag1=sim_rh,
+
+def run_all_models_on_row(row_series: pd.Series, bundle: dict) -> dict:
+    """Compute predictions across the primary ANN Ensemble, NumPy EBPA, Fuzzy, and M-P Neuron."""
+    x_raw = row_series[FEATURE_COLS].to_numpy(dtype=np.float64)
+    x_scaled = scale_feature_vector(x_raw, bundle["scaler_mean"], bundle["scaler_scale"])
+
+    p_mlp = float(bundle["mlp"].predict_proba(x_scaled)[0])
+    p_ebpa = float(bundle["ebpa"].predict_proba(x_scaled)[0])
+    fuzzy_score, p_fuzzy = bundle["fuzzy"].evaluate_sample(
+        float(row_series["tmax_lag1"]),
+        float(row_series["tmax_anomaly_lag1"]),
+        float(row_series["rh_min_lag1"]),
     )
-    sim_p_hybrid = W_ANN * sim_p_mlp + W_EBPA * sim_p_ebpa + W_FUZZY * sim_p_fuzzy
-    sim_alert = sim_p_hybrid >= TAU_STAR
 
-    st.markdown("---")
-    st.subheader("⚡ Soft Computing Model Inferences Under Simulated Atmospheric State")
+    th = bundle["threshold_data"]
+    p_hybrid = th["w_ann"] * p_mlp + th["w_ebpa"] * p_ebpa + th["w_fuzzy"] * p_fuzzy
+    tau_star = float(th["threshold"])
 
-    # M-P Neuron Synaptic Firing Breakdown
-    st.markdown("#### 1. McCulloch-Pitts Biological Neuron (Exp 1 — Threshold Logic)")
-    badge_e1 = '<span class="badge-synapse-active">⚡ FIRED (+1)</span>' if e1 else '<span class="badge-synapse-inactive">💤 INACTIVE (0)</span>'
-    badge_e2 = '<span class="badge-synapse-active">⚡ FIRED (+1)</span>' if e2 else '<span class="badge-synapse-inactive">💤 INACTIVE (0)</span>'
-    badge_e3 = '<span class="badge-synapse-active">⚡ FIRED (+1)</span>' if e3 else '<span class="badge-synapse-inactive">💤 INACTIVE (0)</span>'
-    badge_inh = '<span class="badge-alert">🛑 VETO (-2)</span>' if inh else '<span class="badge-synapse-active">🛡️ CALM (0)</span>'
-    badge_mp = '<span class="badge-alert">🔥 ACTION POTENTIAL</span>' if mp_fired else '<span class="badge-normal">💤 QUIESCENT</span>'
+    # McCulloch-Pitts synaptic breakdown
+    e1 = int(row_series["tmax_lag1"] >= 42.0)
+    e2 = int(row_series["tmax_anomaly_lag1"] >= 3.5)
+    e3 = int(row_series["rh_min_lag1"] <= 25.0)
+    inh = int(row_series["wind_mean_lag1"] >= 15.0)
+    mp_net = (e1 + e2 + e3) - 2 * inh
+    mp_fire = int(mp_net >= 2)
 
-    mp_c1, mp_c2, mp_c3, mp_c4, mp_c5 = st.columns(5)
-    with mp_c1:
+    return {
+        "p_mlp": p_mlp,
+        "p_ebpa": p_ebpa,
+        "p_fuzzy": p_fuzzy,
+        "fuzzy_score": fuzzy_score,
+        "p_hybrid": p_hybrid,
+        "tau_star": tau_star,
+        "mp_synapses": {
+            "e1_tmax": e1,
+            "e2_anom": e2,
+            "e3_dry": e3,
+            "inh_wind": inh,
+            "net": mp_net,
+            "fires": mp_fire,
+        },
+    }
+
+
+def main():
+    bundle = load_artifacts()
+    df_features = bundle["features"]
+    df_daily = bundle["daily"]
+    df_normals = bundle["normals"]
+    th_info = bundle["threshold_data"]
+
+    # Sidebar
+    with st.sidebar:
+        st.markdown("### ☀️ Nagpur Heatwave ANN")
+        st.caption(
+            "**Problem Statement:** Design and develop an artificial neural network to predict "
+            "heat wave in May month considering climate conditions of a specific demographic area."
+        )
+        st.divider()
+        st.markdown("**Demographic Study Area**")
+        st.markdown("- **City:** Nagpur (Vidarbha, MH)\n- **Coords:** `21.1458°N, 79.0882°E`\n- **Elevation:** `311 m` (Inland CHZ)")
+        st.markdown("**Chronological Dataset (1981–2026)**")
         st.markdown(
-            f"**Excitatory 1:** $T_{{max}} \\ge 42.0^\\circ\\text{{C}}$<br>{badge_e1}",
-            unsafe_allow_html=True,
+            "- **Train (1981–2010):** 930 May days\n"
+            "- **Val (2011–2018):** 248 May days\n"
+            "- **Test (2019–2026):** 248 May days"
         )
-    with mp_c2:
-        st.markdown(
-            f"**Excitatory 2:** $\\Delta T \\ge 3.5^\\circ\\text{{C}}$<br>{badge_e2}",
-            unsafe_allow_html=True,
+        st.divider()
+        decision_mode = st.radio(
+            "Primary Decision Engine",
+            ["10-Seed Deep MLP ANN (Default)", "Pure-NumPy EBPA ANN (Exp 7)", "Neuro-Fuzzy Hybrid (ANN + Fuzzy)"],
+            index=0,
         )
-    with mp_c3:
+        st.caption("Inference runs 100% in pure NumPy using exported weights (`models/ensemble_weights.npz`).")
+
+    st.title("☀️ May Heat Wave Prediction in Nagpur Using an Artificial Neural Network")
+    st.markdown(
+        "**K. J. Somaiya School of Engineering** · Soft Computing Lab Mini Project · "
+        "*Leakage-Safe Next-Day Forecasting from Day $T-1$ Atmospheric Conditions*"
+    )
+
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📅 1. Historical May Replay (1981–2026)",
+        "🎛️ 2. Interactive What-If Simulator (Day T-1)",
+        "📊 3. Model, Method & Benchmark Results",
+        "📘 4. Syllabus Alignment & Viva Guide",
+    ])
+
+    # =========================================================================
+    # TAB 1: HISTORICAL MAY REPLAY
+    # =========================================================================
+    with tab1:
+        st.subheader("Historical May Day Replay (1981–2026)")
         st.markdown(
-            f"**Excitatory 3:** $RH_{{min}} \\le 25\\%$<br>{badge_e3}",
-            unsafe_allow_html=True,
-        )
-    with mp_c4:
-        st.markdown(
-            f"**Inhibitory:** $Wind \\ge 15\\text{{ km/h}}$<br>{badge_inh}",
-            unsafe_allow_html=True,
-        )
-    with mp_c5:
-        st.markdown(
-            f"**Axon Hillock Action:** $\\text{{Net}}={net_mp:.1f}$ ($\\theta=2.0$)<br>{badge_mp}",
-            unsafe_allow_html=True,
+            "Select any historical year and May calendar day $T$. The Artificial Neural Network uses **only** "
+            "atmospheric conditions observed up to the end of day $T-1$ (plus deterministic WMO climatology for day $T$) "
+            "to predict whether day $T$ will experience a heat wave."
         )
 
-    st.markdown("---")
-    st.markdown("#### 2. Model Ensemble Comparison")
-    col_pred1, col_pred2 = st.columns([3, 2])
-    with col_pred1:
-        fig_bar, ax_bar = plt.subplots(figsize=(8, 4), dpi=150)
-        models_label = [
-            "M-P Neuron (Exp 1)",
-            "Pure-NumPy EBPA (Exp 2/6)",
-            "Deep MLP Ensemble (Exp 6)",
-            "Mamdani Fuzzy (Exp 3)",
-            "GA Neuro-Fuzzy (Exp 7)",
-        ]
-        probs = [
-            float(mp_fired),
-            sim_p_ebpa,
-            sim_p_mlp,
-            sim_p_fuzzy,
-            sim_p_hybrid,
-        ]
-        colors = ["#6c757d", "#17a2b8", "#007bff", "#fd7e14", "#dc3545"]
+        col_sel1, col_sel2, col_sel3 = st.columns([1.2, 1.2, 1.6])
+        with col_sel1:
+            sel_year = st.selectbox("Select Year (1981–2026)", list(range(2026, 1980, -1)), index=2)
+        with col_sel2:
+            sel_day = st.slider("Select Day of May (T)", min_value=1, max_value=31, value=18)
+        with col_sel3:
+            split_label = (
+                "Training Split (1981–2010)" if sel_year <= 2010
+                else ("Validation Split (2011–2018)" if sel_year <= 2018 else "Locked Test Split (2019–2026)")
+            )
+            st.info(f"**Selected Date:** `{sel_year}-05-{sel_day:02d}`  \n**Partition:** {split_label}")
 
-        bars = ax_bar.barh(models_label, probs, color=colors, height=0.55)
-        ax_bar.axvline(
-            TAU_STAR,
-            color="#dc3545",
-            linestyle="--",
-            linewidth=1.5,
-            label=f"GA Threshold (τ* = {TAU_STAR:.4f})",
+        row_match = df_features[(df_features["year"] == sel_year) & (df_features["day"] == sel_day)].iloc[0]
+        daily_match = df_daily[(df_daily["year"] == sel_year) & (df_daily["month"] == 5) & (df_daily["day"] == sel_day)].iloc[0]
+        preds = run_all_models_on_row(row_match, bundle)
+
+        if "10-Seed" in decision_mode:
+            active_prob = preds["p_mlp"]
+            active_thresh = 0.50
+            active_name = "10-Seed Deep MLP ANN"
+        elif "EBPA" in decision_mode:
+            active_prob = preds["p_ebpa"]
+            active_thresh = 0.50
+            active_name = "Pure-NumPy EBPA ANN"
+        else:
+            active_prob = preds["p_hybrid"]
+            active_thresh = preds["tau_star"]
+            active_name = "Neuro-Fuzzy Hybrid"
+
+        pred_label = int(active_prob >= active_thresh)
+        actual_label = int(row_match["heatwave_day"])
+        actual_tmax = float(daily_match["tmax"])
+        normal_tmax = float(row_match["normal_tmax_T"])
+
+        m1, m2, m3, m4, m5 = st.columns(5)
+        m1.metric(
+            f"{active_name} Prob.",
+            f"{active_prob:.1%}",
+            f"Threshold: {active_thresh:.2f}",
         )
-        ax_bar.set_xlim(0, 1.05)
-        ax_bar.set_xlabel("Predicted Heatwave Probability / Firing State", fontsize=10)
-        ax_bar.set_title("Soft Computing Predictions Under Simulated Parameters", fontsize=11, fontweight="bold")
-        ax_bar.grid(axis="x", linestyle="--", alpha=0.5)
-        ax_bar.legend(loc="lower right", fontsize=9)
+        m2.metric(
+            "Model Decision (Day T)",
+            "🔥 HEAT WAVE" if pred_label == 1 else "✅ NORMAL",
+            "Correct Forecast" if pred_label == actual_label else "Mismatch vs Actual",
+            delta_color="normal" if pred_label == actual_label else "inverse",
+        )
+        m3.metric(
+            "Actual Outcome (Day T)",
+            "🔥 HEAT WAVE" if actual_label == 1 else "✅ NORMAL",
+            f"Actual Tmax: {actual_tmax:.1f}°C (Norm: {normal_tmax:.1f}°C)",
+        )
+        m4.metric(
+            "NumPy EBPA ANN (Exp 7)",
+            f"{preds['p_ebpa']:.1%}",
+            "Heat Wave" if preds["p_ebpa"] >= 0.5 else "Normal",
+        )
+        m5.metric(
+            "Mamdani Fuzzy Risk (CO4)",
+            f"{preds['fuzzy_score']:.1f} / 100",
+            f"Prob equiv: {preds['p_fuzzy']:.1%}",
+        )
 
-        for bar in bars:
-            width = bar.get_width()
-            ax_bar.text(
-                width + 0.02,
-                bar.get_y() + bar.get_height() / 2,
-                f"{width * 100:.1f}%",
-                va="center",
-                ha="left",
-                fontsize=9,
-                fontweight="bold",
+        # 10-day window trajectory chart around selected May day
+        st.markdown("#### 📈 10-Day Temperature Trajectory & Climatological Thresholds")
+        year_may_df = df_daily[(df_daily["year"] == sel_year) & (df_daily["month"] == 5)].sort_values("day")
+        may_normals = df_normals[df_normals["month"] == 5].sort_values("day")
+
+        start_d = max(1, sel_day - 7)
+        end_d = min(31, sel_day + 3)
+        sub_daily = year_may_df[(year_may_df["day"] >= start_d) & (year_may_df["day"] <= end_d)]
+        sub_norm = may_normals[(may_normals["day"] >= start_d) & (may_normals["day"] <= end_d)]
+
+        fig_replay, ax_r = plt.subplots(figsize=(10, 3.6), dpi=150)
+        ax_r.plot(sub_daily["day"], sub_daily["tmax"], "o-", color="#d7191c", linewidth=2.2, label=f"Observed Tmax ({sel_year})")
+        ax_r.plot(sub_norm["day"], sub_norm["normal_tmax"], "--", color="#2b83ba", linewidth=1.8, label="WMO 1991–2020 Normal")
+        ax_r.plot(sub_norm["day"], sub_norm["p90_tmax"], ":", color="#fdae61", linewidth=1.8, label="90th Percentile (P90)")
+        ax_r.axhline(43.5, color="darkred", linestyle="-.", alpha=0.7, label="43.5°C Plains Heatwave Threshold")
+        ax_r.axvline(sel_day, color="black", linestyle="--", alpha=0.6, label=f"Target Day T (May {sel_day})")
+        ax_r.set_xlabel("Day of May")
+        ax_r.set_ylabel("Max Temperature (°C)")
+        ax_r.set_title(f"Nagpur May {sel_year} Temperature Progression (Window: May {start_d} to May {end_d})")
+        ax_r.legend(loc="best", frameon=True, fontsize=8.5)
+        plt.tight_layout()
+        st.pyplot(fig_replay)
+        plt.close(fig_replay)
+
+        # Feature inspection table
+        with st.expander("🔍 Inspect All 26 Leakage-Safe Input Features (Known at End of Day T-1)", expanded=True):
+            feat_disp = pd.DataFrame({
+                "Feature Name": FEATURE_COLS,
+                "Raw Value (at T-1 / Clim T)": [round(float(row_match[c]), 4) for c in FEATURE_COLS],
+                "Standardized Z-Score (ANN Input)": np.round(
+                    scale_feature_vector(row_match[FEATURE_COLS].to_numpy(), bundle["scaler_mean"], bundle["scaler_scale"]), 3
+                ),
+            })
+            st.dataframe(feat_disp, use_container_width=True, hide_index=True)
+
+    # =========================================================================
+    # TAB 2: INTERACTIVE WHAT-IF SIMULATOR (LEAKAGE-SAFE DAY T-1)
+    # =========================================================================
+    with tab2:
+        st.subheader("Interactive What-If Simulator (Day T-1 Atmospheric Controls)")
+        st.markdown(
+            "Start from the currently selected May day in Tab 1 (`"
+            f"{sel_year}-05-{sel_day:02d}"
+            "`) and perturb yesterday's ($T-1$) temperature, humidity, wind speed, and hot-streak length. "
+            "**All dependent engineered features (`tmax_anomaly_lag1`, `tmax_trend3`, `tmax_roll3`, `tmax_roll7`, `dtr_lag1`) "
+            "are dynamically recomputed on the fly.**"
+        )
+
+        sim_col1, sim_col2 = st.columns([1.3, 1.7])
+        with sim_col1:
+            st.markdown("##### 🎚️ Adjust Day T-1 Weather Observations")
+            s_tmax_lag1 = st.slider(
+                "Yesterday Max Temp: `tmax_lag1` (°C)",
+                min_value=32.0, max_value=48.0, value=float(row_match["tmax_lag1"]), step=0.2
+            )
+            s_tmin_lag1 = st.slider(
+                "Yesterday Min Temp: `tmin_lag1` (°C)",
+                min_value=20.0, max_value=36.0, value=float(row_match["tmin_lag1"]), step=0.2
+            )
+            s_rh_mean_lag1 = st.slider(
+                "Yesterday Mean Humidity: `rh_mean_lag1` (%)",
+                min_value=10.0, max_value=80.0, value=float(row_match["rh_mean_lag1"]), step=1.0
+            )
+            s_rh_min_lag1 = st.slider(
+                "Yesterday Min Humidity: `rh_min_lag1` (%)",
+                min_value=4.0, max_value=60.0, value=float(row_match["rh_min_lag1"]), step=1.0
+            )
+            s_wind_lag1 = st.slider(
+                "Yesterday Mean Wind Speed: `wind_mean_lag1` (km/h)",
+                min_value=4.0, max_value=30.0, value=float(row_match["wind_mean_lag1"]), step=0.5
+            )
+            s_streak = st.slider(
+                "Prior Consecutive Heatwave Days: `hot_streak_len`",
+                min_value=0, max_value=12, value=int(row_match["hot_streak_len"]), step=1
             )
 
-        plt.tight_layout()
-        st.pyplot(fig_bar)
-        plt.close(fig_bar)
+        # Dynamically recompute dependent features (strictly leakage-safe)
+        sim_row = row_match.copy()
+        delta_tmax = s_tmax_lag1 - float(row_match["tmax_lag1"])
+        sim_row["tmax_lag1"] = s_tmax_lag1
+        sim_row["tmin_lag1"] = min(s_tmin_lag1, s_tmax_lag1 - 2.0)
+        sim_row["tmean_lag1"] = round(0.55 * s_tmax_lag1 + 0.45 * sim_row["tmin_lag1"], 2)
+        sim_row["rh_mean_lag1"] = s_rh_mean_lag1
+        sim_row["rh_min_lag1"] = min(s_rh_min_lag1, s_rh_mean_lag1)
+        sim_row["wind_mean_lag1"] = s_wind_lag1
+        sim_row["hot_streak_len"] = s_streak
 
-    with col_pred2:
-        st.markdown(
-            f"""
-            <div style="background-color: #f1f3f5; border-radius: 8px; padding: 20px; border-left: 5px solid {'#dc3545' if sim_alert else '#28a745'};">
-                <h4 style="margin-top:0;">Ensemble Consensus Status</h4>
-                <p><strong>Simulated State:</strong> Tmax={sim_tmax}°C, Anom={sim_anomaly:+.1f}°C, RH={sim_rh}%, Wind={sim_wind} km/h</p>
-                <hr style="margin: 10px 0;">
-                <p><strong>Deep MLP Ensemble:</strong> <code>{sim_p_mlp * 100:.1f}%</code></p>
-                <p><strong>NumPy EBPA Network:</strong> <code>{sim_p_ebpa * 100:.1f}%</code></p>
-                <p><strong>Mamdani Fuzzy Risk:</strong> <code>{sim_fuzzy_risk:.1f}/100</code></p>
-                <p><strong>GA Neuro-Fuzzy Probability:</strong> <code>{sim_p_hybrid * 100:.1f}%</code></p>
-                <h3 style="color: {'#dc3545' if sim_alert else '#28a745'}; margin-bottom: 0;">
-                    {'🚨 HEATWAVE ALERT ISSUED' if sim_alert else '✅ NO ALERT (NORMAL REGIME)'}
-                </h3>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        # Recompute dependent engineered features
+        sim_row["dtr_lag1"] = round(s_tmax_lag1 - sim_row["tmin_lag1"], 2)
+        sim_row["tmax_trend3"] = round(s_tmax_lag1 - float(row_match["tmax_lag3"]), 2)
+        sim_row["tmax_roll3"] = round((s_tmax_lag1 + float(row_match["tmax_lag2"]) + float(row_match["tmax_lag3"])) / 3.0, 4)
+        sim_row["tmax_roll7"] = round(float(row_match["tmax_roll7"]) + delta_tmax / 7.0, 4)
+        normal_lag1 = float(row_match["tmax_lag1"]) - float(row_match["tmax_anomaly_lag1"])
+        sim_row["tmax_anomaly_lag1"] = round(s_tmax_lag1 - normal_lag1, 2)
+        sim_row["apparent_tmax_lag1"] = round(float(row_match["apparent_tmax_lag1"]) + delta_tmax + 0.05 * (s_rh_mean_lag1 - float(row_match["rh_mean_lag1"])), 2)
 
+        sim_preds = run_all_models_on_row(sim_row, bundle)
 
-# ---------------------------------------------------------------------------
-# TAB 3: KJSCE Soft Computing Lab Explorer
-# ---------------------------------------------------------------------------
-with tab3:
-    st.subheader("KJSCE Soft Computing Lab Explorer: Syllabus Alignment (Exp 1–7 & CO1–CO5)")
-    st.markdown(
-        "Demonstrating end-to-end alignment with the **KJSCE Soft Computing Lab Syllabus (SVU-KJSCE 2023_1.0)** "
-        "applied to climate informatics and regional hazard mitigation."
-    )
+        with sim_col2:
+            st.markdown("##### 🧠 Live Neural Network & Soft Computing Response")
+            c1, c2, c3 = st.columns(3)
+            c1.metric(
+                "10-Seed Deep MLP ANN",
+                f"{sim_preds['p_mlp']:.1%}",
+                f"{sim_preds['p_mlp'] - preds['p_mlp']:+.1%} vs baseline",
+            )
+            c2.metric(
+                "Pure-NumPy EBPA ANN",
+                f"{sim_preds['p_ebpa']:.1%}",
+                f"{sim_preds['p_ebpa'] - preds['p_ebpa']:+.1%} vs baseline",
+            )
+            c3.metric(
+                "Mamdani Fuzzy Risk",
+                f"{sim_preds['fuzzy_score']:.1f} / 100",
+                f"{sim_preds['p_fuzzy'] - preds['p_fuzzy']:+.1%} vs baseline",
+            )
 
-    exp_tab_labels = [
-        "🏆 Final Model Benchmarks (CO1–CO5)",
-        "📈 Exp 2: EBPA Activation Study (CO2)",
-        "🎯 Exp 4 & 5: Perceptron vs ADALINE (CO2)",
-        "🧬 Exp 7: GA Neuro-Fuzzy (CO5)",
-        "🖼️ Publication Figure Gallery",
-    ]
-    t3_1, t3_2, t3_3, t3_4, t3_5 = st.tabs(exp_tab_labels)
+            st.markdown("###### Recomputed Engineered Features (Dynamic Cascade)")
+            recomp_df = pd.DataFrame([
+                {"Engineered Feature": "tmax_anomaly_lag1 (°C)", "Original": row_match["tmax_anomaly_lag1"], "Simulated": sim_row["tmax_anomaly_lag1"]},
+                {"Engineered Feature": "tmax_trend3 (°C)", "Original": row_match["tmax_trend3"], "Simulated": sim_row["tmax_trend3"]},
+                {"Engineered Feature": "tmax_roll3 (°C)", "Original": row_match["tmax_roll3"], "Simulated": sim_row["tmax_roll3"]},
+                {"Engineered Feature": "tmax_roll7 (°C)", "Original": row_match["tmax_roll7"], "Simulated": sim_row["tmax_roll7"]},
+                {"Engineered Feature": "dtr_lag1 (°C)", "Original": row_match["dtr_lag1"], "Simulated": sim_row["dtr_lag1"]},
+            ])
+            st.dataframe(recomp_df, use_container_width=True, hide_index=True)
 
-    with t3_1:
-        st.markdown("#### Test Split Generalization Benchmark (2019–2026 Out-of-Sample)")
-        test_csv_path = PROJECT_ROOT / "results" / "tables" / "final_model_comparison_test.csv"
-        if test_csv_path.exists():
-            df_test = pd.read_csv(test_csv_path)
-            st.dataframe(df_test.style.format(precision=4).highlight_max(subset=["F1 Score", "PR-AUC", "ROC-AUC"], color="#d4edda"), use_container_width=True)
+            mp_s = sim_preds["mp_synapses"]
+            st.markdown("###### Exp 1: McCulloch–Pitts Biological Synapse Status")
+            st.markdown(
+                f"- **Excitatory 1 (`tmax_lag1 >= 42°C`):** `{'ACTIVE (+1)' if mp_s['e1_tmax'] else 'Inactive (0)'}`  \n"
+                f"- **Excitatory 2 (`anomaly_lag1 >= +3.5°C`):** `{'ACTIVE (+1)' if mp_s['e2_anom'] else 'Inactive (0)'}`  \n"
+                f"- **Excitatory 3 (`rh_min_lag1 <= 25%`):** `{'ACTIVE (+1)' if mp_s['e3_dry'] else 'Inactive (0)'}`  \n"
+                f"- **Inhibitory Veto (`wind_mean_lag1 >= 15 km/h`):** `{'INHIBITING (-2)' if mp_s['inh_wind'] else 'Inactive (0)'}`  \n"
+                f"- **Net Soma Potential:** `{mp_s['net']} (Threshold θ = 2)` $\\rightarrow$ "
+                f"**{'🔥 NEURON FIRES (1)' if mp_s['fires'] else '✅ QUIESCENT (0)'}**"
+            )
+
+    # =========================================================================
+    # TAB 3: MODEL, METHOD & BENCHMARK RESULTS
+    # =========================================================================
+    with tab3:
+        st.subheader("Model Architecture, Evaluation Metrics & Diagnostic Figures")
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.markdown("##### 🏆 Locked Test Set Benchmark (2019–2026, 248 May Days)")
+            test_df = pd.read_csv(PROJECT_ROOT / "results" / "tables" / "final_model_comparison_test.csv")
+            st.dataframe(test_df, use_container_width=True, hide_index=True)
+        with col_b:
+            st.markdown("##### 🧪 Validation Set Benchmark (2011–2018, 248 May Days)")
+            val_df = pd.read_csv(PROJECT_ROOT / "results" / "tables" / "final_model_comparison_val.csv")
+            st.dataframe(val_df, use_container_width=True, hide_index=True)
+
+        col_c, col_d = st.columns(2)
+        with col_c:
+            st.markdown("##### ⚡ KJSCE Exp 2: Hidden Activation Function Study (`src/ann_numpy.py`)")
+            act_df = pd.read_csv(PROJECT_ROOT / "results" / "tables" / "exp2_activation_comparison.csv")
+            st.dataframe(act_df, use_container_width=True, hide_index=True)
+        with col_d:
+            st.markdown("##### 🎯 Label Sensitivity Analysis (Alternative Heatwave Definitions)")
+            sens_df = pd.read_csv(PROJECT_ROOT / "results" / "tables" / "sensitivity_analysis.csv")
+            st.dataframe(sens_df, use_container_width=True, hide_index=True)
+
+        st.divider()
+        st.markdown("##### 🖼️ Diagnostic & Publication Figures Explorer (200 DPI)")
+        fig_options = {
+            "Fig 06 — Test ROC & Precision-Recall Curves (ANN vs Baselines)": "fig06_roc_pr_curves.png",
+            "Fig 07 — Test Confusion Matrices": "fig07_confusion_matrix.png",
+            "Fig 08 — Probability Calibration / Reliability Diagram": "fig08_calibration.png",
+            "Fig 05 — 10-Seed ANN Training Loss Curves & Exp 2 Activation Study": "fig05_training_curves.png",
+            "Fig 09 — Permutation Feature Importance (Top 12 Predictors)": "fig09_permutation_importance.png",
+            "Fig 10 — Test Set Timeline Error Analysis (2019–2026)": "fig10_error_analysis.png",
+            "Fig 01 — Study Area Profile: Nagpur vs Coastal Mumbai": "fig01_study_area.png",
+            "Fig 02 — WMO 1991–2020 May Climatological Normals & Thresholds": "fig02_tmax_climatology.png",
+            "Fig 03 — Heat Wave Days per May (1981–2026) & Split Boundaries": "fig03_positives_per_year.png",
+            "Fig 04 — Feature Correlation Heatmap with Heatwave Target": "fig04_feature_correlation.png",
+            "Fig 11 — Mamdani Fuzzy Membership Functions (Module 4 / CO4)": "fig11_fuzzy_membership.png",
+            "Fig 12 — Evolutionary Ensemble Optimization Curve (Module 5 / CO5)": "fig12_ga_convergence.png",
+        }
+        selected_fig_title = st.selectbox("Choose Figure to Inspect", list(fig_options.keys()))
+        fig_path = PROJECT_ROOT / "results" / "figures" / fig_options[selected_fig_title]
+        if fig_path.exists():
+            st.image(str(fig_path), caption=selected_fig_title, use_container_width=True)
+
+    # =========================================================================
+    # TAB 4: SYLLABUS ALIGNMENT & VIVA GUIDE
+    # =========================================================================
+    with tab4:
+        guide_path = PROJECT_ROOT / "PROJECT_GUIDE.md"
+        if guide_path.exists():
+            st.markdown(guide_path.read_text(encoding="utf-8"))
         else:
-            st.info("Test comparison table not found.")
-
-        st.markdown("#### Validation Split Benchmark (2011–2018 Hyperparameter Selection)")
-        val_csv_path = PROJECT_ROOT / "results" / "tables" / "final_model_comparison_val.csv"
-        if val_csv_path.exists():
-            df_val = pd.read_csv(val_csv_path)
-            st.dataframe(df_val.style.format(precision=4), use_container_width=True)
-
-    with t3_2:
-        st.markdown("#### Experiment 2 & 6: EBPA Network Activation Function Study")
-        st.markdown(
-            "Evaluation of Binary Sigmoid, Bipolar Sigmoid (hyperbolic tangent scaled), and ReLU activations "
-            "trained with identical learning rate (η = 0.05), momentum (α = 0.9), and class-weighted BCE loss."
-        )
-        act_csv_path = PROJECT_ROOT / "results" / "tables" / "exp2_activation_comparison.csv"
-        if act_csv_path.exists():
-            df_act = pd.read_csv(act_csv_path)
-            st.dataframe(df_act.style.format(precision=4).highlight_max(subset=["val_f1", "val_pr_auc", "val_roc_auc"], color="#d4edda"), use_container_width=True)
-
-    with t3_3:
-        st.markdown("#### Experiment 4 & 5: Rosenblatt Perceptron vs Widrow-Hoff ADALINE Delta Rule")
-        st.markdown(
-            "- **Perceptron (Exp 4):** Discrete step activation with updates occurring only upon misclassification.\n"
-            "- **ADALINE (Exp 5):** Continuous linear pre-activation gradient descent minimizing Mean Squared Error (MSE)."
-        )
-        fig_adaline = PROJECT_ROOT / "results" / "figures" / "fig06_adaline_learning_curve.png"
-        if fig_adaline.exists():
-            st.image(str(fig_adaline), caption="Figure 6: Perceptron vs ADALINE Delta Rule Convergence Dynamics", use_container_width=True)
-
-    with t3_4:
-        st.markdown("#### Experiment 7: Genetic Algorithm Optimization of Ensembling Parameters")
-        st.markdown(
-            "Fitness objective: $F = F_1(\\text{val}) + 0.1 \\cdot \\text{PR-AUC}(\\text{val})$.  \n"
-            f"Optimal evolved weights: $w_{{\\text{{ANN}}}} = {W_ANN:.4f}, w_{{\\text{{EBPA}}}} = {W_EBPA:.4f}, w_{{\\text{{Fuzzy}}}} = {W_FUZZY:.4f}, \\tau^* = {TAU_STAR:.4f}$."
-        )
-        fig_ga = PROJECT_ROOT / "results" / "figures" / "fig10_ga_fitness_progression.png"
-        if fig_ga.exists():
-            st.image(str(fig_ga), caption="Figure 10: GA Generation-wise Fitness Progression", use_container_width=True)
-
-    with t3_5:
-        st.markdown("#### Complete Academic Figure Gallery (12 High-Resolution Plots)")
-        fig_files = sorted(list((PROJECT_ROOT / "results" / "figures").glob("fig*.png")))
-        fig_names = [f.name for f in fig_files]
-        if fig_files:
-            selected_fig_name = st.selectbox("Select Publication Figure", options=fig_names)
-            selected_path = PROJECT_ROOT / "results" / "figures" / selected_fig_name
-            st.image(str(selected_path), caption=selected_fig_name, use_container_width=True)
+            st.info("PROJECT_GUIDE.md not found.")
 
 
-# ---------------------------------------------------------------------------
-# TAB 4: Mathematical Foundations & Viva Guide
-# ---------------------------------------------------------------------------
-with tab4:
-    st.subheader("Mathematical Foundations & Comprehensive Viva Voce Guide")
-    st.markdown(
-        "Formal mathematical derivations and oral defense answers structured for external evaluation."
-    )
-
-    with st.expander("1. McCulloch-Pitts Biological Neuron Model (Exp 1 — CO1)", expanded=True):
-        st.markdown(
-            r"""
-            **Formulation (Warren McCulloch & Walter Pitts, 1943):**
-            Let $X = \{x_1, x_2, \dots, x_n\}$ denote excitatory binary inputs and $Y = \{y_1, y_2, \dots, y_m\}$ denote inhibitory binary inputs.
-            The net membrane potential $\text{Net}$ is:
-            $$\text{Net} = \sum_{i=1}^{n} w_i x_i - w_{\text{inh}} \sum_{j=1}^{m} y_j$$
-            The firing decision (axon action potential) follows an all-or-none threshold rule:
-            $$y = \begin{cases} 1 & \text{if } \text{Net} \ge \theta \\ 0 & \text{if } \text{Net} < \theta \end{cases}$$
-            *Nagpur Operationalization:*
-            $$x_1 = [T_{\text{max}} \ge 42.0^\circ\text{C}], \quad x_2 = [\Delta T_{\text{norm}} \ge 3.5^\circ\text{C}], \quad x_3 = [RH_{\text{min}} \le 25\%]$$
-            $$y_{\text{inh}} = [Wind \ge 15.0\text{ km/h}], \quad w_{\text{inh}} = 2.0, \quad \theta = 2.0$$
-            """
-        )
-
-    with st.expander("2. Single-Layer Perceptron Learning Rule (Exp 4 — CO2)"):
-        st.markdown(
-            r"""
-            **Formulation (Frank Rosenblatt, 1958):**
-            Given inputs $\mathbf{x} \in \mathbb{R}^d$ and bipolar targets $t \in \{-1, +1\}$:
-            $$\text{net} = \mathbf{w}^T \mathbf{x} + b, \quad y = \text{sgn}(\text{net})$$
-            Weight update upon misclassification ($y \ne t$):
-            $$\mathbf{w}(t+1) = \mathbf{w}(t) + \eta \, t \, \mathbf{x}, \quad b(t+1) = b(t) + \eta \, t$$
-            *Convergence Theorem:* Guaranteed to converge in finite steps if and only if classes are linearly separable in feature space.
-            """
-        )
-
-    with st.expander("3. ADALINE & Continuous Widrow-Hoff Delta Rule (Exp 5 — CO2)"):
-        st.markdown(
-            r"""
-            **Formulation (Bernard Widrow & Ted Hoff, 1960):**
-            ADALINE (Adaptive Linear Neuron) computes weight updates on the continuous pre-activation:
-            $$y_{\text{in}} = \mathbf{w}^T \mathbf{x} + b$$
-            Minimizes the Sum of Squared Errors (SSE):
-            $$E = \frac{1}{2} (t - y_{\text{in}})^2$$
-            Gradient descent delta rule:
-            $$\Delta \mathbf{w} = -\eta \nabla_{\mathbf{w}} E = \eta (t - y_{\text{in}}) \mathbf{x}$$
-            *Distinction from Perceptron:* Updates occur on continuous analog error $(t - y_{\text{in}})$ rather than discrete classification errors $(t - y)$.
-            """
-        )
-
-    with st.expander("4. Error Backpropagation Algorithm (EBPA) (Exp 2 & 6 — CO2/CO3)"):
-        st.markdown(
-            r"""
-            **Formulation (Rumelhart, Hinton, & Williams, 1986):**
-            Two-layer feedforward network with hidden units $z_j$ and output unit $y_k$:
-            $$z_{\text{in}, j} = v_{0j} + \sum_i x_i v_{ij}, \quad z_j = f(z_{\text{in}, j})$$
-            $$y_{\text{in}, k} = w_{0k} + \sum_j z_j w_{jk}, \quad y_k = g(y_{\text{in}, k})$$
-            **Output Layer Error Signal ($\delta_k$):**
-            $$\delta_k = (t_k - y_k) g'(y_{\text{in}, k})$$
-            For binary cross-entropy with sigmoid activation, $g'(y_{\text{in}}) = y_k (1 - y_k)$, simplifying the gradient:
-            $$\frac{\partial L}{\partial w_{jk}} = -\delta_k z_j$$
-            **Hidden Layer Error Signal ($\delta_j$):**
-            $$\delta_{\text{in}, j} = \sum_k \delta_k w_{jk}, \quad \delta_j = \delta_{\text{in}, j} f'(z_{\text{in}, j})$$
-            **Momentum Weight Update:**
-            $$\Delta w_{jk}(t) = \eta \delta_k z_j + \alpha \Delta w_{jk}(t-1)$$
-            $$\Delta v_{ij}(t) = \eta \delta_j x_i + \alpha \Delta v_{ij}(t-1)$$
-            """
-        )
-
-    with st.expander("5. Mamdani Fuzzy Inference System (Exp 3 — CO4)"):
-        st.markdown(
-            r"""
-            **Formulation (Lotfi Zadeh 1965, Ebrahim Mamdani 1975):**
-            Antecedent membership functions:
-            $$\mu_{\text{tri}}(x; a, b, c) = \max\left(0, \min\left(\frac{x-a}{b-a}, \frac{c-x}{c-b}\right)\right)$$
-            $$\mu_{\text{trap}}(x; a, b, c, d) = \max\left(0, \min\left(\frac{x-a}{b-a}, 1, \frac{d-x}{d-c}\right)\right)$$
-            **Rule Firing via Mamdani Min Operator:**
-            $$\alpha_r = \min_{i} \mu_{A_{ir}}(x_i)$$
-            **Aggregate Consequent Output:**
-            $$\mu_{\text{agg}}(z) = \max_r \min(\alpha_r, \mu_{C_r}(z))$$
-            **Centroid Defuzzification (Center of Gravity):**
-            $$z^* = \frac{\int z \, \mu_{\text{agg}}(z) \, dz}{\int \mu_{\text{agg}}(z) \, dz}$$
-            """
-        )
-
-    with st.expander("6. Genetic Algorithm for Neuro-Fuzzy Optimization (Exp 7 — CO5)"):
-        st.markdown(
-            r"""
-            **Formulation (John Holland, 1975):**
-            Real-coded chromosome: $\vec{x} = [w_{\text{ANN}}, w_{\text{EBPA}}, w_{\text{Fuzzy}}, \tau]$  
-            Normalized constraint: $\sum_{i} w_i = 1, \quad w_i \ge 0$
-            **Fitness Function (Class Imbalance Mitigation):**
-            $$\text{Fitness}(\vec{x}) = F_1(\text{val}; \tau) + 0.1 \cdot \text{PR-AUC}(\text{val})$$
-            **Evolutionary Operators:**
-            - *Selection:* Roulette wheel proportional selection based on rank-transformed fitness.
-            - *Crossover:* Whole arithmetic crossover: $\mathbf{c}_1 = \gamma \mathbf{p}_1 + (1-\gamma)\mathbf{p}_2$.
-            - *Mutation:* Gaussian perturbation with decaying variance $\sigma(g) = \sigma_0 (1 - g/G)$.
-            """
-        )
-
-    with st.expander("7. High-Yield Viva Voce Questions & Model Answers"):
-        st.markdown(
-            """
-            **Q1: Why is Precision-Recall AUC (PR-AUC) more meaningful than ROC-AUC for Nagpur heatwaves?**  
-            *A1:* In May, heatwaves occur on only ~24.3% of days. ROC-AUC incorporates the False Positive Rate ($FP / (FP + TN)$), which is heavily diluted by large numbers of true negatives, artificially inflating ROC-AUC. PR-AUC focuses exclusively on the positive minority class ($TP / (TP + FN)$ vs $TP / (TP + FP)$).
-
-            **Q2: What is the thermodynamic justification for the wind inhibitory synapse?**  
-            *A2:* In Vidarbha, extreme heatwaves develop under quasi-stagnant anticyclonic conditions where turbulent boundary-layer mixing is suppressed. Sustained surface winds ($\ge 15\text{ km/h}$) break regional nocturnal inversions and advect cooler maritime or boundary-layer air, preventing extreme cumulative thermal buildup.
-
-            **Q3: How does the Mamdani Fuzzy System complement the Deep MLP?**  
-            *A3:* While Deep MLPs excel at discovering complex non-linear interactions across high-dimensional lag matrices, they are susceptible to distribution shift and lack transparent reasoning. The Mamdani controller provides a physically grounded expert prior based on IMD meteorological criteria, guaranteeing baseline conservatism on borderline days.
-            """
-        )
+if __name__ == "__main__":
+    main()

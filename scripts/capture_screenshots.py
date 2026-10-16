@@ -37,16 +37,16 @@ def capture_all_tabs():
         time.sleep(2)
         page.screenshot(path=str(OUTPUT_DIR / "tab2_whatif.png"), full_page=False)
 
-        # Tab 3: KJSCE Soft Computing Lab Explorer
-        print("Capturing Tab 3: KJSCE Soft Computing Lab Explorer...")
-        tab3_btn = page.get_by_role("tab").filter(has_text="KJSCE Soft Computing Lab Explorer")
+        # Tab 3: Model, Method & Benchmark Results
+        print("Capturing Tab 3: Model, Method & Benchmark Results...")
+        tab3_btn = page.get_by_role("tab").filter(has_text="Model, Method")
         tab3_btn.click()
         time.sleep(2)
         page.screenshot(path=str(OUTPUT_DIR / "tab3_explorer.png"), full_page=False)
 
-        # Tab 4: Mathematical Foundations & Viva Guide
-        print("Capturing Tab 4: Mathematical Foundations & Viva Guide...")
-        tab4_btn = page.get_by_role("tab").filter(has_text="Mathematical Foundations & Viva Guide")
+        # Tab 4: Syllabus Alignment & Viva Guide
+        print("Capturing Tab 4: Syllabus Alignment & Viva Guide...")
+        tab4_btn = page.get_by_role("tab").filter(has_text="Syllabus Alignment")
         tab4_btn.click()
         time.sleep(2)
         page.screenshot(path=str(OUTPUT_DIR / "tab4_math_viva.png"), full_page=False)
