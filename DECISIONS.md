@@ -38,3 +38,15 @@ This document records key design choices, scientific justifications, and trade-o
   - **Validation split:** 2011–2018 (8 years, 248 May days)
   - **Locked Test split:** 2019–2026 (8 years, 248 May days)
 - **Rationale:** Simulates real-world operational forecasting where models trained on historical decades predict future seasons without temporal leakage.
+
+---
+
+## Decision D005: Open-Meteo ERA5-Land Grid Coordinates & Elevation
+- **Status:** Accepted
+- **Context:** Target coordinates for Nagpur Urban Agglomeration are `latitude: 21.1458, longitude: 79.0882`. Open-Meteo returns the nearest reanalysis grid cell center and model orography.
+- **Decision:** Grid cell coordinates returned by Open-Meteo ERA5-Land are:
+  - **Grid Latitude:** 21.099998° N
+  - **Grid Longitude:** 79.100006° E (~5.2 km displacement from target point, well within urban footprint)
+  - **Grid Elevation:** 311.0 m (matches Nagpur's plateau elevation of ~310 m)
+- **Completeness:** All 8 requested hourly variables are 100% available with zero missing values across 1981–2026.
+

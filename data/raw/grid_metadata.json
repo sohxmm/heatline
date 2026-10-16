@@ -1,0 +1,19 @@
+{
+  "latitude": 21.099998,
+  "longitude": 79.100006,
+  "elevation": 311.0,
+  "timezone": "Asia/Kolkata",
+  "timezone_abbreviation": "GMT+5:30",
+  "hourly_units": {
+    "time": "iso8601",
+    "temperature_2m": "\u00b0C",
+    "relative_humidity_2m": "%",
+    "dew_point_2m": "\u00b0C",
+    "apparent_temperature": "\u00b0C",
+    "surface_pressure": "hPa",
+    "wind_speed_10m": "km/h",
+    "shortwave_radiation": "W/m\u00b2",
+    "soil_moisture_0_to_7cm": "m\u00b3/m\u00b3"
+  },
+  "model": "era5_land"
+}
