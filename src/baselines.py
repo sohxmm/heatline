@@ -34,6 +34,7 @@ if str(PROJECT_ROOT) not in sys.path:
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
@@ -176,6 +177,40 @@ def fit_logistic_regression(
     return lr
 
 
+def fit_random_forest(
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    n_estimators: int = 100,
+    max_depth: int = 6,
+    random_state: int = 42,
+) -> RandomForestClassifier:
+    """
+    Fit Class-Weighted Random Forest Classifier on standardized training features.
+
+    Parameters
+    ----------
+    X_train : np.ndarray
+        Standardized training input array.
+    y_train : np.ndarray
+        Ground-truth binary training labels.
+    n_estimators : int, default=100
+        Number of decision trees in the ensemble forest.
+    max_depth : int, default=6
+        Maximum tree depth constraint to prevent boundary-layer overfitting.
+    random_state : int, default=42
+        Seed for reproducibility.
+    """
+    rf = RandomForestClassifier(
+        n_estimators=n_estimators,
+        max_depth=max_depth,
+        class_weight="balanced",
+        random_state=random_state,
+        n_jobs=-1,
+    )
+    rf.fit(X_train, y_train)
+    return rf
+
+
 def evaluate_model_on_split(
     y_true: np.ndarray,
     y_pred: np.ndarray,
@@ -288,6 +323,13 @@ def evaluate_all_baselines(
     lr_test_prob = lr.predict_proba(X_test)[:, 1]
     lr_test_pred = (lr_test_prob >= 0.5).astype(np.int64)
 
+    # 6. Class-Weighted Random Forest - Scaled Features
+    rf = fit_random_forest(X_train, y_train, random_state=42)
+    rf_val_prob = rf.predict_proba(X_val)[:, 1]
+    rf_val_pred = (rf_val_prob >= 0.5).astype(np.int64)
+    rf_test_prob = rf.predict_proba(X_test)[:, 1]
+    rf_test_pred = (rf_test_prob >= 0.5).astype(np.int64)
+
     # Compile evaluation records
     models_config = [
         (
@@ -324,6 +366,13 @@ def evaluate_all_baselines(
             lr_val_prob,
             lr_test_pred,
             lr_test_prob,
+        ),
+        (
+            "Random Forest (Balanced)",
+            rf_val_pred,
+            rf_val_prob,
+            rf_test_pred,
+            rf_test_prob,
         ),
     ]
 

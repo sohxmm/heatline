@@ -9,3 +9,5 @@ ADALINE Delta Rule (Exp 5),Validation,0.871,0.8333,0.7955,0.814,0.9238,0.851
 ADALINE Delta Rule (Exp 5),Test,0.9315,0.7941,0.7297,0.7606,0.962,0.8293
 Logistic Regression (Balanced),Validation,0.8508,0.7476,0.875,0.8063,0.913,0.8396
 Logistic Regression (Balanced),Test,0.8911,0.6,0.8108,0.6897,0.9636,0.8476
+Random Forest (Balanced),Validation,0.875,0.7879,0.8864,0.8342,0.9247,0.8487
+Random Forest (Balanced),Test,0.8992,0.62,0.8378,0.7126,0.9687,0.8639
