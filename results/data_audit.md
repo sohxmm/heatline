@@ -2,7 +2,6 @@
 **Project:** Heat Wave Prediction in May for Nagpur (Vidarbha) using Error Backpropagation ANN, Fuzzy Logic & Genetic Optimization  
 **Course:** KJSCE Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech COMP)  
 **Location:** Nagpur Urban Agglomeration, Vidarbha, Central Maharashtra, India  
-**Execution Phase:** Phase 1 (Data Fetch & Climatological Audit)  
 **Audit Date:** October 2026  
 
 ---
@@ -11,7 +10,7 @@
 
 This data audit validates 46 consecutive years (1981–2026) of April–May meteorological reanalysis data for Nagpur, retrieved from the ECMWF ERA5 reanalysis via the Open-Meteo Historical Archive API. All 2,806 calendar days (1,380 April days + 1,426 May days) have 100% data completeness with zero missing records across all 8 thermodynamic variables. 
 
-Three candidate heatwave definitions were evaluated against the standard WMO 1991–2020 30-year climatological baseline. In accordance with the protocol in `PROJECT_SPEC.md`, **Candidate A (`imd_reanalysis_plains`)** was selected as the primary binary prediction target, producing an optimal Training set positive rate of **24.30%** (226 / 930 May days), exceptionally well-aligned with the target 22% benchmark.
+Three candidate heatwave definitions were evaluated against the standard WMO 1991–2020 30-year climatological baseline. Based on our climatological selection criteria, **Candidate A (`imd_reanalysis_plains`)** was selected as the primary binary prediction target, producing an optimal Training set positive rate of **24.30%** (226 / 930 May days), exceptionally well-aligned with the target 22% benchmark.
 
 ---
 
@@ -107,17 +106,17 @@ Three definitions were evaluated across all 1,426 May days:
 
 ## 7. Primary Target Selection Rationale
 
-According to `PROJECT_SPEC.md` Section 2.3:
+Based on our climatological selection criteria:
 - Primary criterion: Training set (1981–2010) positive rate must fall between **15% and 35%**, targeting closest to **22%**.
 - **Candidate A (`imd_reanalysis_plains`)** yields **24.30%** in Train, perfectly satisfying the boundary condition and lying within 2.3% of the ideal 22% rate.
 - **Candidate B (`climatology_p85_42c`)** yields **14.95%** in Train, slightly violating the 15% lower bound.
 - **Reference (`imd_strict_raw`)** yields **5.91%**, which would introduce severe class imbalance ($>15:1$) leading to poor gradient signal during Error Backpropagation training without synthetic oversampling.
 
-**Decision:** **Candidate A (`imd_reanalysis_plains`)** is officially designated as the primary target `heatwave_day`. Candidate B and Reference will be retained for sensitivity testing in Phase 4.
+**Decision:** **Candidate A (`imd_reanalysis_plains`)** is officially designated as the primary target `heatwave_day`. Candidate B and Reference will be retained for sensitivity experiments.
 
 ---
 
-## 8. Leakage Prevention Protocol for Phase 2
+## 8. Leakage Prevention Protocol
 
 1. **Chronological Barrier:**
    - Training: 1981–2010 (30 years)
