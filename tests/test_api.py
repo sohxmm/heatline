@@ -52,6 +52,21 @@ def test_filters_do_not_mutate_cached_artifacts(artifacts):
         assert client.get("/api/outlook?city=unknown").status_code == 404
 
 
+def test_replay_details_are_partitioned_and_bounded(artifacts):
+    (artifacts/'replay').mkdir()
+    payload={'source':'Test fixture','mode':'replay','model_version':'test-v1','availability':'available','issued_at':NOW.isoformat(),'target_date':None,'records':[{'date':'2026-05-20','inputs':{'tmax_lag1':43.2}}]}
+    write_snapshot(artifacts/'replay/2026.json',payload)
+    with TestClient(create_app(artifacts)) as client:
+        data=client.get('/api/replay/2026').json()
+        assert all(data[key]==value for key,value in payload.items())
+        assert client.get('/api/replay/1980').status_code==422
+        assert client.get('/api/replay/2027').status_code==422
+        assert client.get('/api/replay/nonsense').status_code==422
+        missing=client.get('/api/replay/2025')
+        assert missing.status_code==503 and missing.json()['availability']=='unavailable'
+        assert client.post('/api/replay/2026').status_code==405
+
+
 def test_stale_forecast_and_replay_are_distinct(artifacts):
     with TestClient(create_app(artifacts, clock=lambda: NOW + timedelta(days=2))) as client:
         snapshot = client.get("/api/outlook").json()

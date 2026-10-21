@@ -19,6 +19,7 @@ Interactive API documentation: <http://127.0.0.1:8000/docs>.
 | `/api/cities` | Six supported cities and assessed ANN scope |
 | `/api/outlook?city=nagpur` | All city forecasts, or one city in the same `cities` array |
 | `/api/history?year=2026` | Replay `records`, optionally filtered to one year |
+| `/api/replay/2026` | Per-day inputs, frozen normalization and saved network computations for one May |
 | `/api/model` | Architecture, preprocessing, version, metrics and limitations |
 | `/api/experiments` | Measured model comparisons and controlled studies |
 | `/api/learning` | Educational examples and numerical backpropagation trace |

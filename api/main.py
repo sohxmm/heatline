@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Query, Request, Path as PathParam
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -60,7 +60,7 @@ class ArtifactStore:
         self._cache: dict[str, tuple[tuple[int, int], dict]] = {}
 
     def read(self, name: str) -> dict:
-        if name not in REQUIRED_ARTIFACTS:
+        if name not in REQUIRED_ARTIFACTS and not (name.startswith('replay/') and name[7:].isdigit() and 1981 <= int(name[7:]) <= 2026):
             raise ValueError("Unknown artifact")
         path = self.directory / f"{name}.json"
         stat = path.stat()
@@ -187,6 +187,10 @@ def create_app(data_dir: str | Path | None = None, clock: Callable[[], datetime]
     @application.get("/api/model")
     def model():
         return read_artifact("model", "educational")
+
+    @application.get('/api/replay/{year}')
+    def replay_details(year: int = PathParam(ge=1981, le=2026)):
+        return read_artifact(f'replay/{year}', 'replay')
 
     @application.get("/api/experiments")
     def experiments():

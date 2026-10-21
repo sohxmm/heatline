@@ -205,6 +205,9 @@ def run(max_epochs=400):
     for name, payload in [('model',model),('history',history),('experiments',experiments),('learning',learning)]:
         write_json(OUT/f'{name}.json', payload)
         write_json(ROOT/'frontend/public/data'/f'{name}.json', payload)
+    from src.replay import export_replay_details
+    export_replay_details(history, features, primary, scaler.mean_, scaler.scale_,
+        [OUT/'replay', ROOT/'frontend/public/data/replay'])
     pd.DataFrame(runs).to_csv(OUT/'runs.csv',index=False)
     pd.DataFrame(comparisons).to_csv(OUT/'metrics.csv',index=False)
     write_json(OUT/'calibration.json', calibration_details)
