@@ -9,7 +9,7 @@ Evaluates three candidate heatwave label definitions for Nagpur Interior Plains:
 3. `imd_strict_raw` (Reference):
    tmax >= 45.0°C OR (tmax >= 40.0°C AND tmax - normal_tmax >= 4.5°C)
 
-Applies the Phase 1 selection rule to choose the primary binary target for training.
+Uses the declared nagpur-grid-proxy-v1 target. Adjusted columns are legacy sensitivity labels.
 """
 
 import logging
@@ -119,38 +119,19 @@ def evaluate_split_metrics(df_may: pd.DataFrame, config: dict) -> dict:
     return metrics
 
 
-def select_primary_label(metrics: dict) -> tuple[str, str]:
-    """
-    Select primary label based on Training split (1981-2010) positive rate:
-    Must be between 15% and 35%, choosing the candidate closest to 22%.
-    """
-    train_metrics = metrics["train"]
-    rate_a = train_metrics["imd_reanalysis_plains"]["pct"]
-    rate_b = train_metrics["climatology_p85_42c"]["pct"]
+def heatwave_proxy(tmax, normal_tmax):
+    """nagpur-grid-proxy-v1: rounded 0.01 C departure; no persistence declaration."""
+    temperature = np.asarray(tmax, dtype=float)
+    normal = np.asarray(normal_tmax, dtype=float)
+    if not np.isfinite(temperature).all() or not np.isfinite(normal).all():
+        raise ValueError("Proxy labels need finite temperature and reference normals")
+    departure = np.round(temperature - normal, 2)
+    return ((temperature >= 45.0) | ((temperature >= 40.0) & (departure >= 4.5))).astype(int)
 
-    target_rate = 22.0
-    diff_a = abs(rate_a - target_rate)
-    diff_b = abs(rate_b - target_rate)
 
-    in_range_a = 15.0 <= rate_a <= 35.0
-    in_range_b = 15.0 <= rate_b <= 35.0
-
-    if in_range_a and not in_range_b:
-        selected = "imd_reanalysis_plains"
-        reason = f"Candidate A rate ({rate_a}%) is inside [15%, 35%] target range while Candidate B ({rate_b}%) is outside."
-    elif in_range_b and not in_range_a:
-        selected = "climatology_p85_42c"
-        reason = f"Candidate B rate ({rate_b}%) is inside [15%, 35%] target range while Candidate A ({rate_a}%) is outside."
-    else:
-        # Both inside or both outside: choose closest to 22%
-        if diff_a <= diff_b:
-            selected = "imd_reanalysis_plains"
-            reason = f"Candidate A ({rate_a}%, diff {diff_a:.2f}%) is closer to optimal 22% target than Candidate B ({rate_b}%, diff {diff_b:.2f}%)."
-        else:
-            selected = "climatology_p85_42c"
-            reason = f"Candidate B ({rate_b}%, diff {diff_b:.2f}%) is closer to optimal 22% target than Candidate A ({rate_a}%, diff {diff_a:.2f}%)."
-
-    return selected, reason
+def select_primary_label(metrics=None):
+    """The target is declared before experiments, never chosen for prevalence."""
+    return "imd_strict_raw", "Declared nagpur-grid-proxy-v1; event frequency does not select the label."
 
 
 def evaluate_labels_and_audit(config: dict) -> dict:
@@ -163,6 +144,8 @@ def evaluate_labels_and_audit(config: dict) -> dict:
 
     metrics = evaluate_split_metrics(df_may, config)
     selected_label, selection_reason = select_primary_label(metrics)
+    if config["labels"]["primary"] != selected_label:
+        raise ValueError("Assessed pipeline requires declared imd_strict_raw proxy")
 
     logger.info(f"Selected Primary Target Label: '{selected_label}'")
     logger.info(f"Selection Reason: {selection_reason}")
@@ -171,16 +154,6 @@ def evaluate_labels_and_audit(config: dict) -> dict:
     df_labeled["heatwave_day"] = df_labeled[selected_label]
     df_labeled.to_csv(daily_csv, index=False)
     logger.info(f"Updated {daily_csv} with candidate labels and primary 'heatwave_day' target.")
-
-    # Update config.yaml with selected primary label
-    config_path = Path("config.yaml")
-    if config_path.exists():
-        with open(config_path, "r", encoding="utf-8") as f:
-            cfg = yaml.safe_load(f)
-        cfg["labels"]["primary"] = selected_label
-        with open(config_path, "w", encoding="utf-8") as f:
-            yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
-        logger.info(f"Updated config.yaml with primary label: {selected_label}")
 
     return {
         "metrics": metrics,

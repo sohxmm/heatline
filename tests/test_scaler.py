@@ -26,9 +26,9 @@ from src.features import FEATURE_COLS
 
 
 @pytest.fixture(scope="module")
-def split_bundle():
+def split_bundle(tmp_path_factory):
     config = load_config("config.yaml")
-    return get_splits(config=config, save_scaler=True, scaler_out_path="models/scaler.json")
+    return get_splits(config=config, save_scaler=True, scaler_out_path=str(tmp_path_factory.mktemp("scaler") / "scaler.json"))
 
 
 def test_scaler_fit_strictly_on_train(split_bundle):

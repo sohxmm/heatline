@@ -58,3 +58,10 @@ DECISIONS.md
 *WALKTHROUGH*.md
 *walkthrough*.md
 
+# Local build and tool logs
+artifacts-training.log
+frontend/bklit-install.log
+frontend/test-results/
+frontend/playwright-report/
+.vercel/
+

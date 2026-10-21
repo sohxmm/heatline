@@ -1,0 +1,311 @@
+{
+  "schema_version": "1.0",
+  "source": "Open-Meteo ERA5 reanalysis",
+  "mode": "replay",
+  "issued_at": "2026-10-21T10:32:00.031057+00:00",
+  "target_date": null,
+  "model_version": "heatline-nagpur-v1",
+  "availability": "available",
+  "timezone": "Asia/Kolkata",
+  "config": {
+    "project": {
+      "name": "nagpur-heatwave-ann",
+      "title": "Heatline \u2014 Nagpur May heatwave proxy prediction with a NumPy backpropagation ANN",
+      "course": "Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech COMP)",
+      "institution": "K. J. Somaiya School of Engineering"
+    },
+    "location": {
+      "name": "Nagpur Urban Agglomeration",
+      "region": "Vidarbha, Central Maharashtra, India",
+      "zone": "Core Heatwave Zone (CHZ)",
+      "target_latitude": 21.1458,
+      "target_longitude": 79.0882,
+      "timezone": "Asia/Kolkata",
+      "grid": {
+        "actual_latitude": 21.25,
+        "actual_longitude": 79.0,
+        "elevation": 311.0
+      }
+    },
+    "data": {
+      "years": {
+        "start": 1981,
+        "end": 2026
+      },
+      "months": {
+        "april": 4,
+        "may": 5
+      },
+      "open_meteo": {
+        "base_url": "https://archive-api.open-meteo.com/v1/archive",
+        "primary_model": "era5",
+        "hourly_variables": [
+          "temperature_2m",
+          "relative_humidity_2m",
+          "dew_point_2m",
+          "apparent_temperature",
+          "surface_pressure",
+          "wind_speed_10m",
+          "shortwave_radiation",
+          "soil_moisture_0_to_7cm"
+        ]
+      },
+      "raw_dir": "data/raw",
+      "processed_dir": "data/processed",
+      "daily_file": "data/processed/daily.csv",
+      "features_file": "data/processed/features.csv"
+    },
+    "climatology": {
+      "baseline_start": 1981,
+      "baseline_end": 2010,
+      "window_days": 7
+    },
+    "splits": {
+      "train": {
+        "start_year": 1981,
+        "end_year": 2010
+      },
+      "val": {
+        "start_year": 2011,
+        "end_year": 2018
+      },
+      "test": {
+        "start_year": 2019,
+        "end_year": 2026
+      }
+    },
+    "labels": {
+      "primary": "imd_strict_raw",
+      "version": "nagpur-grid-proxy-v1",
+      "candidates": {
+        "imd_reanalysis_plains": {
+          "description": "Legacy adjusted rule; not calibrated to station observations",
+          "absolute_threshold": 43.5,
+          "departure_base": 40.0,
+          "departure_threshold": 3.5
+        },
+        "climatology_p85_42c": {
+          "description": "Exploratory percentile label; not the assessed target",
+          "floor_threshold": 42.0,
+          "percentile": 85
+        },
+        "imd_strict_raw": {
+          "description": "Declared IMD-inspired daily gridded proxy; not an official heatwave declaration",
+          "absolute_threshold": 45.0,
+          "departure_base": 40.0,
+          "departure_threshold": 4.5
+        }
+      }
+    }
+  },
+  "versions": {
+    "python": "3.11.9",
+    "numpy": "2.4.6",
+    "pandas": "3.0.6",
+    "sklearn": "1.9.1"
+  },
+  "raw_files": [
+    {
+      "path": "data/raw/grid_metadata.json",
+      "sha256": "5c882a4bc7f8fd2a42239fffadfd3b9c0ebeea95a87652c02edaf08014aff61f"
+    },
+    {
+      "path": "data/raw/raw_hourly_1981.json",
+      "sha256": "7bdd41b07fe8ce117ada210aee0de748a9f4993d86bc5456bf30fa81cb40a8aa"
+    },
+    {
+      "path": "data/raw/raw_hourly_1982.json",
+      "sha256": "1c127e8bf6f7c89c222be82e574c3eed2f3351cc2bbb98ed6adf95964cd956ce"
+    },
+    {
+      "path": "data/raw/raw_hourly_1983.json",
+      "sha256": "099ef2bbe912c14794a4b35da7ce9e95a8bbd61f99460235658c23e3136646cc"
+    },
+    {
+      "path": "data/raw/raw_hourly_1984.json",
+      "sha256": "0090b9e493f14834e81d4699f27f23ac8301510339279ac0a480c15efad20e0c"
+    },
+    {
+      "path": "data/raw/raw_hourly_1985.json",
+      "sha256": "1406c83156f663bda910758c010c979778f1bf2faf97188594b1963998e0b97d"
+    },
+    {
+      "path": "data/raw/raw_hourly_1986.json",
+      "sha256": "225d5a1d2b3b48c94630459179e7db748f1d67b7660f534d49fa8cc0346984f6"
+    },
+    {
+      "path": "data/raw/raw_hourly_1987.json",
+      "sha256": "5292d7660322b397dd9deef5b3ab30c8a7389b75b2f105a8e4a5bdec64555d1c"
+    },
+    {
+      "path": "data/raw/raw_hourly_1988.json",
+      "sha256": "68974eb8fe1a86398e7fd3ecbfd206595ed4c70871f4266da4a38273de3ad4c4"
+    },
+    {
+      "path": "data/raw/raw_hourly_1989.json",
+      "sha256": "2b6de11563fa69858070e164d8a7807dd8be6a8470015eb875d298547800840a"
+    },
+    {
+      "path": "data/raw/raw_hourly_1990.json",
+      "sha256": "40975ee4f1709f9a14e4002fb964bf14ce82ee6f370ce43cfa0f7bf388d48102"
+    },
+    {
+      "path": "data/raw/raw_hourly_1991.json",
+      "sha256": "f6d6db7db4eb01b9fed9a9e11f9d38782eeaec828df44c45abd599e30c0c6779"
+    },
+    {
+      "path": "data/raw/raw_hourly_1992.json",
+      "sha256": "9bee911acc08e872c0135f3916f25bbbbe1e6d4be12d3181ae113987abee06f8"
+    },
+    {
+      "path": "data/raw/raw_hourly_1993.json",
+      "sha256": "5a7ff72ad7780e40c29d8997a15d4d02d9253b997192aa42b12d51049a77f261"
+    },
+    {
+      "path": "data/raw/raw_hourly_1994.json",
+      "sha256": "a2a3bd899d71edb8400bedb5018057fff0facf04160a9739d567e7502cb6d567"
+    },
+    {
+      "path": "data/raw/raw_hourly_1995.json",
+      "sha256": "14b937105861bd66731965eacaccf4becf908887d31713d95bc1563da53042d8"
+    },
+    {
+      "path": "data/raw/raw_hourly_1996.json",
+      "sha256": "de10eae59c74ef49742189d5c7fdea3b8815217d4ac08e9a99647ddf923b520f"
+    },
+    {
+      "path": "data/raw/raw_hourly_1997.json",
+      "sha256": "68704a0fdfc0a0c77a6f25d2d5d20795edbb2d5e951f075b0d575fce51e1379e"
+    },
+    {
+      "path": "data/raw/raw_hourly_1998.json",
+      "sha256": "5dd2310f5ccae50b2bff5937e3feed5f8b04436e5e57798edbcaed80c7b10a6e"
+    },
+    {
+      "path": "data/raw/raw_hourly_1999.json",
+      "sha256": "72463085a3b8e6eaf55e448caceaa2eb7859de2bf8be2accf3aae044f65a5165"
+    },
+    {
+      "path": "data/raw/raw_hourly_2000.json",
+      "sha256": "9d40d9de5db54c2c62bb4e6ac2d0181c7c8a027d446cf42f75c7625a6c72e5d1"
+    },
+    {
+      "path": "data/raw/raw_hourly_2001.json",
+      "sha256": "8ed94797075ada758434a99bcd453c2712b2863d1ea3bddb9b106c9b236222b4"
+    },
+    {
+      "path": "data/raw/raw_hourly_2002.json",
+      "sha256": "d2eaa2df6022d30e905f67ac9f3fe5c4f9d558dfa2d504cc0011ca93d8298247"
+    },
+    {
+      "path": "data/raw/raw_hourly_2003.json",
+      "sha256": "06fdac511d38528da706b914cdb8d20dd458c788b991896fc3bedc11db1a9dd5"
+    },
+    {
+      "path": "data/raw/raw_hourly_2004.json",
+      "sha256": "dd60fc8d155c697d1139269017cad7fc9fae8206336f4ad4d117ebb037024f73"
+    },
+    {
+      "path": "data/raw/raw_hourly_2005.json",
+      "sha256": "44f8dc7f2e048b78b84d154f025dc6d6f507551e8b377a00b0e957c725a2012e"
+    },
+    {
+      "path": "data/raw/raw_hourly_2006.json",
+      "sha256": "c30dd24e025467449f3ed466fe2c20365d41bd109a80cd33320e0e73c1a762d9"
+    },
+    {
+      "path": "data/raw/raw_hourly_2007.json",
+      "sha256": "4e0fdbadee041275526766bd64c4180fba12272e41779bdd0e792d37d9c33ce1"
+    },
+    {
+      "path": "data/raw/raw_hourly_2008.json",
+      "sha256": "bc2b5ccbe7f14c67095abd2b5b78ced37ec330cbcf0af62874bc197b2a6fa33b"
+    },
+    {
+      "path": "data/raw/raw_hourly_2009.json",
+      "sha256": "264955be3d72eb6381b549ebb8cf35d1678945b50476d617fd22fdcaacabf780"
+    },
+    {
+      "path": "data/raw/raw_hourly_2010.json",
+      "sha256": "01d2120c80132a7cee8e77980df5f94a12fbda8dad65af901a66274518edf559"
+    },
+    {
+      "path": "data/raw/raw_hourly_2011.json",
+      "sha256": "af2faf9186305b7a7e22343c3e797116b32d124dfc7ff89f8b6f0c6382ee04f1"
+    },
+    {
+      "path": "data/raw/raw_hourly_2012.json",
+      "sha256": "6dee8a861d8778d55550458387645031aa9f0139ab43e4e70b5adfdfa1c65b12"
+    },
+    {
+      "path": "data/raw/raw_hourly_2013.json",
+      "sha256": "900ff3f036317629cc462d4d981f57381b00dd87ee86304657f2b432a08be80f"
+    },
+    {
+      "path": "data/raw/raw_hourly_2014.json",
+      "sha256": "c4596e5d5027a247f8b07f50c8ccb032ada11ece09b7fdd998f4369896bd1e42"
+    },
+    {
+      "path": "data/raw/raw_hourly_2015.json",
+      "sha256": "9a1630cf9a0970c8a742ad66a750bf9fbf75fa69476e263bd5a6779802d55948"
+    },
+    {
+      "path": "data/raw/raw_hourly_2016.json",
+      "sha256": "d96050cfc4223362dbf95a29969e9299b01a3a5c4607762a53f782b31f3d9de6"
+    },
+    {
+      "path": "data/raw/raw_hourly_2017.json",
+      "sha256": "19c95bec93941411ac033708178fd142c14e72f5b66caf9260c8694dd1a1f6f8"
+    },
+    {
+      "path": "data/raw/raw_hourly_2018.json",
+      "sha256": "26a7a2b79eb0f71ee8e9c9444d6823cc5d893c94a43a159e85a7d3977d75a4f1"
+    },
+    {
+      "path": "data/raw/raw_hourly_2019.json",
+      "sha256": "b1674dd2138fe28f0673faddea7848be79c34b392c4122106533edddac055f63"
+    },
+    {
+      "path": "data/raw/raw_hourly_2020.json",
+      "sha256": "144be7159b75663ebe84bb98cd289d8d8e448a249cf1b02e0f483a461a49dc5b"
+    },
+    {
+      "path": "data/raw/raw_hourly_2021.json",
+      "sha256": "516b154ab31fd204f5af6904d6e28168aaae82f0bc97a9a9e6127baa6f7aecaa"
+    },
+    {
+      "path": "data/raw/raw_hourly_2022.json",
+      "sha256": "46c1d0c5acc6f3f8eb83c167dc07765d97932dd2aaef56e7eef147964e2a25c2"
+    },
+    {
+      "path": "data/raw/raw_hourly_2023.json",
+      "sha256": "98eac93bb1483a1fa410511cd425213c11ec096ad524cbd7583d65a96b4c5c12"
+    },
+    {
+      "path": "data/raw/raw_hourly_2024.json",
+      "sha256": "10b264dfee1f8cbebc8e47e68aa50c7cb23e30b97ab026e964f958b9d9338bbb"
+    },
+    {
+      "path": "data/raw/raw_hourly_2025.json",
+      "sha256": "ca86f32bf15202b9577ad7f7ec4d80e860d20b249c43c109878c73c1888fbd35"
+    },
+    {
+      "path": "data/raw/raw_hourly_2026.json",
+      "sha256": "2ff864de7b9dd670fef506e7aacfde60b2d11e495da4f1f9bbe0758850d24c51"
+    }
+  ],
+  "max_epochs": 400,
+  "seeds": [
+    7,
+    21,
+    42
+  ],
+  "baseline_parameters": {
+    "logistic_C": 1,
+    "perceptron_eta": 0.01,
+    "perceptron_epochs": 100,
+    "delta_eta": 0.01,
+    "delta_epochs": 200
+  },
+  "source_note": "Existing grid_metadata declares ERA5; original cache has no per-request model provenance. Future fetches record it explicitly."
+}

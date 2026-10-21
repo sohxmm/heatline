@@ -38,13 +38,19 @@ def aggregate_year_hourly_to_daily(year_json_path: Path) -> pd.DataFrame:
 
     df_hourly = pd.DataFrame(hourly)
     df_hourly["time"] = pd.to_datetime(df_hourly["time"])
+    if data.get('timezone') != 'Asia/Kolkata':
+        raise ValueError('Hourly input must use Asia/Kolkata local calendar time')
+    if df_hourly['time'].duplicated().any() or not (df_hourly['time'].diff().dropna() == pd.Timedelta(hours=1)).all():
+        raise ValueError('Hourly observations must be unique and contiguous')
+    if df_hourly.drop(columns=['time']).isna().any().any():
+        raise ValueError('Missing hourly measurements cannot be silently averaged')
     df_hourly["date"] = df_hourly["time"].dt.date
 
     # Group by local calendar date (Asia/Kolkata)
     daily_records = []
     for day_date, group in df_hourly.groupby("date"):
         if len(group) != 24:
-            logger.warning(f"Date {day_date} in {year_json_path.name} has {len(group)} hours (expected 24).")
+            raise ValueError(f'Date {day_date} has {len(group)} hours; expected 24')
 
         tmax = group["temperature_2m"].max()
         tmin = group["temperature_2m"].min()
@@ -55,7 +61,7 @@ def aggregate_year_hourly_to_daily(year_json_path: Path) -> pd.DataFrame:
         apparent_tmax = group["apparent_temperature"].max()
         wind_mean = group["wind_speed_10m"].mean()
         pressure_mean = group["surface_pressure"].mean()
-        # Sum of hourly shortwave radiation (Wh/m² or W/m² sum)
+        # Hourly mean irradiance W/m² integrated over 1 h gives Wh/m²/day.
         solar_sum = group["shortwave_radiation"].sum()
         soil_moisture_mean = (
             group["soil_moisture_0_to_7cm"].mean()
