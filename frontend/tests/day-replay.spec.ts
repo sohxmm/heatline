@@ -81,6 +81,7 @@ test("changing year cannot display a previous year input trace", async ({
 test("missing detail files keep published daily results and show unavailability", async ({
   page,
 }) => {
+  await page.route("http://127.0.0.1:8999/**", (route) => route.abort());
   await page.route("**/data/replay/2026.json", (route) =>
     route.fulfill({ status: 404, body: "Unavailable" }),
   );
