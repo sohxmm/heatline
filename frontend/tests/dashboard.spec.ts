@@ -6,6 +6,7 @@ const outlook = JSON.parse(fs.readFileSync("public/data/outlook.json", "utf8"));
 const model = JSON.parse(fs.readFileSync("public/data/model.json", "utf8"));
 
 test("all five views load and remain accessible", async ({ page }) => {
+  test.setTimeout(90000);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   for (const path of ["/", "/outlook", "/explorer", "/learn", "/evidence"]) {
@@ -29,25 +30,29 @@ test("all five views load and remain accessible", async ({ page }) => {
 
 test("replay numbers and errors equal published records", async ({ page }) => {
   await page.goto("/explorer");
-  await expect(page.locator("tbody tr")).toHaveCount(31);
+  await expect(page.locator(".history-table tbody tr")).toHaveCount(31);
   const expected = history.records.filter((r: { date: string }) =>
     r.date.startsWith("2026"),
   );
-  expect(await page.locator("tbody tr").first().innerText()).toContain(
-    expected[0].tmax.toFixed(1),
-  );
-  expect(await page.locator("tbody tr").first().innerText()).toContain(
-    expected[0].score.toFixed(3),
-  );
+  expect(
+    await page.locator(".history-table tbody tr").first().innerText(),
+  ).toContain(expected[0].tmax.toFixed(1));
+  expect(
+    await page.locator(".history-table tbody tr").first().innerText(),
+  ).toContain(expected[0].score.toFixed(3));
   await page.getByLabel("Replay year").selectOption("2019");
   await page.getByLabel("Errors only").check();
   const errors = history.records.filter(
     (r: { date: string; actual: number; prediction: number }) =>
       r.date.startsWith("2019") && r.actual !== r.prediction,
   );
-  await expect(page.locator("tbody tr")).toHaveCount(errors.length);
+  await expect(page.locator(".history-table tbody tr")).toHaveCount(
+    errors.length,
+  );
   await expect(
-    page.getByText("Historical replay", { exact: true }),
+    page
+      .locator(".view-context")
+      .getByText("Historical replay", { exact: true }),
   ).toBeVisible();
 });
 

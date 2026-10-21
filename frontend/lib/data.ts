@@ -54,6 +54,30 @@ export interface HistoryRow {
   normal_tmax?: number;
   threshold?: number;
   split?: string;
+  input_cutoff?: string;
+  model_version?: string;
+  target_date?: string;
+}
+export interface ReplayDay extends HistoryRow {
+  inputs?: Record<string, number>;
+  normalized_inputs?: Record<string, number>;
+  hidden_activations?: number[];
+  output_logit?: number;
+}
+export interface ReplayDetails extends Envelope {
+  selected_year?: number;
+  records?: ReplayDay[];
+  architecture?: {
+    inputs: number;
+    hidden: number;
+    activation: string;
+    loss: string;
+  };
+  normalization?: {
+    reference: string;
+    mean: Record<string, number>;
+    scale: Record<string, number>;
+  };
 }
 export interface History extends Envelope {
   years?: number[];
@@ -86,6 +110,12 @@ export interface Model extends Envelope {
     loss?: string;
   };
   threshold?: number;
+  calibration?: {
+    method?: string;
+    coefficient?: number;
+    intercept?: number;
+    threshold?: number;
+  };
   trained_until?: string;
   metrics?: Metric[];
   splits?: { name: string; years: string; days: number; positives: number }[];
@@ -182,6 +212,7 @@ export function useResource<T extends Envelope>(name: string) {
     error: string | null;
   }>({ data: null, loading: true, transport: "snapshot", error: null });
   useEffect(() => {
+    setState({ data: null, loading: true, transport: "snapshot", error: null });
     let active = true;
     let apiResolved = false;
     const controller = new AbortController();

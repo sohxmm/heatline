@@ -20,18 +20,20 @@ import {
 } from "@/components/project-ui";
 import { amber, cream, probabilitySeries } from "@/components/view-config";
 import { Plot, Legend } from "@/components/charts";
+import { DayReplay } from "@/components/day-replay";
+import type { ReplayDetails } from "@/lib/data";
 
 export function Explorer() {
   const resource = useResource<History>("history");
   const model = useResource<Model>("model");
   const [year, setYear] = useState(2026);
+  const [day, setDay] = useState(1);
+  const replay = useResource<ReplayDetails>(`replay/${year}`);
   const [errorsOnly, setErrorsOnly] = useState(false);
   const all = resource.data?.records ?? [];
-  const years =
-    resource.data?.years ??
-    Array.from(new Set(all.map((r) => Number(r.date.slice(0, 4))))).sort(
-      (a, b) => b - a,
-    );
+  const years = Array.from(
+    new Set(resource.data?.years ?? all.map((r) => Number(r.date.slice(0, 4)))),
+  ).sort((a, b) => a - b);
   const rows = all.filter((r) => r.date.startsWith(String(year)));
   const errors = rows.filter((r) => r.actual !== r.prediction);
   const missed = rows.filter((r) => r.actual === 1 && r.prediction === 0);
@@ -102,6 +104,17 @@ export function Explorer() {
           detail="False positives + false negatives"
         />
       </div>
+      <DayReplay
+        year={year}
+        day={day}
+        years={years}
+        rows={rows}
+        details={replay.data}
+        loading={resource.loading || replay.loading}
+        model={model.data}
+        onYear={setYear}
+        onDay={setDay}
+      />
       <Panel
         title="Model output meets the historical record"
         subtitle="Platt-scaled output is an estimate; calibration is not guaranteed. Dashed reference shows the selected decision threshold."
@@ -169,7 +182,7 @@ export function Explorer() {
           </div>
         }
       >
-        <div className="table-scroll" tabIndex={0}>
+        <div className="table-scroll history-table" tabIndex={0}>
           <table>
             <caption>
               Historical predictions and observed proxy outcomes for May {year}.
@@ -188,7 +201,15 @@ export function Explorer() {
             <tbody>
               {display.map((r) => (
                 <tr key={r.date}>
-                  <td>{dayLabel(r.date)}</td>
+                  <td>
+                    <a
+                      className="text-link"
+                      href="#day-replay"
+                      onClick={() => setDay(Number(r.date.slice(8, 10)))}
+                    >
+                      {dayLabel(r.date)}
+                    </a>
+                  </td>
                   <td>{number(r.tmax)}</td>
                   <td>{number(r.score, 3)}</td>
                   <td>{percent(r.probability)}</td>

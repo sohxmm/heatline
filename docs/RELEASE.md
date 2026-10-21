@@ -11,10 +11,13 @@ The assessed experiment, guided notebook and report are complete. The selected
 ANN is a Nagpur May historical study; public provider forecasts supply current
 regional weather. Live/regional ANN output remains unavailable.
 
-Local validation: 72 Python tests; six browser tests covering five views,
+Local validation: 75 Python tests; nine browser tests covering five views,
 accessibility, mobile/reduced motion, fixture values, forecast/replay distinction,
 stale data and API failure. Next.js production build and TypeScript checks pass.
 GitHub CI additionally checks a fresh Linux checkout.
+The explorer additionally checks day selection, year changes, exact per-day
+network calculations and unavailable detail snapshots. Its calendar covers May
+1981–2026, with inputs and forward computations loaded one year at a time.
 
 Submission archive: run `python scripts/package_heatline.py` to create
 `dist/heatline-submission.zip` with source, cached data, evidence and SHA-256
