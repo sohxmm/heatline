@@ -1,4 +1,4 @@
-import { Heatline } from "@/components/heatline";
-export default function Home() {
-  return <Heatline view="home" />;
+import { Landing } from "@/components/views/landing";
+export default function Page() {
+  return <Landing />;
 }

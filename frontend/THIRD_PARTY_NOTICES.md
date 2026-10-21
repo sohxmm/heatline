@@ -19,7 +19,8 @@ Manrope and Instrument Serif are available under the SIL Open Font License.
 
 ## MIT License (vendored components)
 
-Copyright (c) the respective Bklit UI contributors and shadcn.
+Copyright (c) 2026 uixmat (Bklit UI).
+Copyright (c) 2023 shadcn (shadcn/ui).
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

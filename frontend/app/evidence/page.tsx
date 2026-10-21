@@ -1,5 +1,5 @@
-import { Heatline } from "@/components/heatline";
+import { Evidence } from "@/components/views/evidence";
 export const metadata = { title: "Evidence and methodology" };
 export default function Page() {
-  return <Heatline view="evidence" />;
+  return <Evidence />;
 }

@@ -1,5 +1,5 @@
-import { Heatline } from "@/components/heatline";
+import { Explorer } from "@/components/views/explorer";
 export const metadata = { title: "Nagpur May explorer" };
 export default function Page() {
-  return <Heatline view="explorer" />;
+  return <Explorer />;
 }
