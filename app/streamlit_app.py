@@ -1,3 +1,5 @@
+# LEGACY/OPTIONAL: original experiment only. Use src.experiment and frontend/ for Heatline.
+# Old weights, label definitions and reported metrics are not current assessed evidence.
 """
 Interactive Streamlit Web Application for Nagpur May Heat Wave Prediction using ANNs.
 Course: Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech COMP), K. J. Somaiya School of Engineering.
