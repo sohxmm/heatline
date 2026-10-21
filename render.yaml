@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: heatline-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-api.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: CORS_ORIGINS
+        sync: false
+      - key: WEATHER_MAX_AGE_HOURS
+        value: "12"
+      - key: HEATLINE_DATA_DIR
+        value: artifacts/heatline
