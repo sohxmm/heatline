@@ -8,7 +8,7 @@ Error Backpropagation ANN), the ground truth label definition establishes the
 decision boundary separating positive (heatwave) and negative (normal) days.
 
 Ground Truth Rules for Nagpur (Vidarbha Interior Plains):
-1. `imd_reanalysis_plains` (Candidate A & Primary Target):
+1. `imd_reanalysis_plains` (Legacy adjusted target):
    tmax >= 43.5°C OR (tmax >= 40.0°C AND anomaly >= 3.5°C)
 2. `climatology_p85_42c` (Candidate B):
    tmax >= max(42.0°C, P85_tmax_1991_2020)
@@ -49,12 +49,12 @@ def test_imd_reanalysis_plains_formula(dataset):
     ).astype(int)
 
     assert (df_daily["imd_reanalysis_plains"] == expected).all(), (
-        "imd_reanalysis_plains in daily.csv does not match official formula!"
+        "imd_reanalysis_plains in daily.csv does not match declared proxy formula!"
     )
 
     # Also assert equality in features.csv
-    assert (df_features["heatwave_day"] == df_features["imd_reanalysis_plains"]).all(), (
-        "Primary heatwave_day in features.csv must equal imd_reanalysis_plains!"
+    assert (df_features["heatwave_day"] == df_features["imd_strict_raw"]).all(), (
+        "Primary heatwave_day in features.csv must equal imd_strict_raw!"
     )
 
 
@@ -68,7 +68,7 @@ def test_climatology_p85_42c_formula(dataset):
     expected = (df_daily["tmax"] >= p85_effective).astype(int)
 
     assert (df_daily["climatology_p85_42c"] == expected).all(), (
-        "climatology_p85_42c in daily.csv does not match official formula!"
+        "climatology_p85_42c in daily.csv does not match declared proxy formula!"
     )
 
 
@@ -85,5 +85,5 @@ def test_imd_strict_raw_formula(dataset):
     ).astype(int)
 
     assert (df_daily["imd_strict_raw"] == expected).all(), (
-        "imd_strict_raw in daily.csv does not match official formula!"
+        "imd_strict_raw in daily.csv does not match declared proxy formula!"
     )

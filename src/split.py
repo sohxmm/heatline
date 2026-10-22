@@ -3,11 +3,11 @@ Chronological Splitting and Train-Only Standardization Module.
 KJSCE Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech COMP).
 
 Soft Computing Connection:
-- In Error Backpropagation Neural Networks (EBPA, Exp 2, 6, 7), unscaled inputs
+- In Error Backpropagation Neural Networks (EBPA, Exp 6, 7), unscaled inputs
   with varying dynamic ranges cause gradient imbalance: features with large
   variances dominate weight updates (Delta rule: delta_w = eta * delta * x),
   driving sigmoid/tanh activations into flat saturation regions where f'(x) -> 0.
-- In Single-Layer Perceptron (Exp 4) and ADALINE Delta Rule (Exp 5), standardizing
+- In Single-Layer Perceptron (Exp 4) and Sigmoid Delta Rule (Exp 5), standardizing
   features to zero mean and unit variance conditions the Hessian error surface,
   preventing oscillation and ensuring smooth gradient descent.
 - Temporal Integrity: We strictly use chronological splitting (Train 1981-2010,
@@ -84,7 +84,7 @@ def get_splits(
     features_path: Optional[str] = None,
     target_col: Optional[str] = None,
     scale: bool = True,
-    save_scaler: bool = True,
+    save_scaler: bool = False,
     scaler_out_path: str = "models/scaler.json",
 ) -> Dict[str, Any]:
     """
@@ -92,9 +92,9 @@ def get_splits(
     Fit a StandardScaler strictly on the Training partition, and transform all partitions.
 
     Splits:
-    - Train: 1981–2010 (30 years, 930 May days, ~24.3% positive rate)
-    - Validation: 2011–2018 (8 years, 248 May days, ~35.5% positive rate)
-    - Test: 2019–2026 (8 years, 248 May days, ~14.9% positive rate)
+    - Train: 1981–2010 (30 years, 930 May days)
+    - Validation: 2011–2018 (8 years, 248 May days)
+    - Test: 2019–2026 (8 years, 248 May days)
 
     Parameters
     ----------

@@ -2,7 +2,7 @@
 Data Acquisition Module for Nagpur Meteorological Reanalysis.
 
 Fetches 46 years (1981-2026) of April 1 - May 31 hourly meteorological records
-from the Open-Meteo Historical Archive API (ECMWF ERA5-Land reanalysis)
+from the Open-Meteo Historical Archive API (explicit ECMWF ERA5 selection)
 for Nagpur Urban Agglomeration (21.1458°N, 79.0882°E, Asia/Kolkata timezone).
 
 Results are cached to `data/raw/` to ensure offline reproducibility.
@@ -37,7 +37,7 @@ def fetch_year_data(
     latitude: float,
     longitude: float,
     timezone: str = "Asia/Kolkata",
-    model: str = "era5_land",
+    model: str = "era5",
     max_retries: int = 5,
     backoff_factor: float = 2.0,
 ) -> dict:
@@ -62,6 +62,10 @@ def fetch_year_data(
             if response.status_code == 200:
                 data = response.json()
                 if "hourly" in data and len(data["hourly"].get("time", [])) > 0:
+                    data['_heatline_provenance'] = {
+                        'requested_model': model, 'request_parameters': params,
+                        'retrieved_at': __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
+                    }
                     return data
                 raise ValueError(f"Empty hourly payload received for year {year}: {data}")
             elif response.status_code == 429:
@@ -79,19 +83,7 @@ def fetch_year_data(
             time.sleep(delay)
             delay *= backoff_factor
 
-    # Fallback to standard ERA5 model if era5_land failed
-    if model != "era5":
-        logger.info(f"Retrying year {year} using fallback model 'era5'...")
-        return fetch_year_data(
-            year,
-            latitude,
-            longitude,
-            timezone=timezone,
-            model="era5",
-            max_retries=max_retries,
-            backoff_factor=backoff_factor,
-        )
-
+    # Do not silently mix reanalysis products when a model request fails.
     raise RuntimeError(f"Failed to fetch data for year {year} after {max_retries} attempts.")
 
 

@@ -1,0 +1,346 @@
+{
+  "NumPy ANN": {
+    "method": "Platt scaling, 2015\u20132018",
+    "threshold": 0.4984190109690257,
+    "coefficient": 0.9181004187727917,
+    "intercept": -0.2492079207233881,
+    "bins": [
+      {
+        "lower": 0.0,
+        "upper": 0.2,
+        "count": 239,
+        "mean_score": 0.01274903674669694,
+        "observed_rate": 0.02092050209205021
+      },
+      {
+        "lower": 0.2,
+        "upper": 0.4,
+        "count": 3,
+        "mean_score": 0.270168825718464,
+        "observed_rate": 0.0
+      },
+      {
+        "lower": 0.4,
+        "upper": 0.6000000000000001,
+        "count": 2,
+        "mean_score": 0.4737977222617105,
+        "observed_rate": 0.5
+      },
+      {
+        "lower": 0.6000000000000001,
+        "upper": 0.8,
+        "count": 4,
+        "mean_score": 0.6473150474957392,
+        "observed_rate": 0.5
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.0,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      }
+    ]
+  },
+  "ANN textbook squared error": {
+    "method": "Platt scaling, 2015\u20132018",
+    "threshold": 0.19650413204089975,
+    "coefficient": 1.3103880852968128,
+    "intercept": 0.08001722383755473,
+    "bins": [
+      {
+        "lower": 0.0,
+        "upper": 0.2,
+        "count": 240,
+        "mean_score": 0.010302062430158703,
+        "observed_rate": 0.016666666666666666
+      },
+      {
+        "lower": 0.2,
+        "upper": 0.4,
+        "count": 3,
+        "mean_score": 0.298563502610166,
+        "observed_rate": 0.6666666666666666
+      },
+      {
+        "lower": 0.4,
+        "upper": 0.6000000000000001,
+        "count": 1,
+        "mean_score": 0.48270321890507123,
+        "observed_rate": 0.0
+      },
+      {
+        "lower": 0.6000000000000001,
+        "upper": 0.8,
+        "count": 3,
+        "mean_score": 0.7309146029322188,
+        "observed_rate": 0.6666666666666666
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.0,
+        "count": 1,
+        "mean_score": 0.844322978267664,
+        "observed_rate": 0.0
+      }
+    ]
+  },
+  "ANN cross-entropy": {
+    "method": "Platt scaling, 2015\u20132018",
+    "threshold": 0.4984190109690257,
+    "coefficient": 0.9181004187727917,
+    "intercept": -0.2492079207233881,
+    "bins": [
+      {
+        "lower": 0.0,
+        "upper": 0.2,
+        "count": 239,
+        "mean_score": 0.01274903674669694,
+        "observed_rate": 0.02092050209205021
+      },
+      {
+        "lower": 0.2,
+        "upper": 0.4,
+        "count": 3,
+        "mean_score": 0.270168825718464,
+        "observed_rate": 0.0
+      },
+      {
+        "lower": 0.4,
+        "upper": 0.6000000000000001,
+        "count": 2,
+        "mean_score": 0.4737977222617105,
+        "observed_rate": 0.5
+      },
+      {
+        "lower": 0.6000000000000001,
+        "upper": 0.8,
+        "count": 4,
+        "mean_score": 0.6473150474957392,
+        "observed_rate": 0.5
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.0,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      }
+    ]
+  },
+  "Persistence": {
+    "method": "None",
+    "threshold": 0.5,
+    "coefficient": null,
+    "intercept": null,
+    "bins": [
+      {
+        "lower": 0.0,
+        "upper": 0.2,
+        "count": 241,
+        "mean_score": 0.0,
+        "observed_rate": 0.02074688796680498
+      },
+      {
+        "lower": 0.2,
+        "upper": 0.4,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      },
+      {
+        "lower": 0.4,
+        "upper": 0.6000000000000001,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      },
+      {
+        "lower": 0.6000000000000001,
+        "upper": 0.8,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.0,
+        "count": 7,
+        "mean_score": 1.0,
+        "observed_rate": 0.42857142857142855
+      }
+    ]
+  },
+  "Climatology": {
+    "method": "None",
+    "threshold": 0.06111111111111111,
+    "coefficient": null,
+    "intercept": null,
+    "bins": [
+      {
+        "lower": 0.0,
+        "upper": 0.2,
+        "count": 248,
+        "mean_score": 0.05907322068612391,
+        "observed_rate": 0.03225806451612903
+      },
+      {
+        "lower": 0.2,
+        "upper": 0.4,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      },
+      {
+        "lower": 0.4,
+        "upper": 0.6000000000000001,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      },
+      {
+        "lower": 0.6000000000000001,
+        "upper": 0.8,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.0,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      }
+    ]
+  },
+  "Perceptron": {
+    "method": "Platt scaling, 2015\u20132018",
+    "threshold": 0.1435051232785782,
+    "coefficient": 1.5914641010368276,
+    "intercept": -1.7582838455873753,
+    "bins": [
+      {
+        "lower": 0.0,
+        "upper": 0.2,
+        "count": 248,
+        "mean_score": 0.03971067704337753,
+        "observed_rate": 0.03225806451612903
+      },
+      {
+        "lower": 0.2,
+        "upper": 0.4,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      },
+      {
+        "lower": 0.4,
+        "upper": 0.6000000000000001,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      },
+      {
+        "lower": 0.6000000000000001,
+        "upper": 0.8,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.0,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      }
+    ]
+  },
+  "Sigmoid delta rule": {
+    "method": "Platt scaling, 2015\u20132018",
+    "threshold": 0.5214221680499095,
+    "coefficient": 1.5422403441685695,
+    "intercept": 0.4011472519890785,
+    "bins": [
+      {
+        "lower": 0.0,
+        "upper": 0.2,
+        "count": 239,
+        "mean_score": 0.009180926048753025,
+        "observed_rate": 0.012552301255230125
+      },
+      {
+        "lower": 0.2,
+        "upper": 0.4,
+        "count": 4,
+        "mean_score": 0.2328117937544838,
+        "observed_rate": 0.5
+      },
+      {
+        "lower": 0.4,
+        "upper": 0.6000000000000001,
+        "count": 3,
+        "mean_score": 0.5330125853171183,
+        "observed_rate": 0.6666666666666666
+      },
+      {
+        "lower": 0.6000000000000001,
+        "upper": 0.8,
+        "count": 2,
+        "mean_score": 0.685303331914375,
+        "observed_rate": 0.5
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.0,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      }
+    ]
+  },
+  "Logistic regression": {
+    "method": "Platt scaling, 2015\u20132018",
+    "threshold": 0.47491882798603313,
+    "coefficient": 0.9068242200535905,
+    "intercept": 0.03852796305700183,
+    "bins": [
+      {
+        "lower": 0.0,
+        "upper": 0.2,
+        "count": 236,
+        "mean_score": 0.00905777593198681,
+        "observed_rate": 0.012711864406779662
+      },
+      {
+        "lower": 0.2,
+        "upper": 0.4,
+        "count": 8,
+        "mean_score": 0.25384011696598197,
+        "observed_rate": 0.375
+      },
+      {
+        "lower": 0.4,
+        "upper": 0.6000000000000001,
+        "count": 3,
+        "mean_score": 0.563589197410888,
+        "observed_rate": 0.6666666666666666
+      },
+      {
+        "lower": 0.6000000000000001,
+        "upper": 0.8,
+        "count": 1,
+        "mean_score": 0.6494808717395584,
+        "observed_rate": 0.0
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.0,
+        "count": 0,
+        "mean_score": null,
+        "observed_rate": null
+      }
+    ]
+  }
+}

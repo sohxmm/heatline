@@ -1,3 +1,5 @@
+# LEGACY/OPTIONAL: original experiment only. Use src.experiment and frontend/ for Heatline.
+# Old weights, label definitions and reported metrics are not current assessed evidence.
 """
 Mamdani Fuzzy Inference System for Heat Wave Risk Prediction.
 KJSCE Soft Computing Lab — Module 4 (CO4).

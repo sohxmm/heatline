@@ -1,3 +1,5 @@
+# LEGACY/OPTIONAL: original experiment only. Use src.experiment and frontend/ for Heatline.
+# Old weights, label definitions and reported metrics are not current assessed evidence.
 """
 Genetic Algorithm Optimizer for Neuro-Fuzzy Ensemble Blending & Threshold Selection.
 KJSCE Soft Computing Lab — Module 5 (CO5).

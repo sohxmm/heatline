@@ -1,0 +1,6 @@
+# Runtime is deliberately independent of the training / PyTorch environment.
+fastapi>=0.115,<1.0
+uvicorn>=0.30,<1.0
+requests>=2.32,<3.0
+# Used by API tests; small enough to keep a single reproducible API environment.
+httpx>=0.27,<1.0

@@ -1,3 +1,4 @@
+# LEGACY generator; use scripts/build_lab_notebook.py for the corrected assessed notebook.
 """
 Script to build and pre-execute Jupyter Demonstration Notebooks:
 1. notebooks/01_eda.ipynb (Exploratory Data Analysis, Climatology, Trends)

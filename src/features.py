@@ -8,16 +8,16 @@ Soft Computing Connection:
   nonlinear hidden projections.
 - Excitatory inputs (high lagged temperatures, extreme anomalies, hot streaks)
   and inhibitory inputs (high humidity, cooling wind) mimic biological dendrites
-  as modeled in McCulloch-Pitts neurons (Exp 1).
+  as modeled in McCulloch-Pitts neurons (Exp 2).
 - Time-series lags (L1, L2, L3) and rolling windows capture atmospheric inertia
-  and thermal accumulation, essential for Error Backpropagation ANNs (Exp 2, 6, 7).
+  and thermal accumulation, essential for Error Backpropagation ANNs (Exp 6, 7).
 - Linguistic antecedents for Mamdani Fuzzy Inference (Module 4) rely on lagged
   temperature, departure anomaly, and relative humidity.
 
 Crucial Temporal Integrity Rule:
 To strictly prevent same-day data leakage, any prediction for May day T must ONLY
 use meteorological information observed up to day T-1, plus deterministic
-calendar and WMO 1991-2020 climatology normals for day T itself.
+calendar and frozen 1981-2010 training-reference climatology normals for day T itself.
 """
 
 import logging
@@ -95,7 +95,7 @@ def compute_features(
     df_daily : pd.DataFrame
         Daily aggregated meteorological records (must include April days for lags).
     df_normals : pd.DataFrame, optional
-        Preloaded WMO 1991-2020 climatology normals.
+        Preloaded frozen 1981-2010 training-reference climatology normals.
     normals_path : str
         File path to climatology normals if df_normals is not provided.
 
@@ -117,6 +117,9 @@ def compute_features(
         for _, row in df_normals.iterrows()
     }
 
+    # Calendar gaps must not silently convert row shifts to multi-day lags.
+    if 'city' in df_daily and df_daily['city'].nunique() != 1:
+        raise ValueError('Features require one city at a time')
     # Ensure temporal ordering
     df = df_daily.copy()
     if not pd.api.types.is_datetime64_any_dtype(df["date"]):
@@ -125,6 +128,11 @@ def compute_features(
         df["date_dt"] = df["date"]
 
     df = df.sort_values("date_dt").reset_index(drop=True)
+    if df['date_dt'].duplicated().any():
+        raise ValueError('Duplicate daily dates are not allowed')
+    for field, expected in [('year', df.date_dt.dt.year), ('month', df.date_dt.dt.month), ('day', df.date_dt.dt.day)]:
+        if not np.array_equal(df[field], expected):
+            raise ValueError(f'Date metadata mismatch: {field}')
 
     yearly_processed = []
 
@@ -132,6 +140,8 @@ def compute_features(
     # (e.g., late May of year Y should not bleed into early April of year Y+1)
     for year, grp in df.groupby("year", sort=True):
         g = grp.sort_values("date_dt").copy()
+        if not (g.date_dt.diff().dropna() == pd.Timedelta(days=1)).all():
+            raise ValueError(f'Missing calendar history in {year}; cannot form daily lags')
 
         # 1. Lag 1 features (Day T-1 meteorological state)
         g["tmax_lag1"] = g["tmax"].shift(1)
@@ -194,7 +204,8 @@ def compute_features(
             norm_lookup.get((int(m), int(d)), np.nan) for m, d in zip(g["month"], g["day"])
         ]
         # Day of year cyclical harmonic encoding (Soft Computing time-feature representation)
-        doy = g["date_dt"].dt.dayofyear
+        # Consistent calendar encoding in leap and non-leap years.
+        doy = pd.to_datetime('2001-' + g['date_dt'].dt.strftime('%m-%d')).dt.dayofyear
         g["day_sin"] = np.round(np.sin(2.0 * np.pi * doy / 365.0), 6)
         g["day_cos"] = np.round(np.cos(2.0 * np.pi * doy / 365.0), 6)
 
@@ -209,6 +220,8 @@ def compute_features(
     # Select and order final columns: metadata + features + targets
     output_cols = METADATA_COLS + FEATURE_COLS + TARGET_COLS
     df_out = df_may[output_cols].copy()
+    if df_out.empty or not np.isfinite(df_out[FEATURE_COLS].to_numpy(dtype=float)).all():
+        raise ValueError('Missing finite May history: preserve at least seven preceding April days')
 
     # Drop temporary column if present
     if "date_dt" in df_out.columns:

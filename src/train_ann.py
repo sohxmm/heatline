@@ -1,3 +1,5 @@
+# LEGACY/OPTIONAL: original experiment only. Use src.experiment and frontend/ for Heatline.
+# Old weights, label definitions and reported metrics are not current assessed evidence.
 """
 Deep Multilayer Perceptron (MLP) Ensemble Training Module.
 KJSCE Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech COMP).
