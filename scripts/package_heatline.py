@@ -8,8 +8,8 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
 DIRECTORIES=('src/','api/','tests/','docs/','data/raw/','data/processed/','artifacts/heatline/','legacy/','frontend/')
-FILES={'README.md','PROJECT_GUIDE.md','config.yaml','render.yaml','requirements.txt','requirements-api.txt','requirements-lock.txt',
-    'notebooks/03_heatline_lab.ipynb','scripts/build_lab_notebook.py','scripts/export_evidence.py','scripts/fetch_weather_snapshot.py','scripts/package_heatline.py'}
+FILES={'README.md','PROJECT_GUIDE.md','config.yaml','config_v2.yaml','render.yaml','requirements.txt','requirements-api.txt','requirements-lock.txt',
+    'notebooks/03_heatline_lab.ipynb','scripts/build_lab_notebook.py','scripts/export_evidence.py','scripts/export_seasonal_evidence.py','scripts/fetch_weather_snapshot.py','scripts/package_heatline.py'}
 
 
 def package(destination):

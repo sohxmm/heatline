@@ -105,8 +105,19 @@ def source_audit(daily):
         valid=subset[(subset.T2M_MAX>-900)&subset.month.eq(5)]
         result['nasa_samples'].append(dict(year=year,may_days=len(valid),nasa_mean_tmax=float(valid.T2M_MAX.mean()),era5_mean_tmax=float(valid.tmax.mean()),
             mean_nasa_minus_era5=float((valid.T2M_MAX-valid.tmax).mean()),nasa_days_ge45=int((valid.T2M_MAX>=45).sum()),era5_days_ge45=int((valid.tmax>=45).sum())))
-    for directory in ['seasonal_era5','nasa_power']:
-        for path in sorted((ROOT/'data/raw'/directory).glob('*.json')):
+    result['station_samples']=[]
+    for path in sorted((ROOT/'data/raw/noaa_gsod').glob('*.csv')):
+        station=pd.read_csv(path)
+        station['date']=pd.to_datetime(station.DATE).dt.strftime('%Y-%m-%d')
+        station=station[(station.MAX<9999)&pd.to_datetime(station.DATE).dt.month.eq(5)].copy()
+        station['station_tmax']=(station.MAX-32)*5/9
+        paired=station[['date','station_tmax']].merge(daily[['date','tmax']],on='date',validate='one_to_one')
+        result['station_samples'].append(dict(year=int(path.name[:4]),station='42867099999 · Dr Baba Saheb Ambedkar International Airport',paired_days=len(paired),
+            mean_station_tmax=float(paired.station_tmax.mean()),mean_era5_tmax=float(paired.tmax.mean()),mean_era5_minus_station=float((paired.tmax-paired.station_tmax).mean()),
+            mean_absolute_difference=float((paired.tmax-paired.station_tmax).abs().mean()),station_days_ge45=int((paired.station_tmax>=45).sum()),era5_days_ge45=int((paired.tmax>=45).sum())))
+    result['station_limitation']='NOAA GSOD maximum temperatures summarize synoptic reports; reporting windows can overlap the previous day and differ from local calendar days. Training-era descriptive audit only; not an official warning-label validation.'
+    for directory in ['seasonal_era5','nasa_power','noaa_gsod']:
+        for path in sorted((ROOT/'data/raw'/directory).glob('*')):
             result['files'].append(dict(path=path.relative_to(ROOT).as_posix(),sha256=hashlib.sha256(path.read_bytes()).hexdigest()))
     return result
 

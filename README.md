@@ -32,33 +32,36 @@ Open <http://localhost:3000>; API docs: <http://127.0.0.1:8000/docs>. Set `NEXT_
 The existing hourly cache is sufficient; a normal experiment run needs no weather network requests.
 
 ```powershell
-.venv/Scripts/python.exe -m src.experiment
+.venv/Scripts/python.exe -m src.seasonal_experiment
+.venv/Scripts/python.exe -m src.provider_benchmark
 .venv/Scripts/python.exe scripts/export_evidence.py
 .venv/Scripts/python.exe scripts/build_lab_notebook.py
 .venv/Scripts/python.exe -m pytest -q
 ```
 
-`python -m src.pipeline --prepare-only` rebuilds daily records, reference normals, labels and features. Add `--fetch` to fetch missing ERA5 files; another reanalysis model is never silently substituted. Refresh provider weather with `python scripts/fetch_weather_snapshot.py`.
+`python -m src.pipeline --prepare-only` rebuilds the seasonal training table. Add `--fetch` to acquire missing ERA5 seasons. The explicit acquisition commands are `python -m src.seasonal_data` and `python -m src.seasonal_data --provider nasa`. No source is silently substituted. Refresh current weather with `python scripts/fetch_weather_snapshot.py`.
 
 Current outputs live in `artifacts/heatline/`, with identical public JSON in `frontend/public/data/`. `provenance.json` records raw file hashes, versions, configuration and seeds. The guided notebook is already executed.
 
 ## Method and measured results
 
-Training and preprocessing use **1981–2010**; architecture/objective selection uses **2011–2014**; Platt scaling and F1 threshold selection use **2015–2018**. The **2019–2026** period is retrospective evaluation because the legacy project already examined it. Frozen reference normals use 1981–2010. April initializes May lags; missing or duplicate dates fail explicitly.
+Training and preprocessing use **April–June 1981–2010**; selection uses **May 2011–2014**; Platt scaling and F2/F1 threshold selection use **May 2015–2018**. The **May 2019–2026** period is retrospective evaluation because these outcomes were previously examined. Revised gains are exploratory, not an untouched-test claim. Frozen May reference normals and targets remain unchanged. March initializes seasonal lags; missing or duplicate dates fail explicitly.
 
 The versioned `nagpur-grid-proxy-v1` target is Tmax ≥45°C OR (Tmax ≥40°C and reference departure ≥4.5°C). This single-grid daily proxy is inspired by [IMD criteria](https://mausam.imd.gov.in/pdfs/heatcolduser/morning_heat_bulletin.pdf); it is not an official station-based declaration.
 
-The study compares binary/bipolar sigmoid, 8/16/32 hidden neurons, both consistent objectives, seeds 7/21/42 and controlled learning factors. Mean selection-period average precision chooses the configuration; fixed seed 42 supplies the primary model. Retrospective scores do not guide selection.
+The fixed study compares binary/bipolar sigmoid, 8/16/32 hidden neurons, both consistent objectives, three class-weight modes and seeds 7/21/42. Selection-period average precision of the three-seed mean chooses the configuration. The primary architecture is **26→16→1**, bipolar sigmoid, weighted half-squared-error, η=.03 and μ=.9. Each member is an explicit NumPy backpropagation network; their sigmoid scores are averaged. A single-network comparison remains visible. Training-window and learning-factor ablations do not replace the selected configuration based on retrospective scores.
 
-| Model | Average precision | F1 | Brier |
-| --- | ---: | ---: | ---: |
-| Selected NumPy ANN (cross-entropy) | 0.3636 | 0.3333 | 0.0246 |
-| Textbook NumPy ANN (half-squared-error) | 0.4375 | 0.5000 | 0.0251 |
-| Persistence | 0.1809 | 0.4000 | 0.0363 |
-| Sigmoid delta rule | 0.4886 | 0.3333 | 0.0221 |
-| Logistic regression | 0.4991 | 0.3333 | 0.0223 |
+| ERA5 experiment | Detected / positive days | Recall | False alarms | Average precision | F1 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Previous v1 ANN | 2 / 8 | 25.0% | 2 | 0.3636 | 0.3333 |
+| Seasonal v2 ANN · F2 policy | 5 / 8 | 62.5% | 12 | 0.4097 | 0.4000 |
+| Seasonal v2 ANN · F1 policy | 2 / 8 | 25.0% | 2 | 0.4097 | 0.3333 |
+| Persistence | 3 / 8 | 37.5% | 4 | 0.1809 | 0.4000 |
+| Seasonal logistic regression · F2 | 4 / 8 | 50.0% | 10 | 0.4627 | 0.3636 |
 
-There are only **8 positives in 248 retrospective days**. Simpler models win some metrics. Neither a sigmoid score, an ensemble nor Platt scaling guarantees calibrated probabilities. Full confusion matrices, raw/transformed Brier scores, reliability bins, missed dates, climatology/perceptron comparisons and every measured run are published.
+There are only **8 positives in 248 retrospective ERA5 days**. The F2 policy emphasizes recall at a cost in false alarms; both policies are selected only on calibration years. The source audit verifies 2,806 overlapping days, zero changed May labels, and identical May feature vectors. Full confusion counts, raw/transformed Brier scores, reliability bins, yearly outcomes, onset detections, May-year bootstrap intervals and all ablations are published. Simpler models win some metrics; neither sigmoid, averaging nor Platt scaling guarantees calibration.
+
+The **independent NASA POWER benchmark** has a different daily product and **45 positive days** in the same evaluation years. Its ANN has average precision **0.8580**, and at the calibration-selected F1 threshold detects **41/45**, with **29 false alarms**, precision **0.5857** and F1 **0.7130**. NASA persistence has F1 **0.8222**, so the ANN does not dominate it. These are not replacements for the harder ERA5 target. NASA UTC-day boundaries, coarser meteorology, its own normals and 52 available lag features are documented separately. A limited training-era NOAA station cross-check further demonstrates source/threshold sensitivity.
 
 - [Academic report](docs/ACADEMIC_REPORT.md): problem, inputs, neuron, rules, architecture, derivatives, experiments, results and limitations.
 - [Academic appendix](docs/ACADEMIC_APPENDIX.md): supplied experiment numbering/COs and the independently calculated 2–2–1 update.
@@ -70,7 +73,7 @@ Five views: landing, regional outlook, Nagpur May explorer, learning walkthrough
 
 Read-only endpoints: `GET /api/cities`, `/api/outlook`, `/api/history`, `/api/replay/{year}`, `/api/model`, `/api/experiments`, `/api/learning`, `/health`, `/health/ready`. Responses carry source, mode, issue time, target dates, version and availability. See [API documentation](api/README.md).
 
-The May explorer includes a calendar and selected-day result. Expand the day's calculation to inspect its 26 recorded inputs, standardized values, hidden activations, raw score and threshold decision. Day traces are exported by `python -m src.replay` from the saved weights/scaler; every score must match the published history before export. Traces load one year at a time and are also regenerated by the experiment runner.
+The May explorer includes a calendar and selected-day result. Expand the calculation to inspect 26 recorded inputs, standardized values, each member's hidden/output computation, their mean score and threshold decision. `python -m src.replay` verifies the saved weights/scaler reproduce published scores before exporting. Traces load one year at a time. The evidence view compares F2/F1 policies, yearly errors, source audits and NASA benchmark results.
 
 **Provider forecasts and ANN replay are different products.** Open-Meteo weather covers six cities; apparent temperature and the temperature screen are distinct from the proxy. Live/regional ANN output remains unavailable until timely compatible inputs receive separate validation. [ERA5 arrives with delay](https://open-meteo.com/en/docs/historical-weather-api). Provider snapshot issue time means retrieval time; run initialization time is unknown. Snapshots older than 12 hours remain visibly stale.
 
@@ -90,6 +93,6 @@ The [deployment guide](docs/DEPLOYMENT.md) covers Vercel Hobby, Render Free, COR
 
 ## Legacy preservation
 
-`legacy/original-experiment.zip` preserves the original source, processed data, weights and results. Repository-root `models/`, `results/`, older notebooks and Streamlit belong to that experiment. Do not combine their weights or metrics with the corrected target/scaler. Their adjusted labels, future-inclusive normals and inconsistent loss reporting are documented in the archive README. Current entry points are `src.experiment`, `api.main` and `frontend/`.
+`legacy/original-experiment.zip` preserves the original source and results; `legacy/heatline-v1-experiment.zip` preserves the first corrected experiment before seasonal revision. Repository-root `models/`, `results/`, older notebooks and Streamlit are legacy. Do not combine their weights or metrics with current preprocessing. Current entry points are `src.seasonal_experiment`, `src.provider_benchmark`, `api.main` and `frontend/`.
 
 Data: [Open-Meteo](https://open-meteo.com/), CC BY 4.0, with ECMWF ERA5 reanalysis for the assessed historical study. This educational prototype does not issue official heat warnings.
