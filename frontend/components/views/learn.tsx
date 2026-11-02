@@ -169,6 +169,15 @@ export function Learn() {
               "half-squared-error reference and cross-entropy comparison"}
             . A sigmoid output alone does not establish calibration.
           </p>
+          {model.data?.ensemble_size && (
+            <p className="panel-copy">
+              The application averages {model.data.ensemble_size} independently
+              trained networks with this architecture. Each uses the explicit
+              NumPy backpropagation implementation. The single-network baseline
+              remains in the evidence table, and each member's forward
+              calculation is available in the May explorer.
+            </p>
+          )}
         </Panel>
       </div>
       <Panel

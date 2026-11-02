@@ -60,8 +60,51 @@ def export_saved_replay(root=None):
         raise ValueError('Saved scaler feature order differs from the current model')
     network = EBPANetwork(26)
     network.load_weights(artifacts/'ann_weights.npz')
+    if (artifacts/'ensemble.json').exists():
+        metadata=json.loads((artifacts/'ensemble.json').read_text())
+        members=[]
+        for filename in metadata['members']:
+            member=EBPANetwork(26);member.load_weights(artifacts/filename);members.append(member)
+        return export_ensemble_replay(history,pd.read_csv(root/'data/processed/seasonal_features.csv'),members,
+            scaler['mean'],scaler['scale'],[artifacts/'replay',root/'frontend/public/data/replay'])
     return export_replay_details(history, pd.read_csv(root/'data/processed/features.csv'), network,
         scaler['mean'], scaler['scale'], [artifacts/'replay', root/'frontend/public/data/replay'])
+
+
+def export_ensemble_replay(history,features,members,mean,scale,destinations):
+    """Export each member separately; mean logits is NOT mean sigmoid output."""
+    if features.date.duplicated().any():raise ValueError('Duplicate feature dates')
+    lookup=features.set_index('date');dates=[row['date'] for row in history['records']]
+    if not members or len(set(dates))!=len(dates) or not set(dates).issubset(lookup.index):
+        raise ValueError('Members and unique matching replay dates required')
+    raw_inputs=lookup.loc[dates,FEATURE_COLS].to_numpy(dtype=float)
+    mean,scale=np.asarray(mean),np.asarray(scale)
+    if not np.isfinite(raw_inputs).all() or not np.isfinite(mean).all() or not np.isfinite(scale).all() or (scale<=0).any():
+        raise ValueError('Finite inputs and positive training scales required')
+    normalized=(raw_inputs-mean)/scale
+    member_results=[]
+    for member in members:
+        scores=member.forward(normalized).ravel().copy()
+        member_results.append(dict(seed=member.seed,scores=scores,hidden=member.z.copy(),logits=member.y_in.ravel().copy()))
+    average=np.mean([r['scores'] for r in member_results],axis=0)
+    np.testing.assert_allclose(average,[r['score'] for r in history['records']],atol=1e-12,rtol=1e-12)
+    years={}
+    for i,record in enumerate(history['records']):
+        member_traces=[dict(seed=r['seed'],score=float(r['scores'][i]),output_logit=float(r['logits'][i]),hidden_activations=r['hidden'][i].tolist()) for r in member_results]
+        selected=member_traces[-1]
+        years.setdefault(int(record['date'][:4]),[]).append({**record,'inputs':dict(zip(FEATURE_COLS,raw_inputs[i].tolist())),
+            'normalized_inputs':dict(zip(FEATURE_COLS,normalized[i].tolist())),
+            'hidden_activations':selected['hidden_activations'],'output_logit':selected['output_logit'],
+            'trace_member_seed':selected['seed'],'member_score':selected['score'],'members':member_traces,'aggregation':'mean of member sigmoid scores'})
+    meta={k:v for k,v in history.items() if k not in ['years','records']}
+    for year,records in years.items():
+        payload={**meta,'selected_year':year,'records':records,'ensemble_size':len(members),
+            'normalization':dict(reference='April–June 1981–2010 training data only',mean=dict(zip(FEATURE_COLS,mean.tolist())),scale=dict(zip(FEATURE_COLS,scale.tolist()))),
+            'architecture':dict(inputs=26,hidden=members[0].n_hidden,activation=members[0].activation,loss=members[0].loss)}
+        for directory in destinations:
+            path=Path(directory)/f'{year}.json';path.parent.mkdir(parents=True,exist_ok=True)
+            path.write_text(json.dumps(payload,indent=2,allow_nan=False),encoding='utf-8')
+    return years
 
 
 if __name__ == '__main__':

@@ -1,79 +1,163 @@
-# Heatline: Nagpur May heatwave proxy prediction
+# Heatline: seasonal NumPy ANN for Nagpur May heatwave conditions
 
 ## Problem and assessed contribution
 
-Design and develop an ANN to predict May heatwave conditions in a specific geographical area: Nagpur, Maharashtra. The assessed contribution is a NumPy network with an explicit forward pass, activation derivatives, backpropagated errors, parameter gradients and momentum updates. The six-city weather dashboard is the product extension. Fuzzy inference, GA and the deeper PyTorch ensemble are optional theory extensions archived separately.
+The task is next-day binary prediction of May heatwave conditions for Nagpur, using earlier climate observations. The assessed implementation explicitly computes neuron activations, gradients, bias updates and momentum in NumPy. The selected architecture is **26 → 16 → 1**, with **bipolar_sigmoid** hidden units and a binary sigmoid output. Three independently initialized networks are averaged for the application; the single seed-42 network remains an independently reported baseline. Fuzzy/GA/deeper PyTorch models are legacy optional theory extensions. PyTorch checks derivatives but does not perform assessed training.
 
-## Climate inputs and target
+## Data audit and target
 
-The existing cache contains April–May hourly Open-Meteo reanalysis for 1981–2026. Grid metadata declares ERA5 at 21.25°N, 79.0°E, elevation 311 m; the requested city coordinate is 21.1458°N, 79.0882°E. Original cached responses do not embed per-request model-selection provenance, so that declaration cannot be independently reconstructed from the files. Their SHA-256 hashes and the configuration are recorded in `artifacts/heatline/provenance.json`.
+The requested coordinate is 21.1458°N, 79.0882°E; the ERA5 grid is 21.25°N, 79.0°E. The expanded cache covers March 25–June 30 in each of 1981–2026, with 98 contiguous local days per year. March primes preceding history, April–June supplies training examples, and **every reported assessed evaluation is May only**. Hourly aggregation uses Asia/Kolkata. Missing hourly values, duplicate dates, gaps and missing lag history are rejected.
 
-Hourly records are aggregated in Asia/Kolkata: temperature maximum/minimum/mean, humidity mean/minimum, dewpoint mean, apparent-temperature maximum, wind mean, pressure mean, integrated shortwave irradiance (Wh/m²/day), soil-moisture mean. Twenty-six features use observations through T−1: one-day lags, two/three-day temperature lags, three/seven-day rolling means, trends, pressure tendency, previous proxy streak, normal and calendar encoding. April initializes May history. Calendar gaps, duplicate dates, missing measurements and incomplete seven-day history fail explicitly. May features never use the outcome day's weather. A frozen 1981–2010 ±7-calendar-day reference supplies normals; available-data windows truncate at April/May boundaries.
+Original April/May cache comparison: **2806 overlapping days, maximum daily Tmax difference 0.0°C, 0 May label changes**. May's 26 features also match v1 exactly. The proxy remains `nagpur-grid-proxy-v1`: Tmax≥45°C OR (Tmax≥40°C and frozen-reference departure≥4.5°C), departure rounded to 0.01°C. Frozen 1981–2010 April/May reference values are retained for comparability; March/June references use only the added training years. Labels approximate a grid day and are not official IMD station declarations or warning bulletins.
 
-The declared target **nagpur-grid-proxy-v1** is Tmax≥45°C OR (Tmax≥40°C and departure from the reference normal≥4.5°C), with departure rounded to the daily data's 0.01°C precision. It is an IMD-inspired single-grid daily proxy. Official declarations use station measurements with spatial/persistence requirements; this proxy does not reproduce them. No target was chosen to achieve a desired prevalence. The old adjusted 43.5°C / 3.5°C rule and 1991–2020 normals are preserved in `legacy/original-experiment.zip`.
+The source audit uses training-era NASA samples rather than choosing a provider for more positive labels:
+
+| year | may_days | nasa_mean_tmax | era5_mean_tmax | mean_nasa_minus_era5 | nasa_days_ge45 | era5_days_ge45 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1991 | 31 | 46.1465 | 43.1387 | 3.0077 | 25 | 0 |
+| 2000 | 31 | 41.7206 | 39.8387 | 1.8819 | 3 | 0 |
+| 2010 | 31 | 44.6697 | 43.4355 | 1.2342 | 19 | 6 |
+
+UTC daily boundaries differ from ERA5 Asia/Kolkata. Provider comparison is descriptive and not a matched station validation. A limited NOAA airport-station cross-check is also descriptive:
+
+| year | paired_days | mean_station_tmax | mean_era5_tmax | mean_era5_minus_station | mean_absolute_difference | station_days_ge45 | era5_days_ge45 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1991 | 30 | 43.6259 | 43.1100 | -0.5159 | 0.7819 | 5 | 0 |
+| 2000 | 31 | 40.4624 | 39.8387 | -0.6237 | 0.9814 | 3 | 0 |
+| 2010 | 31 | 44.5197 | 43.4355 | -1.0842 | 1.0986 | 17 | 6 |
+
+NOAA GSOD maximum temperatures summarize synoptic reports; reporting windows can overlap the previous day and differ from local calendar days. Training-era descriptive audit only; not an official warning-label validation. These comparisons establish source sensitivity, not which proxy is the official truth. Raw responses, request metadata and hashes are retained. ERA5 remains the assessed before/after target; NASA is reported separately.
+
+## Climate inputs and chronology
+
+The 26 inputs retain lagged temperature, humidity, dewpoint, apparent temperature, wind, pressure, integrated irradiance, soil moisture, rolling means, tendencies, preceding proxy streak, reference normal and calendar harmonics. Every prediction for T uses observed weather through T−1. Calendar/reference features for T are deterministic. June of the same year never enters the inputs of a preceding May day. Normalization fits only April–June 1981–2010, independently of validation or evaluation years.
 
 | name | years | days | positives |
 | --- | --- | --- | --- |
-| train | 1981–2010 | 930 | 55 |
-| selection | 2011–2014 | 124 | 15 |
-| calibration | 2015–2018 | 124 | 8 |
-| retrospective | 2019–2026 | 248 | 8 |
+| train · April–June | 1981–2010 | 2730 | 117 |
+| selection · May | 2011–2014 | 124 | 15 |
+| calibration · May | 2015–2018 | 124 | 8 |
+| retrospective · May | 2019–2026 | 248 | 8 |
 
-## Artificial neuron, learning rules and architecture
+Training expands from 930 May days /55 positives to **2730 seasonal days /117 positives**. The positive fraction is still small. Positive weight is fitted from training class counts only; the selected weight is 22.3333.
 
-A neuron computes a weighted sum plus bias, then an activation. Binary sigmoid σ(a)=1/(1+exp(−a)); bipolar sigmoid f(a)=2σ(a)−1=tanh(a/2), with f′(a)=(1−f(a)²)/2. The output remains binary sigmoid for 0/1 heatwave targets. Identity, steps and ramp are illustrated in the appendix and guided notebook.
+## Neuron, activation and learning rule
 
-Hebbian updates associate inputs and targets. Perceptron learning adjusts a hard-threshold classifier on mistakes. Sigmoid delta learning uses the activation derivative to descend a continuous objective; it is distinct from linear LMS/ADALINE. XOR demonstrates that a single linear boundary is insufficient and that a hidden layer can solve the task. Whether a hidden layer helps weather data is an empirical question answered by comparisons below.
+For X, hidden Z=f(XV+v₀), output logit s=ZW+w₀, and ŷ=σ(s). Binary sigmoid is σ(a)=1/(1+exp(−a)); bipolar sigmoid is tanh(a/2), derivative (1−f(a)²)/2. Hidden bipolar activation does not change the binary output target convention.
 
-The selected network is **26 → 8 → 1**, hidden activation **bipolar_sigmoid**, objective **binary_cross_entropy**, seed 42. The textbook squared-error ANN remains a separately measured reference. The applied BCE variant is selected only using the earlier selection period; evaluation outcomes do not change the selection. η=0.05, μ=0.9, batch size 64; maximum 400 epochs, patience 60 using the same selection loss as the optimized objective. Weights use seeded Xavier initialization, biases start at zero. Standardization is fitted only on 930 training days.
+For positive weight p, q(t)=1+(p−1)t. The textbook objective L=mean[½q(t)(ŷ−t)²] gives output-logit derivative d=q(t)(ŷ−t)ŷ(1−ŷ). Weighted BCE L=mean[−pt log ŷ−(1−t)log(1−ŷ)] gives d=q(t)ŷ−pt. Both objectives and their exact derivatives are compared; the selected revised model uses the textbook weighted squared-error objective.
 
-## Backpropagation derivation
+Hidden derivative h=(dWᵀ)⊙f′(XV+v₀). Gradients: Zᵀd/N, mean(d), Xᵀh/N, mean(h) for W,w₀,V,v₀ respectively. All gradients use old parameters. Δθ=−η∇L+μΔθ_previous, θ←θ+Δθ. The selected experiment uses η=.03, μ=.9, batch 128, up to 300 epochs, patience 35. Early stopping evaluates the declared weighted objective on May 2011–2014. Weights use seeded Xavier initialization; biases start at zero; gradients are clipped per coordinate at 5.
 
-For batch X: Z=f(XV+v₀), a=ZW+w₀, ŷ=σ(a). With positive-class weight p, let q(t)=1+(p−1)t. Textbook L=mean[½q(t)(ŷ−t)²] has output-logit derivative d=q(t)(ŷ−t)ŷ(1−ŷ). Weighted BCE L=mean[−pt log ŷ−(1−t)log(1−ŷ)] has derivative d=q(t)ŷ−pt. The experiments set p=1; tests also check nonunit weights. Stable logaddexp computes BCE from logits.
+Experiment 7 uses an independent scalar fixture: x=[0,1], target 1, η=α=.25, μ=0, explicitly displayed illustrative initial weights. Output 0.581031948128, output error signal 0.101990994742; a full connection/bias update reduces loss 0.087767114245→0.083346248108. Binary/bipolar delta examples, fixed-threshold NAND/NOR/memory, Hebbian association, perceptron AND and trained XOR remain in the executed notebook.
 
-Hidden derivative h=(dWᵀ)⊙f′(XV+v₀). Gradients are ∂L/∂W=Zᵀd/N, ∂L/∂w₀=mean(d), ∂L/∂V=Xᵀh/N, ∂L/∂v₀=mean(h). Compute all gradients with old weights before changing any parameter. Momentum update Δθ=−η∂L/∂θ+μΔθ_previous, then θ←θ+Δθ. Per-coordinate gradient clipping at 5 is an explicit optimizer safeguard, not a changed loss.
+| experiment | title | co | connection |
+| --- | --- | --- | --- |
+| 1 | Activation functions | CO1 | Identity, binary/bipolar step and sigmoid, ramp; compare sigmoid hidden activations. |
+| 2 | McCulloch–Pitts neuron | CO1 | Fixed-threshold NAND, NOR and recurrent memory; no learning. |
+| 3 | Hebbian learning | CO3 | Binary/bipolar association through weight updates. |
+| 4 | Perceptron learning | CO2 | AND is separable; XOR is not. A single-layer weather comparator. |
+| 5 | Delta learning | CO2 | Error-driven sigmoid updates; distinguish from linear LMS/ADALINE. |
+| 6 | Multilayer perceptron | CO2 | A hidden layer learns XOR; the heatwave model uses the same architecture principle. |
+| 7 | Error backpropagation | CO2 | Numerical 2–2–1 trace; α=0.25 denotes η; μ=0. |
 
-The supplied Experiment 7 α=0.25 denotes η, with μ=0. For the displayed illustrative 2–2–1 weights, input [0,1], target 1 gives output 0.581031948128, output update signal 0.101990994742, loss 0.087767114245→0.083346248108. Initial weights, hidden errors, connection and bias updates appear in the appendix. These weights were chosen as an inspectable fixture, not claimed as missing worksheet weights.
+## Selection, repeated seeds and operating decisions
 
-## Experiments and selection
+The versioned `config_v2.yaml` fixes the experiment before its retrospective evaluation: 8/16/32 hidden neurons × binary/bipolar sigmoid × half-squared-error/BCE × no/square-root-ratio/full-ratio weighting, each with seeds 7/21/42. The 36 configurations use 108 trained members. Highest **May 2011–2014 average precision of the three-member mean** chooses the primary configuration; ties use lower selection Brier then smaller hidden width. Training-window and learning-factor ablations are descriptive and do not replace this choice based on later scores. All runs are exported with their selection-period results.
 
-The fixed architecture/objective grid compares 8,16,32 hidden neurons × binary/bipolar sigmoid × half-squared-error/BCE × seeds 7,21,42: 36 runs. Highest mean selection average precision chooses the configuration; ties use lower mean raw Brier and then fewer hidden neurons. The deployed seed is fixed at 42, not the best evaluation seed. Learning-factor studies compare η∈{0.01,0.05,0.1}, μ∈{0,0.9} across the same seeds on the chosen architecture. Their descriptive results do not retune the predeclared deployed η/μ. Duplicated configurations are reused; `runs.csv` contains 51 unique measured runs. Architecture curves show mean±sample standard deviation across three seeds; they are not independent-day confidence intervals.
+Inference averages each member's sigmoid score, not logits or weights. Platt scaling fits only May 2015–2018. The sensitivity threshold maximizes F2 (recall weighted more heavily), with ties preferring precision then higher threshold. The balanced threshold independently maximizes F1 on the same calibration period. Calibration scores are fitted, not independent performance evidence. An ensemble or Platt scaling does not guarantee calibration.
 
-Platt scaling (regularized logistic regression on clipped raw logits, C=1) is fitted only on 2015–2018. The threshold maximizes calibration-period F1; ties choose the higher threshold. The same policy applies to ANN, perceptron, sigmoid delta and logistic comparisons. Persistence uses the preceding day's proxy at threshold 0.5. Climatology is a training-only ±3 May-day empirical event rate and uses a calibration-selected threshold. A transformed sigmoid score is not guaranteed calibrated; raw and transformed Brier scores and reliability-bin counts are exported.
+## Retrospective results on unchanged ERA5 May targets
 
-## Retrospective results
+Primary sensitivity policy:
 
-| model | pr_auc | precision | recall | f1 | brier | tn | fp | fn | tp |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| NumPy ANN | 0.3636 | 0.5000 | 0.2500 | 0.3333 | 0.0246 | 238 | 2 | 6 | 2 |
-| ANN textbook squared error | 0.4375 | 0.5000 | 0.5000 | 0.5000 | 0.0251 | 236 | 4 | 4 | 4 |
-| ANN cross-entropy | 0.3636 | 0.5000 | 0.2500 | 0.3333 | 0.0246 | 238 | 2 | 6 | 2 |
-| Persistence | 0.1809 | 0.4286 | 0.3750 | 0.4000 | 0.0363 | 236 | 4 | 5 | 3 |
-| Climatology | 0.1136 | 0.0673 | 0.8750 | 0.1250 | 0.0309 | 143 | 97 | 1 | 7 |
-| Perceptron | 0.4446 | 0.5000 | 0.1250 | 0.2000 | 0.0278 | 239 | 1 | 7 | 1 |
-| Sigmoid delta rule | 0.4886 | 0.5000 | 0.2500 | 0.3333 | 0.0221 | 238 | 2 | 6 | 2 |
-| Logistic regression | 0.4991 | 0.5000 | 0.2500 | 0.3333 | 0.0223 | 238 | 2 | 6 | 2 |
+| model | pr_auc | precision | recall | f1 | f2 | brier | tn | fp | fn | tp |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| NumPy ANN | 0.4097 | 0.2941 | 0.6250 | 0.4000 | 0.5102 | 0.0244 | 228 | 12 | 3 | 5 |
+| Single NumPy ANN (seed 42) | 0.4068 | 0.2941 | 0.6250 | 0.4000 | 0.5102 | 0.0240 | 228 | 12 | 3 | 5 |
+| ANN textbook squared error | 0.4097 | 0.2941 | 0.6250 | 0.4000 | 0.5102 | 0.0244 | 228 | 12 | 3 | 5 |
+| ANN cross-entropy | 0.3515 | 0.3636 | 0.5000 | 0.4211 | 0.4651 | 0.0254 | 233 | 7 | 4 | 4 |
+| Persistence | 0.1809 | 0.4286 | 0.3750 | 0.4000 | 0.3846 | 0.0363 | 236 | 4 | 5 | 3 |
+| Climatology | 0.1136 | 0.0547 | 0.8750 | 0.1029 | 0.2188 | 0.0309 | 119 | 121 | 1 | 7 |
+| Perceptron | 0.1994 | 0.1270 | 1.0000 | 0.2254 | 0.4211 | 0.0306 | 185 | 55 | 0 | 8 |
+| Sigmoid delta rule | 0.3581 | 0.4000 | 0.5000 | 0.4444 | 0.4762 | 0.0260 | 234 | 6 | 4 | 4 |
+| Logistic regression | 0.4627 | 0.2857 | 0.5000 | 0.3636 | 0.4348 | 0.0236 | 230 | 10 | 4 | 4 |
+| Temperature trend | 0.3749 | 0.4286 | 0.3750 | 0.4000 | 0.3846 | 0.0249 | 236 | 4 | 5 | 3 |
 
-PR-AUC is average precision, not trapezoidal integration. Brier is mean squared error of the score against the outcome; persistence uses hard 0/1 outputs. TN/FP/FN/TP give the full confusion matrix. Only **8 positives among 248 evaluation days** occur under the declared rule. The selected BCE ANN AP is 0.3636 and F1 0.3333; the textbook squared-error network F1 is 0.5000. Logistic regression AP is 0.4991. Simpler models can outperform this ANN. Selecting the squared-error model because of this table would reuse evaluation outcomes, so the published primary selection remains unchanged.
+Balanced policy:
 
-Missed selected-ANN proxy events: 2019-05-27, 2019-05-31, 2020-05-24, 2026-05-20, 2026-05-21, 2026-05-25. False alarms: 2019-05-29, 2020-05-26. Each replay record carries input cutoff, target date, split, raw score, transformed output, threshold, outcome and model version. Training-era displays are in-sample; selection/calibration displays participated in those fitting decisions.
+| model | pr_auc | precision | recall | f1 | f2 | brier | tn | fp | fn | tp |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| NumPy ANN | 0.4097 | 0.5000 | 0.2500 | 0.3333 | 0.2778 | 0.0244 | 238 | 2 | 6 | 2 |
+| Single NumPy ANN (seed 42) | 0.4068 | 0.6000 | 0.3750 | 0.4615 | 0.4054 | 0.0240 | 238 | 2 | 5 | 3 |
+| ANN textbook squared error | 0.4097 | 0.5000 | 0.2500 | 0.3333 | 0.2778 | 0.0244 | 238 | 2 | 6 | 2 |
+| ANN cross-entropy | 0.3515 | 0.3636 | 0.5000 | 0.4211 | 0.4651 | 0.0254 | 233 | 7 | 4 | 4 |
+| Persistence | 0.1809 | 0.4286 | 0.3750 | 0.4000 | 0.3846 | 0.0363 | 236 | 4 | 5 | 3 |
+| Climatology | 0.1136 | 0.0673 | 0.8750 | 0.1250 | 0.2574 | 0.0309 | 143 | 97 | 1 | 7 |
+| Perceptron | 0.1994 | 0.2222 | 0.2500 | 0.2353 | 0.2439 | 0.0306 | 233 | 7 | 6 | 2 |
+| Sigmoid delta rule | 0.3581 | 0.4000 | 0.5000 | 0.4444 | 0.4762 | 0.0260 | 234 | 6 | 4 | 4 |
+| Logistic regression | 0.4627 | 0.2857 | 0.5000 | 0.3636 | 0.4348 | 0.0236 | 230 | 10 | 4 | 4 |
+| Temperature trend | 0.3749 | 0.5000 | 0.3750 | 0.4286 | 0.3947 | 0.0249 | 237 | 3 | 5 | 3 |
 
-![Learning curve](../artifacts/heatline/figures/learning.png)
-![Activation and hidden-size comparison](../artifacts/heatline/figures/activation-size.png)
+Against v1, detection increases from 2/8 to 5/8 and recall from 25.0% to 62.5%; false alarms increase from 2 to 12. Average precision changes from 0.3636 to 0.4097. This is a sensitivity trade-off, not a claim of universal superiority. Simpler baselines still win some metrics. F2 is 0.5102 for the selected ANN under the calibration-chosen policy.
+
+| year | days | positive_days | detected | missed | false_alarms |
+| --- | --- | --- | --- | --- | --- |
+| 2019 | 31 | 3 | 2 | 1 | 5 |
+| 2020 | 31 | 2 | 2 | 0 | 2 |
+| 2021 | 31 | 0 | 0 | 0 | 0 |
+| 2022 | 31 | 0 | 0 | 0 | 2 |
+| 2023 | 31 | 0 | 0 | 0 | 0 |
+| 2024 | 31 | 0 | 0 | 0 | 0 |
+| 2025 | 31 | 0 | 0 | 0 | 0 |
+| 2026 | 31 | 3 | 1 | 2 | 3 |
+
+Onset analysis: 2 detected of 5 positive days that follow a negative day. Continuing hot spells are easier than onset; the application exposes both errors. Detected dates: 2019-05-27, 2019-05-28, 2020-05-24, 2020-05-25, 2026-05-21. Missed dates: 2019-05-31, 2026-05-20, 2026-05-25.
+
+Uncertainty uses 1000 whole-May-year resamples, preserving within-month dependence. Intervals: average precision [0.3776322751322751, 0.5277777777777778], recall [0.3333333333333333, 1.0], F2 [0.2777777777777778, 0.7894736842105263]. Eight May years and few positive events; intervals do not include model-selection uncertainty.
+
+![Learning](../artifacts/heatline/figures/learning.png)
+![Every retrospective May](../artifacts/heatline/figures/yearly-events.png)
+![Activation and width](../artifacts/heatline/figures/activation-size.png)
 ![Precision–recall and calibration](../artifacts/heatline/figures/precision-calibration.png)
 
-## Application, reproducibility and limitations
+## Independent NASA POWER benchmark
 
-The Next.js application offers landing, provider outlook, Nagpur May replay, neural-learning walkthrough and evidence views. FastAPI serves read-only versioned artifacts, and public Open-Meteo forecasts are cached separately for six cities. Provider initialization time is unavailable in the combined best_match response; snapshot issue time explicitly means retrieval time. The source, forecast/replay mode, freshness, target dates and unavailable regional ANN outputs remain visible. Stale caches preserve their original timestamps. The provider temperature screen and apparent temperature are distinct from the heatwave proxy.
+The secondary benchmark uses NASA POWER UTC daily meteorology, a separate training-only reference and the same year partitions. It has 613 positive training days and **45 positive evaluation days out of 248**, compared with eight ERA5 positives. Different event populations and reporting windows prevent interpreting its larger scores as an improvement on the ERA5 target.
 
-The original 2019–2026 period was already examined in the legacy project, so these are retrospective results rather than a pristine untouched holdout. Adjacent weather days are correlated; rare events and a single grid limit statistical precision and geographical generalization. Reanalysis approximates conditions and arrives with delay, preventing direct live use. Compatible timely inputs, station validation, larger event samples and regional evaluation are required before any operational ANN claim. Platt scaling on 124 days may fail under distribution shift. A deeper ensemble does not automatically remedy calibration or data-source mismatch. No health/warning claim is made.
+The architecture, objective and weight mode are fixed from the ERA5 selection, with no NASA test-based architecture search. Fifty-two inputs contain seven lags of six meteorological variables, seven lagged temperature departures, previous-day proxy and calendar encoding. Early solar responses are missing, so radiation is excluded from all benchmark years rather than imputed or inconsistently included. NASA's 2m wind and UTC day are not ERA5's 10m wind and local day. A 16-neuron, one-hidden-layer NumPy network is trained for each of three seeds.
 
-Reproduce: `python -m src.experiment`, `python scripts/export_evidence.py`, `python scripts/build_lab_notebook.py`, `python -m pytest -q`. The independent PyTorch graph validates the same architecture and gradients without supplying the NumPy training implementation. The legacy deeper model used a different target and cannot share the new comparison table.
+F2 operating point:
+
+| model | pr_auc | precision | recall | f1 | f2 | brier | tn | fp | fn | tp |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| NASA NumPy ANN | 0.8580 | 0.3729 | 0.9778 | 0.5399 | 0.7383 | 0.0689 | 129 | 74 | 1 | 44 |
+| NASA logistic regression | 0.8731 | 0.3750 | 1.0000 | 0.5455 | 0.7500 | 0.0689 | 128 | 75 | 0 | 45 |
+| Persistence | 0.7083 | 0.8222 | 0.8222 | 0.8222 | 0.8222 | 0.0645 | 195 | 8 | 8 | 37 |
+
+F1 operating point (threshold also chosen only on calibration years):
+
+| model | pr_auc | precision | recall | f1 | f2 | brier | tn | fp | fn | tp |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| NASA NumPy ANN | 0.8580 | 0.5857 | 0.9111 | 0.7130 | 0.8200 | 0.0689 | 174 | 29 | 4 | 41 |
+| NASA logistic regression | 0.8731 | 0.5395 | 0.9111 | 0.6777 | 0.8008 | 0.0689 | 168 | 35 | 4 | 41 |
+| Persistence | 0.7083 | 0.8222 | 0.8222 | 0.8222 | 0.8222 | 0.0645 | 195 | 8 | 8 | 37 |
+
+Persistence remains a strong classification baseline. The ANN provides better ranking than persistence here, but does not surpass it on F1. `provider_benchmark.json` contains every retrospective record; `nasa_seed*.npz` and `nasa_scaler.json` preserve the network and preprocessing.
+
+
+## Reproducibility, application and limitations
+
+Run `python -m src.seasonal_experiment`, `python -m src.provider_benchmark`, `python scripts/export_seasonal_evidence.py`, and `python scripts/build_lab_notebook.py`. Raw files are cached; training makes no provider calls. To acquire missing seasons, use `python -m src.seasonal_data` and its `--provider nasa` option. Cached study checkpoints are local, ignored intermediates; saved final member weights and normalization are versioned. The original v1 is frozen in `legacy/heatline-v1-experiment.zip`.
+
+The 2019–2026 outcomes were inspected before this revision. Consequently all apparent gains are **exploratory retrospective findings**, not proof on an untouched holdout. A later untouched May or a predeclared prospective protocol is required for a new confirmation claim. Rare events, grid/station mismatch and daily-boundary differences limit generalization. The station audit is not an official-warning reconstruction. Higher recall can mean more false alarms; the complete trade-off is visible.
+
+The dashboard presents historical daily inputs, each member's hidden/output computation and mean score. Delayed ERA5 cannot directly serve a validated live ANN; regional live ANN outputs remain unavailable. Current six-city weather is a separately labeled provider product with cached freshness. No official warning or health-decision claim is made.
 
 ## Sources
 
-- [IMD heatwave criteria](https://mausam.imd.gov.in/pdfs/heatcolduser/morning_heat_bulletin.pdf)
-- [Open-Meteo historical data and ERA5 availability](https://open-meteo.com/en/docs/historical-weather-api)
-- [Open-Meteo weather-provider forecast documentation](https://open-meteo.com/en/docs)
-- [Open-Meteo attribution, terms and rate limits](https://open-meteo.com/en/terms)
-- [Render Free limitations](https://render.com/docs/free)
+- [Open-Meteo archive and ERA5](https://open-meteo.com/en/docs/historical-weather-api)
+- [NASA POWER daily API and time standards](https://power.larc.nasa.gov/docs/services/api/temporal/daily/)
+- [NASA meteorological source methodology](https://power.larc.nasa.gov/docs/methodology/data/sources_meteorology/)
+- [NOAA daily synoptic summary](https://www.ncei.noaa.gov/access/search/datasets/global-summary-of-the-day/)
+- [IMD criteria](https://mausam.imd.gov.in/pdfs/heatcolduser/Definition.pdf)

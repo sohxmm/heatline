@@ -1,0 +1,2352 @@
+{
+  "source": "NASA POWER daily API \u00b7 MERRA-2/POWER meteorology",
+  "mode": "independent source benchmark",
+  "time_standard": "UTC, not Asia/Kolkata local calendar",
+  "target": "IMD-inspired proxy using NASA temperatures and its own frozen 1981\u20132010 reference",
+  "selection_note": "Architecture and weight-mode fixed from the ERA5 v2 selection before NASA evaluation; only training, early stopping and calibration are source-specific.",
+  "architecture": {
+    "inputs": 52,
+    "hidden": 16,
+    "activation": "bipolar_sigmoid",
+    "loss": "half_squared_error",
+    "ensemble_size": 3
+  },
+  "positive_weight": 3.4535073409461665,
+  "training": {
+    "days": 2730,
+    "positive_days": 613
+  },
+  "evaluation": {
+    "years": "2019\u20132026",
+    "days": 248,
+    "positive_days": 45
+  },
+  "metrics": [
+    {
+      "model": "NASA NumPy ANN",
+      "pr_auc": 0.8580199124557824,
+      "precision": 0.3728813559322034,
+      "recall": 0.9777777777777777,
+      "f1": 0.5398773006134969,
+      "brier": 0.06888394015766121,
+      "tn": 129,
+      "fp": 74,
+      "fn": 1,
+      "tp": 44,
+      "threshold": 0.13890295050939178,
+      "f2": 0.738255033557047,
+      "roc_auc": 0.961247947454844,
+      "balanced": {
+        "pr_auc": 0.8580199124557824,
+        "precision": 0.5857142857142857,
+        "recall": 0.9111111111111111,
+        "f1": 0.7130434782608696,
+        "brier": 0.06888394015766121,
+        "tn": 174,
+        "fp": 29,
+        "fn": 4,
+        "tp": 41,
+        "threshold": 0.3792012588899348,
+        "f2": 0.82,
+        "roc_auc": 0.961247947454844
+      }
+    },
+    {
+      "model": "NASA logistic regression",
+      "pr_auc": 0.87307888492556,
+      "precision": 0.375,
+      "recall": 1.0,
+      "f1": 0.5454545454545454,
+      "brier": 0.06889726834056804,
+      "tn": 128,
+      "fp": 75,
+      "fn": 0,
+      "tp": 45,
+      "threshold": 0.14685158357589667,
+      "f2": 0.75,
+      "roc_auc": 0.9617952928297755,
+      "balanced": {
+        "pr_auc": 0.87307888492556,
+        "precision": 0.5394736842105263,
+        "recall": 0.9111111111111111,
+        "f1": 0.6776859504132231,
+        "brier": 0.06889726834056804,
+        "tn": 168,
+        "fp": 35,
+        "fn": 4,
+        "tp": 41,
+        "threshold": 0.33979631917114544,
+        "f2": 0.80078125,
+        "roc_auc": 0.9617952928297755
+      }
+    },
+    {
+      "model": "Persistence",
+      "pr_auc": 0.7083074472321783,
+      "precision": 0.8222222222222222,
+      "recall": 0.8222222222222222,
+      "f1": 0.8222222222222222,
+      "brier": 0.06451612903225806,
+      "tn": 195,
+      "fp": 8,
+      "fn": 8,
+      "tp": 37,
+      "threshold": 0.5,
+      "f2": 0.8222222222222222,
+      "roc_auc": 0.8914066776135742,
+      "balanced": {
+        "pr_auc": 0.7083074472321783,
+        "precision": 0.8222222222222222,
+        "recall": 0.8222222222222222,
+        "f1": 0.8222222222222222,
+        "brier": 0.06451612903225806,
+        "tn": 195,
+        "fp": 8,
+        "fn": 8,
+        "tp": 37,
+        "threshold": 0.5,
+        "f2": 0.8222222222222222,
+        "roc_auc": 0.8914066776135742
+      }
+    }
+  ],
+  "records": [
+    {
+      "date": "2019-05-01",
+      "score": 0.9605882425522742,
+      "probability": 0.8739653282913544,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.88
+    },
+    {
+      "date": "2019-05-02",
+      "score": 0.7282048988221912,
+      "probability": 0.5753961757266118,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.91
+    },
+    {
+      "date": "2019-05-03",
+      "score": 0.6021977590483475,
+      "probability": 0.47047689869571424,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.33
+    },
+    {
+      "date": "2019-05-04",
+      "score": 0.3518541945084261,
+      "probability": 0.2938998202418374,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.79
+    },
+    {
+      "date": "2019-05-05",
+      "score": 0.21845101268169143,
+      "probability": 0.20304798982876568,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.07
+    },
+    {
+      "date": "2019-05-06",
+      "score": 0.1322177260872466,
+      "probability": 0.13991354207759474,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.82
+    },
+    {
+      "date": "2019-05-07",
+      "score": 0.5279282572854916,
+      "probability": 0.41529344126213796,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.56
+    },
+    {
+      "date": "2019-05-08",
+      "score": 0.2802731617002892,
+      "probability": 0.2456114611310001,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.85
+    },
+    {
+      "date": "2019-05-09",
+      "score": 0.4332051103715801,
+      "probability": 0.3489730759330657,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.9
+    },
+    {
+      "date": "2019-05-10",
+      "score": 0.35951269311660655,
+      "probability": 0.2990537709474912,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.62
+    },
+    {
+      "date": "2019-05-11",
+      "score": 0.5168555799717677,
+      "probability": 0.40734765013346835,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 43.46
+    },
+    {
+      "date": "2019-05-12",
+      "score": 0.09703348454873793,
+      "probability": 0.11163330239400863,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.82
+    },
+    {
+      "date": "2019-05-13",
+      "score": 0.48695284025504554,
+      "probability": 0.38617711261167836,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.58
+    },
+    {
+      "date": "2019-05-14",
+      "score": 0.5633497106941688,
+      "probability": 0.4411652269140867,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.43
+    },
+    {
+      "date": "2019-05-15",
+      "score": 0.5981846831024463,
+      "probability": 0.46739737549870847,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.54
+    },
+    {
+      "date": "2019-05-16",
+      "score": 0.528333407606328,
+      "probability": 0.415585369676114,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.36
+    },
+    {
+      "date": "2019-05-17",
+      "score": 0.28629458878852815,
+      "probability": 0.24969733230582064,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.59
+    },
+    {
+      "date": "2019-05-18",
+      "score": 0.393523349335633,
+      "probability": 0.32199313952934056,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.58
+    },
+    {
+      "date": "2019-05-19",
+      "score": 0.3124628331566827,
+      "probability": 0.2673841932160994,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.87
+    },
+    {
+      "date": "2019-05-20",
+      "score": 0.3954988180737408,
+      "probability": 0.32332956229487786,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.97
+    },
+    {
+      "date": "2019-05-21",
+      "score": 0.8166013866949151,
+      "probability": 0.6636248551764183,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.32
+    },
+    {
+      "date": "2019-05-22",
+      "score": 0.8152004737444939,
+      "probability": 0.6620837045907255,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.06
+    },
+    {
+      "date": "2019-05-23",
+      "score": 0.9362644178120768,
+      "probability": 0.8266544786376537,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.77
+    },
+    {
+      "date": "2019-05-24",
+      "score": 0.9281026115115125,
+      "probability": 0.8125292613735938,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.7
+    },
+    {
+      "date": "2019-05-25",
+      "score": 0.8839984317214445,
+      "probability": 0.7458920798393758,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.43
+    },
+    {
+      "date": "2019-05-26",
+      "score": 0.9174711775806049,
+      "probability": 0.7951153116377263,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.68
+    },
+    {
+      "date": "2019-05-27",
+      "score": 0.9352629313992377,
+      "probability": 0.8248820251455019,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.92
+    },
+    {
+      "date": "2019-05-28",
+      "score": 0.9394964059783598,
+      "probability": 0.8324549948260466,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 47.04
+    },
+    {
+      "date": "2019-05-29",
+      "score": 0.9738254869280025,
+      "probability": 0.9045839433954567,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.48
+    },
+    {
+      "date": "2019-05-30",
+      "score": 0.9275101514166669,
+      "probability": 0.8115309849175384,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.68
+    },
+    {
+      "date": "2019-05-31",
+      "score": 0.8695573663209811,
+      "probability": 0.7266889556561957,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.69
+    },
+    {
+      "date": "2020-05-01",
+      "score": 0.012286188300186407,
+      "probability": 0.02487872589003043,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.44
+    },
+    {
+      "date": "2020-05-02",
+      "score": 0.055694497551130005,
+      "probability": 0.07462200373410847,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.75
+    },
+    {
+      "date": "2020-05-03",
+      "score": 0.13007536514478654,
+      "probability": 0.1382489416846674,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.3
+    },
+    {
+      "date": "2020-05-04",
+      "score": 0.2314410021975438,
+      "probability": 0.21211084121951007,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.85
+    },
+    {
+      "date": "2020-05-05",
+      "score": 0.39098132689146076,
+      "probability": 0.3202742532793816,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.39
+    },
+    {
+      "date": "2020-05-06",
+      "score": 0.2982117949565366,
+      "probability": 0.25776428063188594,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.82
+    },
+    {
+      "date": "2020-05-07",
+      "score": 0.013754777407068472,
+      "probability": 0.027015397143986597,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 38.45
+    },
+    {
+      "date": "2020-05-08",
+      "score": 0.0013782102927654266,
+      "probability": 0.0049951882866040255,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.35
+    },
+    {
+      "date": "2020-05-09",
+      "score": 0.00662661407893467,
+      "probability": 0.015839650237790368,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.63
+    },
+    {
+      "date": "2020-05-10",
+      "score": 0.05835014949421755,
+      "probability": 0.07718366961180446,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.78
+    },
+    {
+      "date": "2020-05-11",
+      "score": 0.004363558009959843,
+      "probability": 0.01165973337701666,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.43
+    },
+    {
+      "date": "2020-05-12",
+      "score": 0.012558952548553269,
+      "probability": 0.025280693141609037,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.18
+    },
+    {
+      "date": "2020-05-13",
+      "score": 0.015526353874614545,
+      "probability": 0.029510619168420935,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.29
+    },
+    {
+      "date": "2020-05-14",
+      "score": 0.02178387639827224,
+      "probability": 0.03776239409292037,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.97
+    },
+    {
+      "date": "2020-05-15",
+      "score": 0.018453857297883663,
+      "probability": 0.03346794511228771,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.66
+    },
+    {
+      "date": "2020-05-16",
+      "score": 0.028020523062944985,
+      "probability": 0.0453446154173648,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.89
+    },
+    {
+      "date": "2020-05-17",
+      "score": 0.006782725572403745,
+      "probability": 0.016112136859728055,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.05
+    },
+    {
+      "date": "2020-05-18",
+      "score": 0.005675548954806692,
+      "probability": 0.01413961025657516,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.32
+    },
+    {
+      "date": "2020-05-19",
+      "score": 0.0325208724670048,
+      "probability": 0.05052236072677786,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.73
+    },
+    {
+      "date": "2020-05-20",
+      "score": 0.0076873858033439735,
+      "probability": 0.01765905569641406,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.94
+    },
+    {
+      "date": "2020-05-21",
+      "score": 0.09276605558823654,
+      "probability": 0.10804125949969542,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.18
+    },
+    {
+      "date": "2020-05-22",
+      "score": 0.3132238021939297,
+      "probability": 0.26789722801851146,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.99
+    },
+    {
+      "date": "2020-05-23",
+      "score": 0.6528941884670236,
+      "probability": 0.5105825603635369,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.1
+    },
+    {
+      "date": "2020-05-24",
+      "score": 0.9251529186707352,
+      "probability": 0.8075930748363341,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.23
+    },
+    {
+      "date": "2020-05-25",
+      "score": 0.9763046131780991,
+      "probability": 0.9109008205449238,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.18
+    },
+    {
+      "date": "2020-05-26",
+      "score": 0.9790130762850081,
+      "probability": 0.9180755854545134,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.67
+    },
+    {
+      "date": "2020-05-27",
+      "score": 0.9845523323965062,
+      "probability": 0.9338407250143246,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.12
+    },
+    {
+      "date": "2020-05-28",
+      "score": 0.9777962579542417,
+      "probability": 0.9148144101483225,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.78
+    },
+    {
+      "date": "2020-05-29",
+      "score": 0.960816249073866,
+      "probability": 0.8744563908641603,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.54
+    },
+    {
+      "date": "2020-05-30",
+      "score": 0.7536245036170532,
+      "probability": 0.5991385004664077,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 42.25
+    },
+    {
+      "date": "2020-05-31",
+      "score": 0.09685018684482925,
+      "probability": 0.11147986148534578,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.03
+    },
+    {
+      "date": "2021-05-01",
+      "score": 0.06041653454560499,
+      "probability": 0.07915485387344222,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.67
+    },
+    {
+      "date": "2021-05-02",
+      "score": 0.01654429729880593,
+      "probability": 0.03090841102123073,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 37.97
+    },
+    {
+      "date": "2021-05-03",
+      "score": 0.0023539077186166533,
+      "probability": 0.007408071767716048,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.74
+    },
+    {
+      "date": "2021-05-04",
+      "score": 0.003884504044165528,
+      "probability": 0.010705553652649285,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.72
+    },
+    {
+      "date": "2021-05-05",
+      "score": 0.013914181187145575,
+      "probability": 0.02724341542701117,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.07
+    },
+    {
+      "date": "2021-05-06",
+      "score": 0.012891881888818938,
+      "probability": 0.02576807119483043,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.25
+    },
+    {
+      "date": "2021-05-07",
+      "score": 0.006307662226699199,
+      "probability": 0.015277417228831568,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.09
+    },
+    {
+      "date": "2021-05-08",
+      "score": 0.002574513289820176,
+      "probability": 0.007912663218110148,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.66
+    },
+    {
+      "date": "2021-05-09",
+      "score": 0.007449243879671736,
+      "probability": 0.01725690946917606,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.71
+    },
+    {
+      "date": "2021-05-10",
+      "score": 0.002290706558325035,
+      "probability": 0.007261214515409465,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.45
+    },
+    {
+      "date": "2021-05-11",
+      "score": 0.0027657517576700707,
+      "probability": 0.008340764426564217,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.33
+    },
+    {
+      "date": "2021-05-12",
+      "score": 0.011186447536668274,
+      "probability": 0.023232233847329645,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.0
+    },
+    {
+      "date": "2021-05-13",
+      "score": 0.07802948106020059,
+      "probability": 0.0952861256232903,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.11
+    },
+    {
+      "date": "2021-05-14",
+      "score": 0.034827485609116214,
+      "probability": 0.05309766564002494,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.03
+    },
+    {
+      "date": "2021-05-15",
+      "score": 0.051151623935775666,
+      "probability": 0.07016028000598348,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.02
+    },
+    {
+      "date": "2021-05-16",
+      "score": 0.004746356243736793,
+      "probability": 0.012401917642605743,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.32
+    },
+    {
+      "date": "2021-05-17",
+      "score": 0.0013784158098278012,
+      "probability": 0.004995737050930124,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 35.39
+    },
+    {
+      "date": "2021-05-18",
+      "score": 0.00036802490968733506,
+      "probability": 0.0018861462407504808,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 35.12
+    },
+    {
+      "date": "2021-05-19",
+      "score": 0.00020390124455935536,
+      "probability": 0.0012195094288299827,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 34.41
+    },
+    {
+      "date": "2021-05-20",
+      "score": 0.00025902334618778936,
+      "probability": 0.0014552555090377845,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 34.45
+    },
+    {
+      "date": "2021-05-21",
+      "score": 0.00034707835144583485,
+      "probability": 0.0018062821713437738,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 38.84
+    },
+    {
+      "date": "2021-05-22",
+      "score": 0.0023417812527471164,
+      "probability": 0.007379976702396457,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.09
+    },
+    {
+      "date": "2021-05-23",
+      "score": 0.013293432070476207,
+      "probability": 0.02635130029913339,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.87
+    },
+    {
+      "date": "2021-05-24",
+      "score": 0.010547154300703493,
+      "probability": 0.022254652115012426,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.07
+    },
+    {
+      "date": "2021-05-25",
+      "score": 0.01734416576125739,
+      "probability": 0.03199003107528191,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.74
+    },
+    {
+      "date": "2021-05-26",
+      "score": 0.07278423299244728,
+      "probability": 0.09059570831330566,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.3
+    },
+    {
+      "date": "2021-05-27",
+      "score": 0.37877692113659905,
+      "probability": 0.31203317464649916,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.76
+    },
+    {
+      "date": "2021-05-28",
+      "score": 0.1696262761356747,
+      "probability": 0.16809296237353907,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.06
+    },
+    {
+      "date": "2021-05-29",
+      "score": 0.061554112243034476,
+      "probability": 0.08023213868585474,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.76
+    },
+    {
+      "date": "2021-05-30",
+      "score": 0.4093265141075469,
+      "probability": 0.33270146287951147,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.53
+    },
+    {
+      "date": "2021-05-31",
+      "score": 0.18927412365425886,
+      "probability": 0.1823570532003817,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.86
+    },
+    {
+      "date": "2022-05-01",
+      "score": 0.9452220647347679,
+      "probability": 0.8430539098929042,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.38
+    },
+    {
+      "date": "2022-05-02",
+      "score": 0.9071756727188789,
+      "probability": 0.77915854225438,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.06
+    },
+    {
+      "date": "2022-05-03",
+      "score": 0.534113389307683,
+      "probability": 0.4197595829596281,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.16
+    },
+    {
+      "date": "2022-05-04",
+      "score": 0.839813910675502,
+      "probability": 0.6900336334678883,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 43.99
+    },
+    {
+      "date": "2022-05-05",
+      "score": 0.19930485946722656,
+      "probability": 0.18952937940070907,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.25
+    },
+    {
+      "date": "2022-05-06",
+      "score": 0.6028269191767778,
+      "probability": 0.4709608545204488,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.14
+    },
+    {
+      "date": "2022-05-07",
+      "score": 0.653606222123727,
+      "probability": 0.5111633588547426,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 43.05
+    },
+    {
+      "date": "2022-05-08",
+      "score": 0.2589470559587342,
+      "probability": 0.23107243573815325,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.47
+    },
+    {
+      "date": "2022-05-09",
+      "score": 0.6556234460948422,
+      "probability": 0.512811678757926,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 43.68
+    },
+    {
+      "date": "2022-05-10",
+      "score": 0.34616424852326183,
+      "probability": 0.2900716729337645,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.33
+    },
+    {
+      "date": "2022-05-11",
+      "score": 0.07266698048760097,
+      "probability": 0.09048984421440287,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.37
+    },
+    {
+      "date": "2022-05-12",
+      "score": 0.13903924685126864,
+      "probability": 0.1451726418853776,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.17
+    },
+    {
+      "date": "2022-05-13",
+      "score": 0.16444264168937714,
+      "probability": 0.16427562456126563,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.46
+    },
+    {
+      "date": "2022-05-14",
+      "score": 0.18347978156013056,
+      "probability": 0.17818182031352894,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 1,
+      "tmax": 46.17
+    },
+    {
+      "date": "2022-05-15",
+      "score": 0.9143141039631123,
+      "probability": 0.7901339641887835,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.53
+    },
+    {
+      "date": "2022-05-16",
+      "score": 0.9068989020254105,
+      "probability": 0.7787406415466185,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 43.33
+    },
+    {
+      "date": "2022-05-17",
+      "score": 0.2622106055967401,
+      "probability": 0.23330519939823144,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.94
+    },
+    {
+      "date": "2022-05-18",
+      "score": 0.1404081435899635,
+      "probability": 0.14622076412211468,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.83
+    },
+    {
+      "date": "2022-05-19",
+      "score": 0.6480657589164394,
+      "probability": 0.5066579202962037,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 43.18
+    },
+    {
+      "date": "2022-05-20",
+      "score": 0.09834762498165917,
+      "probability": 0.1127312221826033,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.34
+    },
+    {
+      "date": "2022-05-21",
+      "score": 0.22247593589818127,
+      "probability": 0.20586468083037868,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.04
+    },
+    {
+      "date": "2022-05-22",
+      "score": 0.2688455814892891,
+      "probability": 0.23783526620526377,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.95
+    },
+    {
+      "date": "2022-05-23",
+      "score": 0.19184829366102152,
+      "probability": 0.18420417937463313,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.7
+    },
+    {
+      "date": "2022-05-24",
+      "score": 0.16022626353529726,
+      "probability": 0.16115204895175064,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.05
+    },
+    {
+      "date": "2022-05-25",
+      "score": 0.05822976871257001,
+      "probability": 0.07706825112870766,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.16
+    },
+    {
+      "date": "2022-05-26",
+      "score": 0.08674251554105682,
+      "probability": 0.10289707781371889,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.06
+    },
+    {
+      "date": "2022-05-27",
+      "score": 0.11067309067422822,
+      "probability": 0.12285579402789185,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.97
+    },
+    {
+      "date": "2022-05-28",
+      "score": 0.19149408366826667,
+      "probability": 0.18395028612319994,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.53
+    },
+    {
+      "date": "2022-05-29",
+      "score": 0.33300609027438494,
+      "probability": 0.28121906879124237,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.54
+    },
+    {
+      "date": "2022-05-30",
+      "score": 0.2384179088026069,
+      "probability": 0.21694740317141367,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.49
+    },
+    {
+      "date": "2022-05-31",
+      "score": 0.6008405571920002,
+      "probability": 0.46943399829561083,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.22
+    },
+    {
+      "date": "2023-05-01",
+      "score": 0.00048129923160780745,
+      "probability": 0.0022993305511294906,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 32.55
+    },
+    {
+      "date": "2023-05-02",
+      "score": 0.0010067546557337374,
+      "probability": 0.0039630817093599955,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 33.04
+    },
+    {
+      "date": "2023-05-03",
+      "score": 0.0014160299090484078,
+      "probability": 0.005095811040213117,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 32.36
+    },
+    {
+      "date": "2023-05-04",
+      "score": 0.0008627521569550652,
+      "probability": 0.0035367490009679987,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 34.34
+    },
+    {
+      "date": "2023-05-05",
+      "score": 0.0020439492863796108,
+      "probability": 0.006677055112364082,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 35.13
+    },
+    {
+      "date": "2023-05-06",
+      "score": 0.004605702330993563,
+      "probability": 0.012131164649595062,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 37.73
+    },
+    {
+      "date": "2023-05-07",
+      "score": 0.008801270715417026,
+      "probability": 0.019496990953548548,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 38.96
+    },
+    {
+      "date": "2023-05-08",
+      "score": 0.013651532025360805,
+      "probability": 0.0268673200210569,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.39
+    },
+    {
+      "date": "2023-05-09",
+      "score": 0.00916873632815046,
+      "probability": 0.020089046397288524,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.36
+    },
+    {
+      "date": "2023-05-10",
+      "score": 0.01003069493544781,
+      "probability": 0.021452942448761017,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.4
+    },
+    {
+      "date": "2023-05-11",
+      "score": 0.022050785828324936,
+      "probability": 0.03809835046548782,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.32
+    },
+    {
+      "date": "2023-05-12",
+      "score": 0.041823666608409665,
+      "probability": 0.060635077647614,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.32
+    },
+    {
+      "date": "2023-05-13",
+      "score": 0.0232125631328835,
+      "probability": 0.03954769441489447,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.33
+    },
+    {
+      "date": "2023-05-14",
+      "score": 0.0986784172707807,
+      "probability": 0.11300699491685695,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.17
+    },
+    {
+      "date": "2023-05-15",
+      "score": 0.3509777159856997,
+      "probability": 0.29331009366898647,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.37
+    },
+    {
+      "date": "2023-05-16",
+      "score": 0.12816961806224578,
+      "probability": 0.13676275652882158,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.66
+    },
+    {
+      "date": "2023-05-17",
+      "score": 0.07228379455634197,
+      "probability": 0.0901435554719784,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.37
+    },
+    {
+      "date": "2023-05-18",
+      "score": 0.0893436739088777,
+      "probability": 0.10512955807664325,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.2
+    },
+    {
+      "date": "2023-05-19",
+      "score": 0.018272520524681146,
+      "probability": 0.033228163816581585,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.02
+    },
+    {
+      "date": "2023-05-20",
+      "score": 0.2101112693291264,
+      "probability": 0.197185042318922,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.88
+    },
+    {
+      "date": "2023-05-21",
+      "score": 0.5549512143056063,
+      "probability": 0.4349637091546016,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.74
+    },
+    {
+      "date": "2023-05-22",
+      "score": 0.5303981989211438,
+      "probability": 0.4170744845027299,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.32
+    },
+    {
+      "date": "2023-05-23",
+      "score": 0.39187511218052656,
+      "probability": 0.32087851842442344,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.11
+    },
+    {
+      "date": "2023-05-24",
+      "score": 0.4362550976781274,
+      "probability": 0.3510609301198573,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.05
+    },
+    {
+      "date": "2023-05-25",
+      "score": 0.36035933455077857,
+      "probability": 0.29962368316517385,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.05
+    },
+    {
+      "date": "2023-05-26",
+      "score": 0.16225033178022652,
+      "probability": 0.1626536531515388,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.54
+    },
+    {
+      "date": "2023-05-27",
+      "score": 0.08582077206823518,
+      "probability": 0.10210179169765128,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.86
+    },
+    {
+      "date": "2023-05-28",
+      "score": 0.2131416601011604,
+      "probability": 0.19931976452175518,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.61
+    },
+    {
+      "date": "2023-05-29",
+      "score": 0.08625373661773744,
+      "probability": 0.10247563376955249,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.35
+    },
+    {
+      "date": "2023-05-30",
+      "score": 0.056145922640929324,
+      "probability": 0.07505977850354222,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.88
+    },
+    {
+      "date": "2023-05-31",
+      "score": 0.011423784603713127,
+      "probability": 0.023591210879127137,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.0
+    },
+    {
+      "date": "2024-05-01",
+      "score": 0.02891576078011894,
+      "probability": 0.0463920972854182,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.1
+    },
+    {
+      "date": "2024-05-02",
+      "score": 0.09434260094348601,
+      "probability": 0.10937315479067866,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.86
+    },
+    {
+      "date": "2024-05-03",
+      "score": 0.10336299453290056,
+      "probability": 0.11688758482275836,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.35
+    },
+    {
+      "date": "2024-05-04",
+      "score": 0.07785806322174439,
+      "probability": 0.09513419883524683,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.0
+    },
+    {
+      "date": "2024-05-05",
+      "score": 0.1164851167533894,
+      "probability": 0.12753108581928277,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 1,
+      "tmax": 45.45
+    },
+    {
+      "date": "2024-05-06",
+      "score": 0.8204298335822612,
+      "probability": 0.6678655508447486,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.89
+    },
+    {
+      "date": "2024-05-07",
+      "score": 0.6060571051418396,
+      "probability": 0.47345054679358595,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 43.0
+    },
+    {
+      "date": "2024-05-08",
+      "score": 0.0166513140284236,
+      "probability": 0.031053952503300918,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.68
+    },
+    {
+      "date": "2024-05-09",
+      "score": 0.011299333728363435,
+      "probability": 0.02340323563588739,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.5
+    },
+    {
+      "date": "2024-05-10",
+      "score": 0.005414131797867445,
+      "probability": 0.013659103812424741,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 38.36
+    },
+    {
+      "date": "2024-05-11",
+      "score": 0.001525512591100538,
+      "probability": 0.005383170323902598,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.04
+    },
+    {
+      "date": "2024-05-12",
+      "score": 0.0023334792278837863,
+      "probability": 0.007360719812157624,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.58
+    },
+    {
+      "date": "2024-05-13",
+      "score": 0.00558951433966088,
+      "probability": 0.013982148444555207,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.07
+    },
+    {
+      "date": "2024-05-14",
+      "score": 0.002554707574134669,
+      "probability": 0.00786784833948493,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.78
+    },
+    {
+      "date": "2024-05-15",
+      "score": 0.006206702092987108,
+      "probability": 0.015097848318108028,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 37.47
+    },
+    {
+      "date": "2024-05-16",
+      "score": 0.002235253787020664,
+      "probability": 0.007131467434642828,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 38.85
+    },
+    {
+      "date": "2024-05-17",
+      "score": 0.003010050941360741,
+      "probability": 0.008876283768841614,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 35.6
+    },
+    {
+      "date": "2024-05-18",
+      "score": 0.001020077338816991,
+      "probability": 0.004001677763712264,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.16
+    },
+    {
+      "date": "2024-05-19",
+      "score": 0.002574657911678224,
+      "probability": 0.007912990117212746,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.42
+    },
+    {
+      "date": "2024-05-20",
+      "score": 0.021303097603482216,
+      "probability": 0.03715432825809105,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.19
+    },
+    {
+      "date": "2024-05-21",
+      "score": 0.02015692698491335,
+      "probability": 0.035689009444773025,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.77
+    },
+    {
+      "date": "2024-05-22",
+      "score": 0.13070270527846234,
+      "probability": 0.13873704304584814,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.94
+    },
+    {
+      "date": "2024-05-23",
+      "score": 0.22173159799676265,
+      "probability": 0.2053443875802172,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.53
+    },
+    {
+      "date": "2024-05-24",
+      "score": 0.6092474317468086,
+      "probability": 0.4759178421320378,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.56
+    },
+    {
+      "date": "2024-05-25",
+      "score": 0.7454744776657947,
+      "probability": 0.5914041968004337,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.96
+    },
+    {
+      "date": "2024-05-26",
+      "score": 0.7278062040500076,
+      "probability": 0.5750324018706944,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.84
+    },
+    {
+      "date": "2024-05-27",
+      "score": 0.9193637710577501,
+      "probability": 0.7981412759129876,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 47.42
+    },
+    {
+      "date": "2024-05-28",
+      "score": 0.9596685054431235,
+      "probability": 0.871995435071375,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 47.56
+    },
+    {
+      "date": "2024-05-29",
+      "score": 0.9385784472968072,
+      "probability": 0.8307947460095736,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.37
+    },
+    {
+      "date": "2024-05-30",
+      "score": 0.8928126022014835,
+      "probability": 0.7581548248571042,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.66
+    },
+    {
+      "date": "2024-05-31",
+      "score": 0.9245579986310736,
+      "probability": 0.8066076269412016,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.27
+    },
+    {
+      "date": "2025-05-01",
+      "score": 0.12497407196823629,
+      "probability": 0.13425889734475427,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.04
+    },
+    {
+      "date": "2025-05-02",
+      "score": 0.008196089704136036,
+      "probability": 0.01850689258439282,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.6
+    },
+    {
+      "date": "2025-05-03",
+      "score": 0.020218091531615204,
+      "probability": 0.03576778167997076,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.53
+    },
+    {
+      "date": "2025-05-04",
+      "score": 0.06049117772340493,
+      "probability": 0.07922570975010433,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.25
+    },
+    {
+      "date": "2025-05-05",
+      "score": 0.0031301350925895754,
+      "probability": 0.009135207572360792,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 38.32
+    },
+    {
+      "date": "2025-05-06",
+      "score": 0.001050862471083827,
+      "probability": 0.004090356847379178,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 37.7
+    },
+    {
+      "date": "2025-05-07",
+      "score": 0.0006767297753759557,
+      "probability": 0.0029567247989522216,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 37.67
+    },
+    {
+      "date": "2025-05-08",
+      "score": 0.0009394994529328364,
+      "probability": 0.003766126377612787,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 37.79
+    },
+    {
+      "date": "2025-05-09",
+      "score": 0.001777417182848239,
+      "probability": 0.006024436389309841,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 38.19
+    },
+    {
+      "date": "2025-05-10",
+      "score": 0.0022847836003798204,
+      "probability": 0.007247396497609581,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.22
+    },
+    {
+      "date": "2025-05-11",
+      "score": 0.003986854902803083,
+      "probability": 0.010911967072946241,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 40.6
+    },
+    {
+      "date": "2025-05-12",
+      "score": 0.013308068760505325,
+      "probability": 0.02637246645676558,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.8
+    },
+    {
+      "date": "2025-05-13",
+      "score": 0.04569295754696221,
+      "probability": 0.06465112443960798,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.15
+    },
+    {
+      "date": "2025-05-14",
+      "score": 0.10396115217468711,
+      "probability": 0.11737983673722306,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.7
+    },
+    {
+      "date": "2025-05-15",
+      "score": 0.17624962914582912,
+      "probability": 0.17293608666572985,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.27
+    },
+    {
+      "date": "2025-05-16",
+      "score": 0.008323150162824476,
+      "probability": 0.018716384823700763,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.14
+    },
+    {
+      "date": "2025-05-17",
+      "score": 0.01909451727189704,
+      "probability": 0.03430989867764433,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.14
+    },
+    {
+      "date": "2025-05-18",
+      "score": 0.07567463169973244,
+      "probability": 0.09319114336944678,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.92
+    },
+    {
+      "date": "2025-05-19",
+      "score": 0.00935827827093817,
+      "probability": 0.020391880524868188,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.47
+    },
+    {
+      "date": "2025-05-20",
+      "score": 0.00635459094295959,
+      "probability": 0.015360618403453138,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.06
+    },
+    {
+      "date": "2025-05-21",
+      "score": 0.10985785400818883,
+      "probability": 0.12219520461147884,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.87
+    },
+    {
+      "date": "2025-05-22",
+      "score": 0.002844327549477419,
+      "probability": 0.008514342482394778,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 37.89
+    },
+    {
+      "date": "2025-05-23",
+      "score": 0.0005896502261841598,
+      "probability": 0.0026710078997290313,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 35.82
+    },
+    {
+      "date": "2025-05-24",
+      "score": 0.00040548945240011534,
+      "probability": 0.0020260840356363633,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 30.19
+    },
+    {
+      "date": "2025-05-25",
+      "score": 0.00015068534744338256,
+      "probability": 0.0009753340992804148,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 32.04
+    },
+    {
+      "date": "2025-05-26",
+      "score": 0.00017850623555520323,
+      "probability": 0.0011053846689207576,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 36.96
+    },
+    {
+      "date": "2025-05-27",
+      "score": 0.001639993961419584,
+      "probability": 0.005677842341111906,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 37.62
+    },
+    {
+      "date": "2025-05-28",
+      "score": 0.004097227940721764,
+      "probability": 0.011132963347781053,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 35.34
+    },
+    {
+      "date": "2025-05-29",
+      "score": 0.0008777158322839173,
+      "probability": 0.003581881481508784,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 38.4
+    },
+    {
+      "date": "2025-05-30",
+      "score": 0.003957184276443448,
+      "probability": 0.01085227832510448,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 39.94
+    },
+    {
+      "date": "2025-05-31",
+      "score": 0.015273679680586835,
+      "probability": 0.029159763322346755,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 38.21
+    },
+    {
+      "date": "2026-05-01",
+      "score": 0.4875640253341786,
+      "probability": 0.38660597690859855,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 43.75
+    },
+    {
+      "date": "2026-05-02",
+      "score": 0.4496789337495895,
+      "probability": 0.36027975803995677,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 1,
+      "tmax": 45.27
+    },
+    {
+      "date": "2026-05-03",
+      "score": 0.6995678388816208,
+      "probability": 0.5498755507467962,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 44.39
+    },
+    {
+      "date": "2026-05-04",
+      "score": 0.5614414283831642,
+      "probability": 0.43975222516779217,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 43.69
+    },
+    {
+      "date": "2026-05-05",
+      "score": 0.3470149607048382,
+      "probability": 0.29064399457363543,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.08
+    },
+    {
+      "date": "2026-05-06",
+      "score": 0.10759310299830178,
+      "probability": 0.12035361513063515,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.75
+    },
+    {
+      "date": "2026-05-07",
+      "score": 0.12608673991757702,
+      "probability": 0.13513243508909756,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.61
+    },
+    {
+      "date": "2026-05-08",
+      "score": 0.025423083976807075,
+      "probability": 0.04225082880880182,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 41.51
+    },
+    {
+      "date": "2026-05-09",
+      "score": 0.032864323371961185,
+      "probability": 0.05090897431762909,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 42.9
+    },
+    {
+      "date": "2026-05-10",
+      "score": 0.03010367850409919,
+      "probability": 0.047768158120914,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.46
+    },
+    {
+      "date": "2026-05-11",
+      "score": 0.2669476764662689,
+      "probability": 0.23654067804139908,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.15
+    },
+    {
+      "date": "2026-05-12",
+      "score": 0.09627154068421134,
+      "probability": 0.11099497917888368,
+      "prediction": 0,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.38
+    },
+    {
+      "date": "2026-05-13",
+      "score": 0.24954926710838357,
+      "probability": 0.2246244568708946,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 44.21
+    },
+    {
+      "date": "2026-05-14",
+      "score": 0.3469536710994519,
+      "probability": 0.29060276139107266,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 1,
+      "tmax": 46.3
+    },
+    {
+      "date": "2026-05-15",
+      "score": 0.9228833106419323,
+      "probability": 0.8038513334579491,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.98
+    },
+    {
+      "date": "2026-05-16",
+      "score": 0.929823237080889,
+      "probability": 0.815448427575838,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.86
+    },
+    {
+      "date": "2026-05-17",
+      "score": 0.8540815893132184,
+      "probability": 0.707176775646431,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.13
+    },
+    {
+      "date": "2026-05-18",
+      "score": 0.8899419251524691,
+      "probability": 0.7541122928080152,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 45.89
+    },
+    {
+      "date": "2026-05-19",
+      "score": 0.8764352352450819,
+      "probability": 0.7357055218759687,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.01
+    },
+    {
+      "date": "2026-05-20",
+      "score": 0.9138264115551799,
+      "probability": 0.7893716551981681,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 47.5
+    },
+    {
+      "date": "2026-05-21",
+      "score": 0.962103047964406,
+      "probability": 0.8772485602280762,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 47.8
+    },
+    {
+      "date": "2026-05-22",
+      "score": 0.9414560955431646,
+      "probability": 0.8360344651929925,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 47.1
+    },
+    {
+      "date": "2026-05-23",
+      "score": 0.9475706405779495,
+      "probability": 0.8475308564527989,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 47.33
+    },
+    {
+      "date": "2026-05-24",
+      "score": 0.9408555827529027,
+      "probability": 0.8349324361464098,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.85
+    },
+    {
+      "date": "2026-05-25",
+      "score": 0.9630604129614918,
+      "probability": 0.879349396529314,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.46
+    },
+    {
+      "date": "2026-05-26",
+      "score": 0.9557476487972941,
+      "probability": 0.863785262597158,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.52
+    },
+    {
+      "date": "2026-05-27",
+      "score": 0.8852829113343518,
+      "probability": 0.7476520122308867,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 47.16
+    },
+    {
+      "date": "2026-05-28",
+      "score": 0.9509879763096721,
+      "probability": 0.8541918320267392,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 47.11
+    },
+    {
+      "date": "2026-05-29",
+      "score": 0.9677951733009689,
+      "probability": 0.8900579333645007,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 1,
+      "tmax": 46.46
+    },
+    {
+      "date": "2026-05-30",
+      "score": 0.9077256838395161,
+      "probability": 0.7799906534053525,
+      "prediction": 1,
+      "balanced_prediction": 1,
+      "actual": 0,
+      "tmax": 43.76
+    },
+    {
+      "date": "2026-05-31",
+      "score": 0.3657071940856571,
+      "probability": 0.30322446217782334,
+      "prediction": 1,
+      "balanced_prediction": 0,
+      "actual": 0,
+      "tmax": 43.19
+    }
+  ],
+  "limitations": [
+    "These scores are not comparable as an improvement over ERA5 because the target data product and daily boundaries differ.",
+    "52 lag features use six meteorological variables, seven lagged departures, previous proxy and calendar; early solar responses are unavailable and are excluded for every year. NASA wind is 2m, ERA5 is 10m.",
+    "The benchmark is not validated against official station declarations or live warnings."
+  ]
+}

@@ -20,7 +20,9 @@ test("calendar selection shows the real daily prediction and forward computation
   );
   const selected = page.getByTestId("selected-day-result");
   await expect(selected).toContainText("20 May 2026");
-  await expect(selected).toContainText("Missed event");
+  await expect(selected).toContainText(
+    day.prediction === day.actual ? "Correct event" : "Missed event",
+  );
   await expect(selected).toContainText("19 May");
   await expect(selected).toContainText(day.score.toFixed(6));
   await expect(selected).toContainText(
@@ -33,11 +35,11 @@ test("calendar selection shows the real daily prediction and forward computation
   await page
     .getByText("How the model calculated this day", { exact: true })
     .click();
-  await expect(page.locator(".day-calculation tbody tr")).toHaveCount(26);
+  await expect(page.locator(".day-feature-inputs tbody tr")).toHaveCount(26);
   await expect(page.locator(".day-trace-values")).toContainText(
     day.output_logit.toFixed(6),
   );
-  const first = page.locator(".day-calculation tbody tr").first();
+  const first = page.locator(".day-feature-inputs tbody tr").first();
   await expect(first).toContainText(day.inputs.tmax_lag1.toFixed(4));
   await expect(first).toContainText(day.normalized_inputs.tmax_lag1.toFixed(4));
   const accessibility = await new AxeBuilder({ page })

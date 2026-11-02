@@ -4,7 +4,7 @@ Start with [README.md](README.md). The assessed contribution is Nagpur May predi
 
 1. Review the [executed lab notebook](notebooks/03_heatline_lab.ipynb).
 2. Derive the two objectives and scalar update using the [appendix](docs/ACADEMIC_APPENDIX.md).
-3. Reproduce the study with `python -m src.experiment`.
+3. Reproduce the assessed study with `python -m src.seasonal_experiment`; run `python -m src.provider_benchmark` for the independent NASA dataset.
 4. Compare models and missed events in the [academic report](docs/ACADEMIC_REPORT.md).
 5. Run the API and five-view frontend using the README commands.
 6. Follow the [deployment guide](docs/DEPLOYMENT.md) for release.

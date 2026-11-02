@@ -1,0 +1,454 @@
+{
+  "era5_overlap_days": 2806,
+  "max_daily_tmax_difference": 0.0,
+  "may_label_changes": 0,
+  "source_decision": "Keep ERA5 for assessed modelling and unchanged May targets. NASA POWER is a source sensitivity audit only, not a way to increase event prevalence.",
+  "nasa_time_standard": "UTC daily boundaries differ from ERA5 Asia/Kolkata. Provider comparison is descriptive and not a matched station validation.",
+  "nasa_samples": [
+    {
+      "year": 1991,
+      "may_days": 31,
+      "nasa_mean_tmax": 46.146451612903235,
+      "era5_mean_tmax": 43.138709677419364,
+      "mean_nasa_minus_era5": 3.0077419354838715,
+      "nasa_days_ge45": 25,
+      "era5_days_ge45": 0
+    },
+    {
+      "year": 2000,
+      "may_days": 31,
+      "nasa_mean_tmax": 41.72064516129032,
+      "era5_mean_tmax": 39.83870967741936,
+      "mean_nasa_minus_era5": 1.8819354838709674,
+      "nasa_days_ge45": 3,
+      "era5_days_ge45": 0
+    },
+    {
+      "year": 2010,
+      "may_days": 31,
+      "nasa_mean_tmax": 44.66967741935484,
+      "era5_mean_tmax": 43.43548387096775,
+      "mean_nasa_minus_era5": 1.234193548387096,
+      "nasa_days_ge45": 19,
+      "era5_days_ge45": 6
+    }
+  ],
+  "files": [
+    {
+      "path": "data/raw/seasonal_era5/1981.json",
+      "sha256": "a12695f9b4c7a33580b706b803bff37247a1b7ee0b42dde42d2d2535e0bb2831"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1982.json",
+      "sha256": "205e9a625c9ff9d3f2605041b9879e993c21ce8264cd1fe8cefcbeadd060554d"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1983.json",
+      "sha256": "e71183cc870db35e349ba663461f17cc79dba5bf38b3a3fbff8e07d8e447d56f"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1984.json",
+      "sha256": "d1346208ddfa7342adad9b1fa03d26e98f46398fd4ec98d4e90f169cd1d00214"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1985.json",
+      "sha256": "957c18a398c525d640ede309beed95d7d80731f5d668363c46aab954752895cf"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1986.json",
+      "sha256": "4310881b977cfd030ca9de91c3c5be5b86cbb08c98d253478c38d9aba8187bfd"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1987.json",
+      "sha256": "92f395ddc21daae1ce593e2ebc73618298f763d1622d486bc2303dee9713a771"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1988.json",
+      "sha256": "9d6645be57d7a5d2b53a81adcda8a01e7b7e5ebfd0a0fe78d2c2312f05769ea8"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1989.json",
+      "sha256": "fda66f94479e148156da5f3e1d8f21e28626cd6cff9c12afdcb52d2916e168d2"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1990.json",
+      "sha256": "2fd1d130d8571ff9d628551b312fe1d3458020d929085875788c9dadcbdf8402"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1991.json",
+      "sha256": "d807cd4ecfe1f01e8fdef0c27e3923b207e66c6b0b7c617b654ca6c61341ee99"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1992.json",
+      "sha256": "c2a250a8a89a0894dfcda44c2d32298b8e2d18620a3238f3d5833a61dffeea37"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1993.json",
+      "sha256": "7afe61a671f96b416352fdc87a7cddef24088097a38bf9039db382ff1bcb61a0"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1994.json",
+      "sha256": "ba58f720ad3a567ccef428f982c57b737468cc539a26767be67268f83a72c5e9"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1995.json",
+      "sha256": "f0ccd728f798488df34a54d6a2b2188cec40cfb6a8855efb44301bcb1ccfe410"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1996.json",
+      "sha256": "2b41d4dbf8fe4b74d4ba614855be32a3673187f19be1c3ac4155cc7cd87d10e1"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1997.json",
+      "sha256": "47c718588001307c849736b6f44b62ebfe9f083cf6e1e2e3bbf5b2f17955558a"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1998.json",
+      "sha256": "4d6673fd0122678395185cdf757c1aa77f905381e05cc0f3057c51b4c5ddcb26"
+    },
+    {
+      "path": "data/raw/seasonal_era5/1999.json",
+      "sha256": "6e4fbed1b7dc006edd80b67f56957b1edf661cd80a43d91b2ced248993230b7f"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2000.json",
+      "sha256": "a923a31c942fc07df01634feca16e9c9ecca109e006f9758bf3749a30ebd1191"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2001.json",
+      "sha256": "54058149fe4bb837c2c884f02d2c1ff4f09126b31d9ca74a5d89119fa048fbd2"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2002.json",
+      "sha256": "c620239a14eca2d6fede7debb67ace9e7397f645e8eb9b431a8f7e4770c52764"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2003.json",
+      "sha256": "b1d46fe58695cc3e206ea6e2578603e16b3174f47127147ac0a4a868b9b4a82f"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2004.json",
+      "sha256": "29b6eea193802a9b6881467e89c1d0446072d191cd1be39552b1738b4ee58b18"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2005.json",
+      "sha256": "f4ee9349756fb6adaaca48c7ffd73400bed57895fa5709c75a67ef215844ec18"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2006.json",
+      "sha256": "e520b20ebee2e3ee08c3d3710d0e7230deb9652c48dbc48b477d22877cc83222"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2007.json",
+      "sha256": "9435164458dc1e5cb3329a31f19cb8281b9e03d9b90aee1dcd3f931922d3116f"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2008.json",
+      "sha256": "17fe25063bb1764aa206acaf7885d57df3c1afd47ba6eb124335df0b66c43b2d"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2009.json",
+      "sha256": "0249c561b1b02b8be43bb939b11bb789e2bb83495765e85529ca2cf67ce11c79"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2010.json",
+      "sha256": "25e7accfe38dc3e06b161a99217be236d2897780c6abfe58a8a3efba4c3d86d3"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2011.json",
+      "sha256": "44a61f440c423e1e219bf6e586660ec7ff5052f6ffb93afd95d1525baec13500"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2012.json",
+      "sha256": "d41a58b4b1f6806b707b521f0a948f6cf39bb50591859638140b0851959d93d9"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2013.json",
+      "sha256": "c8ecc5942ad0bc59bec4d89678b09b040477a86d52ebe17993fd2155e6e089da"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2014.json",
+      "sha256": "b0e8789a5239fac0cb6d31821fab8c9c075d43daaf2a778e3a42095cc6a9cb29"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2015.json",
+      "sha256": "5902fda5d52f17aab1678b3e5d17dafdf263e35afe7737eda08de5838a9b410e"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2016.json",
+      "sha256": "7adf6e13a43a73402d8150eb454bd2a6d1dd058136c2f248dd0513fd083a7af1"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2017.json",
+      "sha256": "86b1b99559b13b669c51e2a15407c4985e14b4879571128633b00e8cf8fee697"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2018.json",
+      "sha256": "ba81e091e095bb2da13ed47a490a6effbf54e1bd4cac801e518a1c6ed182d256"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2019.json",
+      "sha256": "64cfe7527f5177ed20f81927f4ab9e2a267b8db8912dabda5755cb85bdc004ba"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2020.json",
+      "sha256": "fd4acc631412d6a60b9eb88beb66732aed80227e2a6ee17b7d7310442278305e"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2021.json",
+      "sha256": "d657e9e523d6f2bc4da04bd4c312428c10039a7b8f7d015c8e53d1fe32504e9a"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2022.json",
+      "sha256": "c78f7f82adbe64e1dbbee6b9c2ed52a0916977468383b14e0db71bfd4ef2c490"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2023.json",
+      "sha256": "f9d8f0b7d43b27c01180ae85b041d67ca0dc0e71a00ba37a28fe55725b9bae1a"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2024.json",
+      "sha256": "0e291ef189d14a3481d35a4c746149d92239bb68427d893f29fc94f34b373074"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2025.json",
+      "sha256": "28cb2dab394f2d43ae774b456c2fa26f94e5abc455e435f5d9481aa5c6c0720e"
+    },
+    {
+      "path": "data/raw/seasonal_era5/2026.json",
+      "sha256": "c7cb2cdd930e3815ab33d220f245355b307107ba190c50c9b2353eeb2ba99608"
+    },
+    {
+      "path": "data/raw/nasa_power/1981.json",
+      "sha256": "19f81f6e3db3606ab22b68831a7910b32b018971abc4614fcd9bf2783a0a3766"
+    },
+    {
+      "path": "data/raw/nasa_power/1982.json",
+      "sha256": "653f71a6cd7944ddd1a49528be880231b4b4e00f602544ca87808bd453804077"
+    },
+    {
+      "path": "data/raw/nasa_power/1983.json",
+      "sha256": "ca51d85679b326aafce58fcb2612b24be1fd808295cef1ed5faa53c892fb83bd"
+    },
+    {
+      "path": "data/raw/nasa_power/1984.json",
+      "sha256": "c96cd6bc0da20ca49657caeadbf9ce55e43a85dda1f4940b99658218fe8e7c07"
+    },
+    {
+      "path": "data/raw/nasa_power/1985.json",
+      "sha256": "9dae3ee70a38a8436b2b0b359f8a364564221317a72be97377ff6856da09ad16"
+    },
+    {
+      "path": "data/raw/nasa_power/1986.json",
+      "sha256": "5022be85d99b2a2eaca8700c709445fdb426d8c50ea869b51b4a274e08c320ce"
+    },
+    {
+      "path": "data/raw/nasa_power/1987.json",
+      "sha256": "fbec10a75a470ee4ca5c3a370687bb857fcc4f7a826ebd89202928953c63a57b"
+    },
+    {
+      "path": "data/raw/nasa_power/1988.json",
+      "sha256": "642d6e1b5b32e957714db17ba5db1022602776a071b4d1f6e0ec62fc4db748dc"
+    },
+    {
+      "path": "data/raw/nasa_power/1989.json",
+      "sha256": "d3177455a6eeffb5d92931a57e348ea8b011cfbe9f649b4e624ec331cb11a0f8"
+    },
+    {
+      "path": "data/raw/nasa_power/1990.json",
+      "sha256": "e03f8cb0cd7bcdc1c333e43432e66814383408098c6185a26cbbfb4ab0551706"
+    },
+    {
+      "path": "data/raw/nasa_power/1991.json",
+      "sha256": "1aa8bd6913c9cb6ee863fb8f9fae5a3324880bcd04905edf7100f44ade5ec8ca"
+    },
+    {
+      "path": "data/raw/nasa_power/1992.json",
+      "sha256": "faf5fc0d359fae8b36109321dd846d47e2cb3c2a8c648838314acc418b991ac4"
+    },
+    {
+      "path": "data/raw/nasa_power/1993.json",
+      "sha256": "3414bee02ca07dbc65ea73915e7d67e4668a8c3be3abe090111e9bc923e5acdd"
+    },
+    {
+      "path": "data/raw/nasa_power/1994.json",
+      "sha256": "47a1e870e7872a0cf3dabc973089e92c9ea6ac16e985d702ff155711a749fdd9"
+    },
+    {
+      "path": "data/raw/nasa_power/1995.json",
+      "sha256": "17e98ed4f4bc7dacd9b42720d3e2e5312f486635f80fa16e292f558ff1d760f7"
+    },
+    {
+      "path": "data/raw/nasa_power/1996.json",
+      "sha256": "43f5cf6c91cfff908ed070d062fd6bcd01a9979bff411639eb48bb4c8d568cd8"
+    },
+    {
+      "path": "data/raw/nasa_power/1997.json",
+      "sha256": "85d0d034118db4f9ac6847ebd7b277e57e6fa1b8348ae3aa0b4ab3aa0d73809d"
+    },
+    {
+      "path": "data/raw/nasa_power/1998.json",
+      "sha256": "0f5ff8a4a85485073d9ed69c942936656e01c5405423c9fccdd7b1356769806e"
+    },
+    {
+      "path": "data/raw/nasa_power/1999.json",
+      "sha256": "ffeef532dcbbd3380713daf9966929da8adaa73cb87b9b4ce35e1c902ae7bdce"
+    },
+    {
+      "path": "data/raw/nasa_power/2000.json",
+      "sha256": "1d983f6704b12ca0ab9ba91606608880fc6970085fe3c8e5fc770d08401972fc"
+    },
+    {
+      "path": "data/raw/nasa_power/2001.json",
+      "sha256": "edc0ae955c1ea3217c7a9a152098bed78d9cbdc54b289f604a26084bf8f7d9b7"
+    },
+    {
+      "path": "data/raw/nasa_power/2002.json",
+      "sha256": "d3402f57e3997ccdc1b7928656b20473cf9241aacdd0227d7e546a9e211b3287"
+    },
+    {
+      "path": "data/raw/nasa_power/2003.json",
+      "sha256": "2de05551c8bf715097e22dfdfb4a34a4ae53a0ca20f376735290e66594d5b132"
+    },
+    {
+      "path": "data/raw/nasa_power/2004.json",
+      "sha256": "2516ed8ab3f2932fdbf299a3af818320082e6f5a7a2f623b38a2e4f6a44cd7a1"
+    },
+    {
+      "path": "data/raw/nasa_power/2005.json",
+      "sha256": "6a76d5b16becc390fbeb3aad302f23a6619a560249ade06f01e03ac9921136b6"
+    },
+    {
+      "path": "data/raw/nasa_power/2006.json",
+      "sha256": "8024f87de7a6e887b9b88c9d4f137eeef0e02ff5340a54ce4b56f82858c5fe62"
+    },
+    {
+      "path": "data/raw/nasa_power/2007.json",
+      "sha256": "72355eeb62a979516a60b11c8f312195621d90a2c34d57585ad0347dbddac0fd"
+    },
+    {
+      "path": "data/raw/nasa_power/2008.json",
+      "sha256": "387788ec3200d5e84ee8a9a5204c688ce7ba018f62a534a4e0be43e13b8fdc4d"
+    },
+    {
+      "path": "data/raw/nasa_power/2009.json",
+      "sha256": "4e895578c3060d907b0de20ead9958c24889cf7a20ca60cc896dfea7388e84f9"
+    },
+    {
+      "path": "data/raw/nasa_power/2010.json",
+      "sha256": "93c754b7a35094cda462bab37ab4aed75796062b7be66f84aca8c8681f35c480"
+    },
+    {
+      "path": "data/raw/nasa_power/2011.json",
+      "sha256": "e89ac4ffa2ffa7ce63de53ac005a29c45c5afbeb3d3e2e6d0561fbeb4fc219af"
+    },
+    {
+      "path": "data/raw/nasa_power/2012.json",
+      "sha256": "925fbec0de56bfc0f6598e2edb74be4e47d2f1a21a716a5a802c6be86b488c15"
+    },
+    {
+      "path": "data/raw/nasa_power/2013.json",
+      "sha256": "d6d400775e615c6b8ad770070c9593527f6d93c2ea585f2b4e85426826d44041"
+    },
+    {
+      "path": "data/raw/nasa_power/2014.json",
+      "sha256": "c2ad783fc17002f1d16bbb64572ee8cccc87bd6c47a221adee4632c8f609bdc3"
+    },
+    {
+      "path": "data/raw/nasa_power/2015.json",
+      "sha256": "381af637fb8da9477cc4fe0e48bef4a0e68c9fbda7b0e2a3473393c4ed749444"
+    },
+    {
+      "path": "data/raw/nasa_power/2016.json",
+      "sha256": "c1b49d255f8e0baf77b357ca48adb39d952d4e38f51913a9531c6a51c3d10b66"
+    },
+    {
+      "path": "data/raw/nasa_power/2017.json",
+      "sha256": "fef925f410ba030aaf851013d6834e3b9ffd391896cd82b5f3869e443559c2c2"
+    },
+    {
+      "path": "data/raw/nasa_power/2018.json",
+      "sha256": "829911e49c7e88931e04558c48cf851f986465348182b5ff2c03060d7d4bff16"
+    },
+    {
+      "path": "data/raw/nasa_power/2019.json",
+      "sha256": "0deac2d82784ca2966f8f2b559d3e15ba801dd90b375adde829a90daf78516bf"
+    },
+    {
+      "path": "data/raw/nasa_power/2020.json",
+      "sha256": "0d67774f72fed409023751f392087b562e11ada095420bce217c915c31675166"
+    },
+    {
+      "path": "data/raw/nasa_power/2021.json",
+      "sha256": "24eb7cdd281ee05fea75d24c2dad2a591e415b0c21fca9dc4cf7bf1e78cbbfb3"
+    },
+    {
+      "path": "data/raw/nasa_power/2022.json",
+      "sha256": "162a2e4af1a07617d96153087406fc716a102c6f2c3b60f913e7a669b8043cd6"
+    },
+    {
+      "path": "data/raw/nasa_power/2023.json",
+      "sha256": "caee4387594c7428994218d411cea0260d7b622e611b818896519a1108da93e7"
+    },
+    {
+      "path": "data/raw/nasa_power/2024.json",
+      "sha256": "bf07194ab4d9156297a9ccb5deb1ece337dabf2da3453276650d06d4d8cc89c8"
+    },
+    {
+      "path": "data/raw/nasa_power/2025.json",
+      "sha256": "5bf035bfb28cf4035ebebfcf42fabaa5830357d357de657f88c030e5b28a5781"
+    },
+    {
+      "path": "data/raw/nasa_power/2026.json",
+      "sha256": "7b68a16356e11bbfa7d6482484fa5e4a2ea3585fda80b97861fdc98d81dcd9b5"
+    },
+    {
+      "path": "data/raw/noaa_gsod/1991-42867099999.csv",
+      "sha256": "eeb3ce41d794bab3c43c112bb7f3009b586604c61876240dde65020ed9f6abf6"
+    },
+    {
+      "path": "data/raw/noaa_gsod/2000-42867099999.csv",
+      "sha256": "0b7420f9afe1addf6def47109ab630bdf823d9f06f16749c71638ac4c85f3123"
+    },
+    {
+      "path": "data/raw/noaa_gsod/2010-42867099999.csv",
+      "sha256": "290c791c0bbf9c9d223d673e3e8b37a40de337aba424322a605865ad7e65d58b"
+    }
+  ],
+  "station_samples": [
+    {
+      "year": 1991,
+      "station": "42867099999 \u00b7 Dr Baba Saheb Ambedkar International Airport",
+      "paired_days": 30,
+      "mean_station_tmax": 43.62592592592593,
+      "mean_era5_tmax": 43.11,
+      "mean_era5_minus_station": -0.5159259259259262,
+      "mean_absolute_difference": 0.7818518518518521,
+      "station_days_ge45": 5,
+      "era5_days_ge45": 0
+    },
+    {
+      "year": 2000,
+      "station": "42867099999 \u00b7 Dr Baba Saheb Ambedkar International Airport",
+      "paired_days": 31,
+      "mean_station_tmax": 40.462365591397855,
+      "mean_era5_tmax": 39.83870967741936,
+      "mean_era5_minus_station": -0.6236559139784945,
+      "mean_absolute_difference": 0.9813620071684587,
+      "station_days_ge45": 3,
+      "era5_days_ge45": 0
+    },
+    {
+      "year": 2010,
+      "station": "42867099999 \u00b7 Dr Baba Saheb Ambedkar International Airport",
+      "paired_days": 31,
+      "mean_station_tmax": 44.51971326164874,
+      "mean_era5_tmax": 43.43548387096775,
+      "mean_era5_minus_station": -1.084229390681004,
+      "mean_absolute_difference": 1.098566308243728,
+      "station_days_ge45": 17,
+      "era5_days_ge45": 6
+    }
+  ],
+  "station_limitation": "NOAA GSOD maximum temperatures summarize synoptic reports; reporting windows can overlap the previous day and differ from local calendar days. Training-era descriptive audit only; not an official warning-label validation."
+}

@@ -16,20 +16,14 @@ def main():
     args=parser.parse_args()
     config=load_config()
     if args.fetch:
-        from src.fetch_data import fetch_all_data
-        fetch_all_data(config)
+        from src.seasonal_data import fetch_all
+        fetch_all('era5')
     if args.prepare_only:
-        from src.daily import process_hourly_to_daily
-        from src.climatology import compute_wmo_climatology
-        from src.labels import evaluate_labels_and_audit
-        from src.features import build_and_save_features
-        process_hourly_to_daily(config)
-        compute_wmo_climatology(config)
-        evaluate_labels_and_audit(config)
-        build_and_save_features(config)
+        from src.seasonal_data import prepare_era5
+        prepare_era5()
     else:
-        from src.experiment import run
-        run(args.max_epochs)
+        from src.seasonal_experiment import run
+        run()
 
 
 if __name__=="__main__":

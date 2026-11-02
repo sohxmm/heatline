@@ -75,6 +75,20 @@ export function Explorer() {
         </span>
         <span>31 May days · Nagpur</span>
       </div>
+      {model.data?.decision_policy && (
+        <div className="notice">
+          <Info size={17} />
+          <p>
+            Active decision policy: sensitivity (F2). It gives missed events
+            more weight and can create more false alarms. The threshold was
+            selected on May 2015–2018.{" "}
+            <a className="text-link" href="/evidence">
+              Compare sensitivity and balanced operating points
+            </a>
+            .
+          </p>
+        </div>
+      )}
       <DataNote
         data={resource.data}
         transport={resource.transport}

@@ -19,6 +19,9 @@ def markdown_table(rows, fields):
 
 
 def export():
+    if json.loads((ROOT/'artifacts/heatline/model.json').read_text()).get('schema_version')=='2.0':
+        from export_seasonal_evidence import export as seasonal_export
+        return seasonal_export()
     art=ROOT/'artifacts/heatline'; docs=ROOT/'docs';docs.mkdir(exist_ok=True)
     model=json.loads((art/'model.json').read_text());exp=json.loads((art/'experiments.json').read_text());history=json.loads((art/'history.json').read_text())
     trace=backpropagation_trace()

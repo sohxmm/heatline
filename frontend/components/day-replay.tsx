@@ -299,7 +299,12 @@ export function DayReplay({
                   {trace.hidden_activations?.length} hidden activations
                 </span>
                 <ArrowRight size={15} />
-                <span>Sigmoid → Platt scaling → threshold</span>
+                <span>
+                  {trace.members?.length
+                    ? `${trace.members.length} sigmoid scores → mean → `
+                    : ""}
+                  Platt scaling → threshold
+                </span>
               </div>
               <p className="panel-copy">
                 These are the actual recorded features and saved network
@@ -309,7 +314,12 @@ export function DayReplay({
               </p>
               <div className="day-trace-values">
                 <div>
-                  <span>Hidden layer outputs</span>
+                  <span>
+                    Hidden layer outputs
+                    {trace.trace_member_seed !== undefined
+                      ? ` · member seed ${trace.trace_member_seed}`
+                      : ""}
+                  </span>
                   <code>
                     {trace.hidden_activations
                       ?.map((value) => number(value, 4))
@@ -317,10 +327,15 @@ export function DayReplay({
                   </code>
                 </div>
                 <div>
-                  <span>Output neuron</span>
+                  <span>
+                    Output neuron
+                    {trace.trace_member_seed !== undefined
+                      ? ` · member seed ${trace.trace_member_seed}`
+                      : ""}
+                  </span>
                   <code>
                     σ({number(trace.output_logit, 6)}) ={" "}
-                    {number(trace.score, 6)}
+                    {number(trace.member_score ?? trace.score, 6)}
                   </code>
                 </div>
                 <div>
@@ -333,13 +348,54 @@ export function DayReplay({
                   </code>
                 </div>
               </div>
+              {trace.members && (
+                <div className="ensemble-calculation">
+                  <p className="panel-copy">
+                    Each member uses the same inputs and architecture, with
+                    independently learned weights. The raw score is their
+                    arithmetic mean.
+                  </p>
+                  <div className="table-scroll" tabIndex={0}>
+                    <table>
+                      <caption>
+                        Independent NumPy network outputs for {date}
+                      </caption>
+                      <thead>
+                        <tr>
+                          <th>Member seed</th>
+                          <th>Sigmoid score</th>
+                          <th>Output logit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {trace.members.map((member) => (
+                          <tr key={member.seed}>
+                            <td>{member.seed}</td>
+                            <td>{number(member.score, 6)}</td>
+                            <td>{number(member.output_logit, 6)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <th>Mean raw score</th>
+                          <td>{number(trace.score, 6)}</td>
+                          <td>Mean of scores, not logits</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
               <p className="fine-print">
                 Each standardized input is (value − training mean) / training
-                standard deviation, fitted on 1981–2010. Hidden activations
-                describe computation; they do not establish causal feature
-                importance. Platt scaling does not guarantee calibration.
+                standard deviation, fitted on{" "}
+                {model?.training_months ? "April–June " : ""}1981–2010. Hidden
+                activations describe computation; they do not establish causal
+                feature importance. Platt scaling does not guarantee
+                calibration.
               </p>
-              <div className="table-scroll" tabIndex={0}>
+              <div className="table-scroll day-feature-inputs" tabIndex={0}>
                 <table>
                   <caption>
                     Inputs for {date}; observed weather inputs end on{" "}

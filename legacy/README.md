@@ -1,5 +1,10 @@
 # Original lab experiment
 
+`heatline-v1-experiment.zip` preserves the first mathematically corrected
+May-only experiment before the seasonal v2 revision. It uses the same ERA5 May
+targets as v2 and supplies the fair before/after comparison. Its primary model
+detected 2/8 retrospective positives with two false alarms.
+
 `original-experiment.zip` preserves the tracked source, configuration, processed
 data, model weights, notebooks and reported outputs before the Heatline overhaul.
 Raw hourly data remain in `data/raw/`. Extract the archive into a separate folder

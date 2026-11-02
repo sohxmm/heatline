@@ -1,0 +1,9 @@
+{
+  "version": "heatline-nagpur-v2",
+  "members": [
+    "ann_seed7.npz",
+    "ann_seed21.npz",
+    "ann_seed42.npz"
+  ],
+  "aggregation": "arithmetic mean of sigmoid scores"
+}

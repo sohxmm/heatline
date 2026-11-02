@@ -48,7 +48,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           </nav>
           <a
             className="github-link"
-            href="https://github.com/sohxmm/heatwave-ANN"
+            href="https://github.com/sohxmm/heatline"
             target="_blank"
             rel="noreferrer"
             aria-label="View source on GitHub"

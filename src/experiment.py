@@ -1,4 +1,4 @@
-"""Reproduce the assessed Heatline experiment; no tuning uses 2019–2026 outcomes.
+"""v1 compatibility helpers; the command runs the current seasonal experiment.
 
 Run: python -m src.experiment. Raw hourly observations are cached in data/raw.
 The grid, seeds and selection policy below are fixed before evaluating test years.
@@ -220,6 +220,9 @@ def run(max_epochs=400):
 
 
 def main():
+    from src.seasonal_experiment import run as run_current
+    run_current()
+    return
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--max-epochs',type=int,default=400)
     args=parser.parse_args()
