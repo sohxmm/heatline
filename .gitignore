@@ -64,4 +64,6 @@ frontend/bklit-install.log
 frontend/test-results/
 frontend/playwright-report/
 .vercel/
+seasonal-*.log
+artifacts/seasonal-study/
 

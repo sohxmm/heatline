@@ -85,6 +85,7 @@ def compute_features(
     df_daily: pd.DataFrame,
     df_normals: Optional[pd.DataFrame] = None,
     normals_path: str = "data/processed/climatology_normals.csv",
+    target_months: tuple = (5,),
 ) -> pd.DataFrame:
     """
     Compute ~24-26 predictive features for each May day T using ONLY information
@@ -215,7 +216,7 @@ def compute_features(
 
     # Filter strictly for May (month == 5) prediction targets
     # April rows served their sole purpose of priming lags and 7-day rolling windows
-    df_may = df_full[df_full["month"] == 5].copy().reset_index(drop=True)
+    df_may = df_full[df_full["month"].isin(target_months)].copy().reset_index(drop=True)
 
     # Select and order final columns: metadata + features + targets
     output_cols = METADATA_COLS + FEATURE_COLS + TARGET_COLS

@@ -1,0 +1,29 @@
+version: heatline-nagpur-v2
+source: era5
+target: nagpur-grid-proxy-v1
+training_years: [1981, 2010]
+training_months: [4, 5, 6]
+selection_years: [2011, 2014]
+calibration_years: [2015, 2018]
+retrospective_years: [2019, 2026]
+evaluation_month: 5
+seeds: [7, 21, 42]
+hidden_sizes: [8, 16, 32]
+activations: [binary_sigmoid, bipolar_sigmoid]
+objectives: [half_squared_error, binary_cross_entropy]
+positive_weights: [none, sqrt_ratio, ratio]
+learning_rate: 0.03
+momentum: 0.9
+batch_size: 128
+max_epochs: 300
+patience: 35
+selection: highest_selection_average_precision_of_three_seed_mean
+primary_decision: calibration_F2
+secondary_decision: calibration_F1
+bootstrap: 1000
+notes:
+  - The previously inspected 2019–2026 period remains retrospective, not untouched.
+  - Selection uses May 2011–2014 only; no candidate is selected on 2026 detections.
+  - June contributes training examples, never input from after a May target date.
+  - Calibration and operating points use May 2015–2018 only.
+  - NASA POWER sensitivity samples use training-era years only; its daily labels are never substituted for ERA5 evaluation targets.
