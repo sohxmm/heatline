@@ -57,12 +57,22 @@ export interface HistoryRow {
   input_cutoff?: string;
   model_version?: string;
   target_date?: string;
+  balanced_threshold?: number;
+  balanced_prediction?: number;
 }
 export interface ReplayDay extends HistoryRow {
   inputs?: Record<string, number>;
   normalized_inputs?: Record<string, number>;
   hidden_activations?: number[];
   output_logit?: number;
+  trace_member_seed?: number;
+  member_score?: number;
+  members?: {
+    seed: number;
+    score: number;
+    output_logit: number;
+    hidden_activations: number[];
+  }[];
 }
 export interface ReplayDetails extends Envelope {
   selected_year?: number;
@@ -95,6 +105,9 @@ export interface Metric {
   fp?: number;
   fn?: number;
   tp?: number;
+  f2?: number;
+  balanced?: Metric;
+  threshold?: number;
 }
 export interface Curve {
   epoch: number;
@@ -117,6 +130,13 @@ export interface Model extends Envelope {
     threshold?: number;
   };
   trained_until?: string;
+  ensemble_size?: number;
+  seeds?: number[];
+  positive_weight?: number;
+  training_months?: number[];
+  decision_policy?: string;
+  balanced_threshold?: number;
+  previous_version?: { version: string; metrics: Metric };
   metrics?: Metric[];
   splits?: { name: string; years: string; days: number; positives: number }[];
   limitations?: string[];
@@ -131,10 +151,56 @@ export interface Run {
   loss?: string;
   pr_auc?: number;
   f1?: number;
+  positive_weight_mode?: string;
+  positive_weight?: number;
+  training_window?: string;
 }
 export interface Experiments extends Envelope {
   runs?: Run[];
-  summary?: string;
+  summary?: unknown;
+  yearly_results?: {
+    year: number;
+    days: number;
+    positive_days: number;
+    detected: number;
+    missed: number;
+    false_alarms: number;
+  }[];
+  onset?: { events: number; detected: number; missed: number };
+  uncertainty?: {
+    method: string;
+    intervals: Record<string, [number, number]>;
+    limitation: string;
+  };
+  operating_points?: Record<
+    string,
+    {
+      sensitive: { threshold: number; retrospective: Metric };
+      balanced: { threshold: number; retrospective: Metric };
+    }
+  >;
+  detected_events?: HistoryRow[];
+  provider_benchmark?: {
+    source: string;
+    time_standard: string;
+    training: { days: number; positive_days: number };
+    evaluation: { years: string; days: number; positive_days: number };
+    metrics: Metric[];
+    limitations: string[];
+  };
+  source_audit?: {
+    era5_overlap_days: number;
+    max_daily_tmax_difference: number;
+    may_label_changes: number;
+    source_decision: string;
+    nasa_time_standard: string;
+    nasa_samples: {
+      year: number;
+      mean_nasa_minus_era5: number;
+      nasa_days_ge45: number;
+      era5_days_ge45: number;
+    }[];
+  };
 }
 export interface Weights {
   V?: number[][];
@@ -215,6 +281,7 @@ export function useResource<T extends Envelope>(name: string) {
     setState({ data: null, loading: true, transport: "snapshot", error: null });
     let active = true;
     let apiResolved = false;
+    let apiSettled = false;
     const controller = new AbortController();
     const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
     fetch(`/data/${name}.json`, { signal: controller.signal })
@@ -235,7 +302,7 @@ export function useResource<T extends Envelope>(name: string) {
         if (active && !apiResolved)
           setState((s) => ({
             ...s,
-            loading: !!base,
+            loading: !!base && !apiSettled,
             error: base
               ? null
               : "A published data snapshot is not available yet.",
@@ -250,12 +317,14 @@ export function useResource<T extends Envelope>(name: string) {
           return r.json();
         })
         .then((data: T) => {
+          apiSettled = true;
           if (active) {
             apiResolved = true;
             setState({ data, loading: false, transport: "api", error: null });
           }
         })
         .catch(() => {
+          apiSettled = true;
           if (active)
             setState((s) => ({
               ...s,

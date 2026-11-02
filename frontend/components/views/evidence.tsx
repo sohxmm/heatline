@@ -9,6 +9,7 @@ import {
   Panel,
   DataNote,
   Download,
+  Metric,
 } from "@/components/project-ui";
 import { amber } from "@/components/view-config";
 
@@ -65,6 +66,12 @@ export function Evidence() {
   const runs = (experiments.data?.runs ?? []).filter(
     (r) => study === "all" || r.activation === study,
   );
+  const [policy, setPolicy] = useState("sensitive");
+  const shownMetrics = metrics.map((m) =>
+    policy === "balanced" && m.balanced ? { ...m, ...m.balanced } : m,
+  );
+  const previous = model?.previous_version?.metrics;
+  const current = metrics[0];
   return (
     <div className="page">
       <Heading
@@ -109,9 +116,59 @@ export function Evidence() {
           </p>
         </section>
       </div>
+      {previous && current && (
+        <Panel
+          title="What changed, measured on the same May days"
+          subtitle="Frozen ERA5 proxy labels and identical 2019–2026 dates. Previously inspected outcomes make this an exploratory retrospective comparison."
+        >
+          <div className="metric-strip">
+            <Metric
+              label="Proxy events detected"
+              value={`${current.tp ?? 0} / ${(current.tp ?? 0) + (current.fn ?? 0)}`}
+              detail={`Previous version: ${previous.tp} / ${(previous.tp ?? 0) + (previous.fn ?? 0)}`}
+            />
+            <Metric
+              label="Recall"
+              value={`${number((current.recall ?? 0) * 100, 1)}%`}
+              detail={`Previous: ${number((previous.recall ?? 0) * 100, 1)}%`}
+            />
+            <Metric
+              label="Average precision"
+              value={number(current.pr_auc, 3)}
+              detail={`Previous: ${number(previous.pr_auc, 3)}`}
+            />
+            <Metric
+              label="False alarms"
+              value={current.fp}
+              detail={`Previous: ${previous.fp} · sensitivity costs alerts`}
+            />
+          </div>
+          <p className="panel-copy">
+            The revised study trains on April–June, compares positive-class
+            weighting, and averages {model?.ensemble_size} small NumPy networks.
+            The F2 operating point prioritizes recall; the balanced F1 policy is
+            shown separately. Architecture selection uses May 2011–2014, and
+            both thresholds use May 2015–2018.
+          </p>
+        </Panel>
+      )}
       <Panel
         title="Retrospective evaluation"
         subtitle="2019–2026 · Nagpur May · identical target and evaluation dates for every baseline"
+        aside={
+          model?.decision_policy ? (
+            <label className="field compact">
+              Decision policy
+              <select
+                value={policy}
+                onChange={(e) => setPolicy(e.target.value)}
+              >
+                <option value="sensitive">Sensitivity · F2</option>
+                <option value="balanced">Balanced · F1</option>
+              </select>
+            </label>
+          ) : undefined
+        }
       >
         <div className="table-scroll" tabIndex={0}>
           <table>
@@ -131,7 +188,7 @@ export function Evidence() {
               </tr>
             </thead>
             <tbody>
-              {metrics.map((m) => (
+              {shownMetrics.map((m) => (
                 <tr
                   key={m.model}
                   className={
@@ -168,6 +225,58 @@ export function Evidence() {
           baselines may perform better.
         </p>
       </Panel>
+      {experiments.data?.yearly_results && (
+        <Panel
+          title="Every evaluation May, including quiet years"
+          subtitle="Detection and false alarms are reported together; zero-event years remain visible."
+        >
+          <div className="table-scroll" tabIndex={0}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Proxy-positive days</th>
+                  <th>Detected</th>
+                  <th>Missed</th>
+                  <th>False alarms</th>
+                </tr>
+              </thead>
+              <tbody>
+                {experiments.data.yearly_results.map((row) => (
+                  <tr key={row.year}>
+                    <td>{row.year}</td>
+                    <td>{row.positive_days}</td>
+                    <td>{row.detected}</td>
+                    <td>{row.missed}</td>
+                    <td>{row.false_alarms}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {experiments.data.onset && (
+            <p className="fine-print">
+              Event onsets: {experiments.data.onset.detected} detected of{" "}
+              {experiments.data.onset.events}. An onset is a proxy-positive day
+              after a negative day; continuation and onset are not the same
+              task.
+            </p>
+          )}
+          {experiments.data.uncertainty && (
+            <p className="fine-print">
+              May-year block bootstrap 95% interval: average precision{" "}
+              {experiments.data.uncertainty.intervals.pr_auc
+                .map((x) => number(x, 3))
+                .join("–")}
+              ; recall{" "}
+              {experiments.data.uncertainty.intervals.recall
+                .map((x) => `${number(x * 100, 1)}%`)
+                .join("–")}
+              . {experiments.data.uncertainty.limitation}
+            </p>
+          )}
+        </Panel>
+      )}
       <Panel
         title="Chronology is part of the method"
         subtitle="The future must not leak into a historical prediction."
@@ -211,7 +320,10 @@ export function Evidence() {
         <ul className="plain-list columns">
           <li>Normalization fits only the 1981–2010 training data.</li>
           <li>Reference normals use 1981–2010; later years are excluded.</li>
-          <li>April observations initialize lagged features for May.</li>
+          <li>
+            March observations initialize April–June training history; May
+            inputs still end on T−1.
+          </li>
           <li>
             Missing or noncontiguous history is rejected, never silently filled.
           </li>
@@ -219,6 +331,63 @@ export function Evidence() {
           <li>2015–2018 selects calibration and decision threshold.</li>
         </ul>
       </Panel>
+      {experiments.data?.provider_benchmark && (
+        <Panel
+          title="Independent NASA POWER benchmark"
+          subtitle="A separate data product and target population. These scores do not replace the ERA5 before/after comparison."
+        >
+          <p className="panel-copy">
+            The NumPy network is also trained on NASA POWER meteorology with its
+            own training-only reference normals. Evaluation covers{" "}
+            {experiments.data.provider_benchmark.evaluation.days} May days in{" "}
+            {experiments.data.provider_benchmark.evaluation.years}, including{" "}
+            {experiments.data.provider_benchmark.evaluation.positive_days}{" "}
+            proxy-positive days. ERA5 has 8 positive days over the same years,
+            so these scores measure a different classification problem.
+          </p>
+          <div className="table-scroll" tabIndex={0}>
+            <table>
+              <thead>
+                <tr>
+                  <th>NASA benchmark model</th>
+                  <th>Average precision</th>
+                  <th>F2-policy recall</th>
+                  <th>F2-policy false alarms</th>
+                  <th>F1-policy recall</th>
+                  <th>F1-policy precision</th>
+                  <th>F1-policy F1</th>
+                  <th>F1-policy false alarms</th>
+                </tr>
+              </thead>
+              <tbody>
+                {experiments.data.provider_benchmark.metrics.map((m) => (
+                  <tr key={m.model}>
+                    <td>{m.model}</td>
+                    <td>{number(m.pr_auc, 3)}</td>
+                    <td>{number(m.recall, 3)}</td>
+                    <td>{m.fp}</td>
+                    <td>{number(m.balanced?.recall, 3)}</td>
+                    <td>{number(m.balanced?.precision, 3)}</td>
+                    <td>{number(m.balanced?.f1, 3)}</td>
+                    <td>{m.balanced?.fp}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="fine-print">
+            {experiments.data.provider_benchmark.time_standard}.{" "}
+            {experiments.data.provider_benchmark.limitations.join(" ")}
+          </p>
+          <a
+            className="text-link"
+            href="/data/provider_benchmark.json"
+            download
+          >
+            Download benchmark records and provenance
+          </a>
+        </Panel>
+      )}
       <Panel
         title="Controlled experiments"
         subtitle="Repeated seeds, activation functions, hidden size, and learning settings."
@@ -240,6 +409,8 @@ export function Evidence() {
                 <th>Activation</th>
                 <th>Hidden</th>
                 <th>Loss</th>
+                <th>Positive weight</th>
+                <th>Training months</th>
                 <th>η</th>
                 <th>μ</th>
                 <th>Seed</th>
@@ -253,6 +424,11 @@ export function Evidence() {
                   <td>{r.activation?.replaceAll("_", " ")}</td>
                   <td>{r.hidden}</td>
                   <td>{r.loss?.replaceAll("_", " ")}</td>
+                  <td>
+                    {r.positive_weight_mode ?? "none"} ·{" "}
+                    {number(r.positive_weight ?? 1, 2)}
+                  </td>
+                  <td>{r.training_window ?? "May"}</td>
                   <td>{number(r.learning_rate, 3)}</td>
                   <td>{number(r.momentum, 2)}</td>
                   <td>{r.seed}</td>
@@ -274,6 +450,57 @@ export function Evidence() {
         </div>
       </Panel>
       <div className="two-column">
+        {experiments.data?.source_audit && (
+          <Panel
+            title="Weather sources do not define identical targets"
+            subtitle="Training-era sensitivity check; providers were not selected using evaluation scores."
+          >
+            <p className="panel-copy">
+              {experiments.data.source_audit.source_decision}
+            </p>
+            <p className="fine-print">
+              ERA5 overlap: {experiments.data.source_audit.era5_overlap_days}{" "}
+              days; maximum daily Tmax change{" "}
+              {number(
+                experiments.data.source_audit.max_daily_tmax_difference,
+                4,
+              )}
+              °C; May label changes{" "}
+              {experiments.data.source_audit.may_label_changes}.
+            </p>
+            <div className="table-scroll" tabIndex={0}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>May year</th>
+                    <th>NASA − ERA5 mean °C</th>
+                    <th>NASA days ≥45°C</th>
+                    <th>ERA5 days ≥45°C</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {experiments.data.source_audit.nasa_samples.map((row) => (
+                    <tr key={row.year}>
+                      <td>{row.year}</td>
+                      <td>{number(row.mean_nasa_minus_era5, 2)}</td>
+                      <td>{row.nasa_days_ge45}</td>
+                      <td>{row.era5_days_ge45}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="fine-print">
+              {experiments.data.source_audit.nasa_time_standard} NASA POWER is
+              not substituted for ERA5 merely because it labels more days
+              positive. See the downloadable source audit for station
+              cross-checks and reporting-window limitations.
+            </p>
+            <a className="text-link" href="/data/source_audit.json" download>
+              Download source audit
+            </a>
+          </Panel>
+        )}
         <Panel
           title="What the labels mean"
           subtitle="A versioned proxy—not an official declaration."
@@ -367,7 +594,7 @@ export function Evidence() {
         </div>
         <a
           className="button outlined"
-          href="https://github.com/sohxmm/heatwave-ANN"
+          href="https://github.com/sohxmm/heatline"
           target="_blank"
           rel="noreferrer"
         >
