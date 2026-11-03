@@ -60,7 +60,7 @@ Persistence remains a strong classification baseline. The ANN provides better ra
 '''
     report=f'''# Heatline: seasonal NumPy ANN for Nagpur May heatwave conditions
 
-This report preserves the original 26-input v2 experiment. The separate full-history 52-input study, expanding-window evaluation and all-data refit are documented in [Evaluation protocol](EVALUATION.md). Their periods, reference normals and model versions differ; do not merge the scores.
+This report preserves the original 26-input v2 experiment. The separate full-history source-specific study (26 ERA5 inputs, 52 NASA inputs), expanding-window evaluation and all-data refit are documented in [Evaluation protocol](EVALUATION.md). Their periods, reference normals and model versions differ; do not merge the scores.
 
 ## Problem and assessed contribution
 

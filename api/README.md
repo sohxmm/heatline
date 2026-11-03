@@ -26,6 +26,7 @@ Interactive API documentation: <http://127.0.0.1:8000/docs>.
 | `/api/experiments` | Measured model comparisons and controlled studies |
 | `/api/learning` | Educational examples and numerical backpropagation trace |
 | `/api/study` | Full-history forward evaluation, source comparison and separate all-data refit |
+| `/api/study/era5/2026` | Source/year model inputs, normalization, weights, and exact held-out forward computations; sources `era5` and `nasa_power`, years 1996–2026 |
 | `/api/metric-context` | Accuracy/precision definitions and baselines from v2 confusion counts |
 | `/api/station-comparison` | Small, paired training-era airport temperature audit |
 

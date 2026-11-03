@@ -111,6 +111,25 @@ def test_optional_study_and_metric_audit_are_read_only_and_not_readiness_require
         assert client.get("/api/station_comparison").status_code == 200
 
 
+def test_source_specific_day_traces_cannot_cross_sources_or_year_bounds(artifacts):
+    for source, width in (("era5", 26), ("nasa_power", 52)):
+        directory = artifacts / "study" / source
+        directory.mkdir(parents=True)
+        write_snapshot(directory / "2026.json", dict(source_id=source, selected_year=2026,
+            architecture=dict(inputs=width), records=[dict(date="2026-05-20", actual=0, prediction=1)]))
+    with TestClient(create_app(artifacts)) as client:
+        for source, width in (("era5", 26), ("nasa_power", 52)):
+            response = client.get(f"/api/study/{source}/2026")
+            assert response.status_code == 200
+            assert response.json()["source_id"] == source
+            assert response.json()["architecture"]["inputs"] == width
+            assert client.post(f"/api/study/{source}/2026").status_code == 405
+        assert client.get("/api/study/era5/1995").status_code == 422
+        assert client.get("/api/study/era5/2027").status_code == 422
+        assert client.get("/api/study/unknown/2026").status_code == 404
+        assert client.get("/api/study/era5/2025").status_code == 503
+
+
 def test_cors_is_restricted_to_configured_origins(artifacts, monkeypatch):
     monkeypatch.setenv("CORS_ORIGINS", "https://heatline.example")
     with TestClient(create_app(artifacts)) as client:

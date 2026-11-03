@@ -32,6 +32,7 @@ Open <http://localhost:3000>; API docs: <http://127.0.0.1:8000/docs>. Set `NEXT_
 The existing hourly cache is sufficient; a normal experiment run needs no weather network requests.
 
 ```powershell
+.venv/Scripts/python.exe -m src.full_dataset_study
 .venv/Scripts/python.exe -m src.seasonal_experiment
 .venv/Scripts/python.exe -m src.provider_benchmark
 .venv/Scripts/python.exe scripts/export_evidence.py
@@ -43,58 +44,43 @@ The existing hourly cache is sufficient; a normal experiment run needs no weathe
 
 Current outputs live in `artifacts/heatline/`, with identical public JSON in `frontend/public/data/`. `provenance.json` records raw file hashes, versions, configuration and seeds. The guided notebook is already executed.
 
-## Method and measured results
+## Models and data
 
-### Full-history study and all-data refit
+The current version is `heatline-walk-forward-v2`. The sources remain independent:
 
-`python -m src.full_dataset_study` generates six expanding-window evaluations covering **961 May days in 1996–2026**, then separately fits three-member NumPy ensembles to **all 4,186 April–June rows from 1981–2026** per source. Calibration, scaling, reference normals and stopping for each evaluated block use only earlier observations. The 1981–1995 warmup is used for training, not claimed as independently tested. The final all-data fit is a research checkpoint; its same-row diagnostics are not test accuracy.
+| Pipeline | Inputs | Architecture | Daily boundary |
+| --- | ---: | --- | --- |
+| ERA5 via Open-Meteo | 26 lagged, rolling, trend and calendar features | 26 → 16 → 1 | Asia/Kolkata |
+| NASA POWER comparison | 52 lagged and calendar features | 52 → 16 → 1 | UTC |
 
-Both sources use the same 52-feature recipe and **52→16→1** network. This is a separately versioned study, `heatline-walk-forward-v1`; it does not silently replace the 26-input v2 replay or establish a new untouched test.
+Each has its own scaler, weights, source-derived targets, calibration and decision thresholds. Neither source is substituted into the other network. The model-score threshold is distinct from the heatwave proxy rule: Tmax ≥45°C OR (Tmax ≥40°C and departure from the source's reference normal ≥4.5°C). These are grid-based proxy outcomes, not official IMD warning records.
 
-| Held-out May 1996–2026 | Accuracy | Precision | Recall | F1 | Average precision |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| ERA5 ANN | 95.21% | 53.57% | 60.00% | 0.5660 | 0.4163 |
-| ERA5 persistence | 95.84% | 60.87% | 56.00% | 0.5833 | 0.3638 |
-| NASA POWER ANN | 84.08% | 71.88% | 78.50% | 0.7504 | 0.8062 |
-| NASA POWER persistence | 85.95% | 76.87% | 77.13% | 0.7700 | 0.6626 |
+Six chronological folds evaluate **961 May days in 1996–2026** using earlier fitting, stopping and calibration years. Final research ensembles are separately fitted on **all 4,186 April–June rows from 1981–2026** per source. Their training fit is not independent test performance. See [evaluation protocol](docs/EVALUATION.md).
 
-The ANN improves ranking over persistence but does not beat its F1 on either source. The source-defined positive populations differ, so these scores cannot decide which source matches official warnings. A **92-day, training-era paired airport-station audit** finds temperature MAE 0.956°C for ERA5 and 1.826°C for NASA; the sample is small and reporting windows differ. ERA5 remains primary; NASA remains a source-sensitivity comparison. See [evaluation protocol](docs/EVALUATION.md), `full_dataset_study.json`, `full_dataset_metrics.csv` and `station_comparison.json`. Checkpoints and preprocessing are saved under `artifacts/full-dataset-study/`.
+| Held-out May results | Detected / positive days | False alarms | Precision | Recall | F1 | Average precision |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ERA5 ANN | 33 / 50 | 43 | 43.42% | 66.00% | 0.5238 | 0.4444 |
+| NASA POWER ANN | 230 / 293 | 90 | 71.88% | 78.50% | 0.7504 | 0.8062 |
 
-### Original seasonal v2 comparison
+Source-derived positive populations differ. These scores do not establish which source better predicts official warnings. Persistence remains a strong baseline; complete comparisons and confusion counts are published in `full_dataset_metrics.csv`. ERA5 remains primary, supported by a limited paired station audit. NASA is an independent source-sensitivity comparison.
 
-Training and preprocessing use **April–June 1981–2010**; selection uses **May 2011–2014**; Platt scaling and F2/F1 threshold selection use **May 2015–2018**. The **May 2019–2026** period is retrospective evaluation because these outcomes were previously examined. Revised gains are exploratory, not an untouched-test claim. Frozen May reference normals and targets remain unchanged. March initializes seasonal lags; missing or duplicate dates fail explicitly.
+## Application
 
-The versioned `nagpur-grid-proxy-v1` target is Tmax ≥45°C OR (Tmax ≥40°C and reference departure ≥4.5°C). This single-grid daily proxy is inspired by [IMD criteria](https://mausam.imd.gov.in/pdfs/heatcolduser/morning_heat_bulletin.pdf); it is not an official station-based declaration.
+- Dashboard: city forecast, hourly-weather entry and direct historical-date selection.
+- Regional outlook: six-city forecasts, date controls, hourly profiles and city comparisons.
+- May history: source-specific predictions, observed outcomes, classification margins, temperature criteria and saved neuron calculations.
+- Network: selected-source architecture, initialization, real training curves and a separate 2–2–1 lab exercise.
+- Results: metrics and baseline comparisons, with dataset, protocol and lab mapping in compact reference panels.
 
-The fixed study compares binary/bipolar sigmoid, 8/16/32 hidden neurons, both consistent objectives, three class-weight modes and seeds 7/21/42. Selection-period average precision of the three-seed mean chooses the configuration. The primary architecture is **26→16→1**, bipolar sigmoid, weighted half-squared-error, η=.03 and μ=.9. Each member is an explicit NumPy backpropagation network; their sigmoid scores are averaged. A single-network comparison remains visible. Training-window and learning-factor ablations do not replace the selected configuration based on retrospective scores.
+The original fixed-fit ERA5 experiment is available through the archived model-run selector. Its 26-input preprocessing and weights remain independent from current fold models. The previous common-input study is preserved in `legacy/common-input-study-v1.zip`.
 
-| ERA5 experiment | Detected / positive days | Recall | False alarms | Average precision | F1 |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Previous v1 ANN | 2 / 8 | 25.0% | 2 | 0.3636 | 0.3333 |
-| Seasonal v2 ANN · F2 policy | 5 / 8 | 62.5% | 12 | 0.4097 | 0.4000 |
-| Seasonal v2 ANN · F1 policy | 2 / 8 | 25.0% | 2 | 0.4097 | 0.3333 |
-| Persistence | 3 / 8 | 37.5% | 4 | 0.1809 | 0.4000 |
-| Seasonal logistic regression · F2 | 4 / 8 | 50.0% | 10 | 0.4627 | 0.3636 |
+Current research weights and fold checkpoints live in `artifacts/full-dataset-study/`. Source/year traces live in `artifacts/heatline/study/{source}/{year}.json` and matching public files. The JSON records source, model version, feature order, fit periods, calibration and availability. Page requests never train a model.
 
-There are only **8 positives in 248 retrospective ERA5 days**. The F2 policy emphasizes recall at a cost in false alarms; both policies are selected only on calibration years. The source audit verifies 2,806 overlapping days, zero changed May labels, and identical May feature vectors. Full confusion counts, raw/transformed Brier scores, reliability bins, yearly outcomes, onset detections, May-year bootstrap intervals and all ablations are published. Simpler models win some metrics; neither sigmoid, averaging nor Platt scaling guarantees calibration.
+Read-only interfaces include `/api/study`, `/api/study/{source}/{year}`, weather, archive and learning endpoints. See [API documentation](api/README.md). Provider weather remains separate from historical ANN predictions; live ANN prediction is unavailable until compatible timely inputs receive validation. Cached forecasts display their retrieval time and freshness.
 
-**Metric interpretation:** the ANN's **29.4% is precision**, not accuracy: 5 correct alerts out of 17 alerts. Its accuracy is **94.0%** (233/248), balanced accuracy **78.8%**, and recall **62.5%**. An always-negative classifier achieves **96.8% accuracy but zero recall**; independent fair coin guesses have expected accuracy 50%. Accuracy alone is therefore a poor measure of rare-event detection. This does not remove the ANN's false-alarm problem. `python scripts/export_metric_context.py` reproduces these calculations from saved confusion counts and publishes `metric_context.json`.
-
-The **independent NASA POWER benchmark** has a different daily product and **45 positive days** in the same evaluation years. Its ANN has average precision **0.8580**, and at the calibration-selected F1 threshold detects **41/45**, with **29 false alarms**, precision **0.5857** and F1 **0.7130**. NASA persistence has F1 **0.8222**, so the ANN does not dominate it. These are not replacements for the harder ERA5 target. NASA UTC-day boundaries, coarser meteorology, its own normals and 52 available lag features are documented separately. A limited training-era NOAA station cross-check further demonstrates source/threshold sensitivity.
-
-- [Academic report](docs/ACADEMIC_REPORT.md): problem, inputs, neuron, rules, architecture, derivatives, experiments, results and limitations.
-- [Academic appendix](docs/ACADEMIC_APPENDIX.md): supplied experiment numbering/COs and the independently calculated 2–2–1 update.
-- [Executed notebook](notebooks/03_heatline_lab.ipynb): all seven supporting examples and measured results.
-
-## Application and API
-
-Five views: landing, regional outlook, Nagpur May explorer, learning walkthrough and evidence. The graphite/amber interface uses Manrope, Instrument Serif, Motion with reduced-motion support, shadcn controls and Bklit charts. See `frontend/THIRD_PARTY_NOTICES.md` for licenses.
-
-Read-only endpoints: `GET /api/cities`, `/api/outlook`, `/api/history`, `/api/replay/{year}`, `/api/model`, `/api/experiments`, `/api/learning`, `/health`, `/health/ready`. Responses carry source, mode, issue time, target dates, version and availability. See [API documentation](api/README.md).
-
-The May explorer includes a calendar and selected-day result. Expand the calculation to inspect 26 recorded inputs, standardized values, each member's hidden/output computation, their mean score and threshold decision. `python -m src.replay` verifies the saved weights/scaler reproduce published scores before exporting. Traces load one year at a time. The evidence view compares F2/F1 policies, yearly errors, source audits and NASA benchmark results.
-
-**Provider forecasts and ANN replay are different products.** Open-Meteo weather covers six cities; apparent temperature and the temperature screen are distinct from the proxy. Live/regional ANN output remains unavailable until timely compatible inputs receive separate validation. [ERA5 arrives with delay](https://open-meteo.com/en/docs/historical-weather-api). Provider snapshot issue time means retrieval time; run initialization time is unknown. Snapshots older than 12 hours remain visibly stale.
+- [Original scientific report](docs/ACADEMIC_REPORT.md)
+- [Academic appendix](docs/ACADEMIC_APPENDIX.md)
+- [Lab notebook](notebooks/03_heatline_lab.ipynb)
 
 ## Verification and deployment
 

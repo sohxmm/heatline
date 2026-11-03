@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import json
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
@@ -61,7 +62,9 @@ class ArtifactStore:
         self._cache: dict[str, tuple[tuple[int, int], dict]] = {}
 
     def read(self, name: str) -> dict:
-        if name not in REQUIRED_ARTIFACTS + OPTIONAL_ARTIFACTS and not (name.startswith('replay/') and name[7:].isdigit() and 1981 <= int(name[7:]) <= 2026):
+        replay_name = name.startswith('replay/') and name[7:].isdigit() and 1981 <= int(name[7:]) <= 2026
+        study_name = re.fullmatch(r'study/(era5|nasa_power)/(199[6-9]|20[01][0-9]|202[0-6])', name)
+        if name not in REQUIRED_ARTIFACTS + OPTIONAL_ARTIFACTS and not replay_name and not study_name:
             raise ValueError("Unknown artifact")
         path = self.directory / f"{name}.json"
         stat = path.stat()
@@ -205,6 +208,12 @@ def create_app(data_dir: str | Path | None = None, clock: Callable[[], datetime]
     @application.get("/api/full_dataset_study", include_in_schema=False)
     def full_dataset_study():
         return read_artifact("full_dataset_study", "rolling evaluation")
+
+    @application.get("/api/study/{source}/{year}")
+    def study_day_details(source: str, year: int = PathParam(ge=1996, le=2026)):
+        if source not in ("era5", "nasa_power"):
+            return JSONResponse(envelope("replay", reason="Unknown model source."), status_code=404)
+        return read_artifact(f"study/{source}/{year}", "replay")
 
     @application.get("/api/metric-context")
     def metric_context():

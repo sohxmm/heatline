@@ -6,8 +6,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.full_dataset_study import (FEATURES, calibrated_scores, expected_coin,
-    fold_plan, make_features, measured_metrics)
+from src.full_dataset_study import (calibrated_scores, expected_coin,
+    fold_plan, make_features, measured_metrics, source_feature_names)
+
+FEATURES = source_feature_names('era5')
 
 
 @pytest.fixture
@@ -46,7 +48,7 @@ def test_target_day_weather_is_not_an_input_to_its_prediction(daily):
     changed.loc[changed.date.eq(date), ['tmax', 'tmin', 'tmean', 'rh_mean', 'wind_mean', 'pressure_mean']] += 100
     result = make_features(changed, reference_end=1991)
     np.testing.assert_array_equal(original.loc[original.date.eq(date), FEATURES], result.loc[result.date.eq(date), FEATURES])
-    assert len(FEATURES) == 52
+    assert len(FEATURES) == 26
 
 
 def test_incoming_saved_labels_and_normals_are_ignored(daily):
@@ -59,7 +61,7 @@ def test_incoming_saved_labels_and_normals_are_ignored(daily):
 
 def test_missing_history_fails_instead_of_interpolating(daily):
     daily = daily[~daily.date.eq('1996-05-19')]
-    with pytest.raises(ValueError, match='Missing weather history'):
+    with pytest.raises(ValueError, match='Missing.*history'):
         make_features(daily, reference_end=1991)
 
 
@@ -98,7 +100,7 @@ def test_saved_full_refit_is_separate_from_held_out_evidence():
     if not path.exists():
         pytest.skip('Run python -m src.full_dataset_study to build research artifacts')
     data = json.loads(path.read_text())
-    assert data['model_version'] == 'heatline-walk-forward-v1'
+    assert data['model_version'] == 'heatline-walk-forward-v2'
     for source in data['sources']:
         assert source['coverage']['total_seasonal_days'] == 4186
         assert source['coverage']['held_out_may_days'] == 31*31
@@ -108,3 +110,102 @@ def test_saved_full_refit_is_separate_from_held_out_evidence():
         for fold in source['folds']:
             assert fold['reference_years'][1] <= fold['fit_years'][1]
             assert fold['scaler_fit_years'] == fold['fit_years']
+
+
+def test_nasa_keeps_its_own_52_input_representation():
+    daily = pd.read_csv('data/processed/nasa_daily.csv')
+    frame = make_features(daily, reference_end=1991, source='nasa_power')
+    names = source_feature_names('nasa_power')
+    assert len(names) == 52 and len(frame) == 4186
+    assert np.isfinite(frame[names]).all().all()
+    assert names != source_feature_names('era5')
+
+
+def test_current_forward_trace_reproduces_held_out_prediction():
+    from src.ann_numpy import EBPANetwork
+    from src.experiment import logit
+    for source, width in [('era5', 26), ('nasa_power', 52)]:
+        path = Path(f'artifacts/heatline/study/{source}/2026.json')
+        if not path.exists():
+            pytest.skip('Regenerate the v2 study first')
+        trace = json.loads(path.read_text())
+        assert trace['model_version'] == 'heatline-walk-forward-v2'
+        assert trace['source_id'] == source and trace['selected_year'] == 2026
+        assert trace['architecture']['inputs'] == width
+        day = trace['records'][0]
+        inputs = np.array([day['inputs'][name] for name in trace['feature_names']])
+        model = trace['fold_model']
+        expected_x = (inputs-np.array(model['scaler_mean'])) / np.array(model['scaler_scale'])
+        actual_x = np.array([day['normalized_inputs'][name] for name in trace['feature_names']])
+        np.testing.assert_allclose(actual_x, expected_x, rtol=1e-12)
+        scores = []
+        for weights, observed in zip(model['members'], day['members']):
+            net = EBPANetwork(width, 16, activation='bipolar_sigmoid', seed=weights['seed'])
+            for key in ['V', 'v0', 'W', 'w0']:
+                setattr(net, key, np.array(weights[key]))
+            score = float(net.forward(actual_x)[0, 0])
+            assert observed['score'] == pytest.approx(score, abs=1e-14)
+            np.testing.assert_allclose(observed['hidden_activations'], net.z[0], atol=1e-14)
+            scores.append(score)
+        raw = float(np.mean(scores))
+        calibration = day['calibration']
+        expected_probability = raw if calibration is None else 1/(1+np.exp(-(float(logit([raw])[0, 0])*calibration['coefficient']+calibration['intercept'])))
+        assert day['score'] == pytest.approx(raw, abs=1e-14)
+        assert day['probability'] == pytest.approx(expected_probability, abs=1e-14)
+        assert day['prediction'] == int(expected_probability >= day['threshold'])
+
+
+def test_learning_curves_describe_actual_member_histories():
+    path = Path('artifacts/heatline/full_dataset_study.json')
+    data = json.loads(path.read_text())
+    if data['model_version'] != 'heatline-walk-forward-v2':
+        pytest.skip('Regenerate v2 first')
+    for source in data['sources']:
+        width = 26 if source['id'] == 'era5' else 52
+        assert source['architecture']['inputs'] == len(source['feature_names']) == width
+        assert source['initialization']['input_hidden_limit'] == pytest.approx(np.sqrt(6/(width+16)))
+        for group in [*source['folds'], source['final_fit']]:
+            members = group['members']
+            history = group['training_history']
+            assert history[0]['epoch'] == 1
+            assert len(history) == min(len(member['training_history']) for member in members)
+            assert history[0]['train_loss'] == pytest.approx(np.mean([member['training_history'][0]['train_loss'] for member in members]))
+        assert 'val_loss' not in source['final_fit']['training_history'][0]
+
+
+def test_common_input_predecessor_is_preserved_as_a_scientific_archive():
+    from zipfile import ZipFile
+    with ZipFile('legacy/common-input-study-v1.zip') as archive:
+        data = json.loads(archive.read('artifacts/heatline/full_dataset_study.json'))
+        assert data['model_version'] == 'heatline-walk-forward-v1'
+        assert all(source['architecture']['inputs'] == 52 for source in data['sources'])
+        assert b"VERSION = 'heatline-walk-forward-v1'" in archive.read('src/full_dataset_study.py')
+
+
+def test_partitioned_traces_match_source_year_and_published_decisions():
+    path = Path('artifacts/heatline/full_dataset_study.json')
+    data = json.loads(path.read_text())
+    if data['model_version'] != 'heatline-walk-forward-v2':
+        pytest.skip('Regenerate v2 first')
+    assert path.read_bytes() == Path('frontend/public/data/full_dataset_study.json').read_bytes()
+    for source in data['sources']:
+        expected = {record['date']: record for record in source['records']}
+        dates = []
+        for year in source['trace_years']:
+            filename = Path(f"study/{source['id']}/{year}.json")
+            trace_path = Path('artifacts/heatline')/filename
+            trace = json.loads(trace_path.read_text())
+            assert trace_path.read_bytes() == (Path('frontend/public/data')/filename).read_bytes()
+            assert trace['model_version'] == data['model_version']
+            assert trace['source_id'] == source['id'] and trace['selected_year'] == year
+            assert trace['feature_names'] == source['feature_names']
+            assert trace['fold_model']['fit_years'][1] < year
+            assert len(trace['records']) == 31
+            for record in trace['records']:
+                date = record['date']; dates.append(date)
+                assert date.startswith(f'{year}-05-')
+                assert record['prediction'] == expected[date]['prediction']
+                assert record['actual'] == expected[date]['actual']
+                assert record['probability'] == pytest.approx(expected[date]['probability'], abs=1e-14)
+                assert record['threshold_margin'] == pytest.approx(record['probability']-record['threshold'])
+        assert len(dates) == len(set(dates)) == len(expected)
