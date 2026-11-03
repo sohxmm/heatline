@@ -1,5 +1,7 @@
 # Heatline public API
 
+`GET /api/metric-context` serves reproducible metric definitions, confusion-count calculations and always-negative/fair-coin comparisons. `GET /api/study` serves the separate expanding-window full-history study when generated. Both are read-only optional artifacts: missing study data returns 503 without preventing the existing replay and weather service from becoming ready. Their packaged equivalents are `metric_context.json` and `full_dataset_study.json`.
+
 The API serves experiment artifacts and cached provider weather. It never trains a
 network, invokes a weather provider during a request, or claims that the assessed
 ANN is a validated live weather forecaster.

@@ -98,6 +98,17 @@ def test_missing_or_corrupt_artifact_is_explicitly_unavailable(tmp_path):
         assert client.get("/api/history?year=nonsense").json()["availability"] == "unavailable"
 
 
+def test_optional_study_and_metric_audit_are_read_only_and_not_readiness_requirements(artifacts):
+    with TestClient(create_app(artifacts)) as client:
+        assert client.get("/health/ready").status_code == 200
+        assert client.get("/api/study").status_code == 503
+        assert client.get("/api/metric-context").status_code == 503
+        for name, endpoint in (("full_dataset_study", "study"), ("metric_context", "metric-context")):
+            write_snapshot(artifacts / f"{name}.json", {"source": "Test fixture", "availability": "available"})
+            assert client.get(f"/api/{endpoint}").json()["source"] == "Test fixture"
+            assert client.post(f"/api/{endpoint}").status_code == 405
+
+
 def test_cors_is_restricted_to_configured_origins(artifacts, monkeypatch):
     monkeypatch.setenv("CORS_ORIGINS", "https://heatline.example")
     with TestClient(create_app(artifacts)) as client:

@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "source": "Saved Heatline v2 confusion counts",
+  "mode": "retrospective metric audit",
+  "issued_at": "2026-11-03T10:46:09.030197+00:00",
+  "target_date": null,
+  "model_version": "heatline-nagpur-v2",
+  "availability": "available",
+  "timezone": "Asia/Kolkata",
+  "years": "May 2019\u20132026",
+  "definitions": {
+    "accuracy": "(TP + TN) / all days",
+    "precision": "TP / (TP + FP): fraction of alerts that were correct",
+    "recall": "TP / (TP + FN): fraction of positive days detected",
+    "balanced_accuracy": "Mean of sensitivity and specificity"
+  },
+  "era5": {
+    "days": 248,
+    "positive_days": 8,
+    "tp": 5,
+    "tn": 228,
+    "fp": 12,
+    "fn": 3,
+    "accuracy": 0.9395161290322581,
+    "precision": 0.29411764705882354,
+    "recall": 0.625,
+    "specificity": 0.95,
+    "balanced_accuracy": 0.7875,
+    "always_negative": {
+      "accuracy": 0.967741935483871,
+      "recall": 0.0,
+      "balanced_accuracy": 0.5
+    },
+    "fair_coin": {
+      "expected_accuracy": 0.5,
+      "expected_recall": 0.5,
+      "expected_balanced_accuracy": 0.5,
+      "note": "Analytical expectation for independent fair binary guesses; not a fitted model or an observed run."
+    }
+  },
+  "nasa_f1": {
+    "days": 248,
+    "positive_days": 45,
+    "tp": 41,
+    "tn": 174,
+    "fp": 29,
+    "fn": 4,
+    "accuracy": 0.8669354838709677,
+    "precision": 0.5857142857142857,
+    "recall": 0.9111111111111111,
+    "specificity": 0.8571428571428571,
+    "balanced_accuracy": 0.8841269841269841,
+    "always_negative": {
+      "accuracy": 0.8185483870967742,
+      "recall": 0.0,
+      "balanced_accuracy": 0.5
+    },
+    "fair_coin": {
+      "expected_accuracy": 0.5,
+      "expected_recall": 0.5,
+      "expected_balanced_accuracy": 0.5,
+      "note": "Analytical expectation for independent fair binary guesses; not a fitted model or an observed run."
+    }
+  },
+  "interpretation": "29.4% is ERA5 alert precision, not accuracy. Accuracy alone conceals the rare positive class. NASA and ERA5 use different daily products and target labels; their scores do not establish which source matches station truth."
+}
