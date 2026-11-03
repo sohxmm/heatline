@@ -751,9 +751,6 @@ p {
   min-width: 0;
   border-right: 1px solid var(--line);
 }
-.metric:first-child {
-  padding-left: 0;
-}
 .metric:last-child {
   border: 0;
 }
@@ -1694,7 +1691,7 @@ summary {
     margin-top: 20px;
   }
   .metric {
-    padding: 20px 13px !important;
+    padding: 20px 13px;
     border-bottom: 1px solid var(--line);
     border-right: 1px solid var(--line);
   }
@@ -2583,6 +2580,7 @@ summary {
   background: #1a1b1c;
   border-radius: 6px;
   margin-block: 24px;
+  padding: 0;
 }
 .metric {
   padding: 23px;
