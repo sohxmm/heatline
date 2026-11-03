@@ -7,8 +7,30 @@ import { Line } from "./charts/line";
 import { Grid } from "./charts/grid";
 import { XAxis } from "./charts/x-axis";
 import { ChartTooltip } from "./charts/tooltip/chart-tooltip";
+import { useYScale } from "./charts/chart-context";
 import type { Day } from "@/lib/data";
 import { number } from "@/lib/data";
+
+function TemperatureAxis() {
+  const scale = useYScale();
+  return (
+    <g aria-hidden="true">
+      {scale.ticks(4).map((value) => (
+        <text
+          key={value}
+          x={-9}
+          y={scale(value)}
+          textAnchor="end"
+          dominantBaseline="middle"
+          fill="#a0a397"
+          fontSize={10}
+        >
+          {value}°
+        </text>
+      ))}
+    </g>
+  );
+}
 
 /** Bklit registry chart. Exact source numbers remain in the adjacent day controls/table. */
 export function WeatherChart({ days }: { days: Day[] }) {
@@ -37,9 +59,10 @@ export function WeatherChart({ days }: { days: Day[] }) {
         style={{ height: 260 }}
         animationDuration={reduce ? 0 : 650}
         yDomainTween={!reduce}
-        margin={{ top: 22, right: 16, bottom: 35, left: 16 }}
+        margin={{ top: 22, right: 16, bottom: 35, left: 42 }}
       >
         <Grid horizontal vertical={false} />
+        <TemperatureAxis />
         <Line
           dataKey="tmax"
           stroke="#e7b46b"

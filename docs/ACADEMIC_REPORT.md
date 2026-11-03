@@ -1,5 +1,7 @@
 # Heatline: seasonal NumPy ANN for Nagpur May heatwave conditions
 
+This report preserves the original 26-input v2 experiment. The separate full-history 52-input study, expanding-window evaluation and all-data refit are documented in [Evaluation protocol](EVALUATION.md). Their periods, reference normals and model versions differ; do not merge the scores.
+
 ## Problem and assessed contribution
 
 The task is next-day binary prediction of May heatwave conditions for Nagpur, using earlier climate observations. The assessed implementation explicitly computes neuron activations, gradients, bias updates and momentum in NumPy. The selected architecture is **26 → 16 → 1**, with **bipolar_sigmoid** hidden units and a binary sigmoid output. Three independently initialized networks are averaged for the application; the single seed-42 network remains an independently reported baseline. Fuzzy/GA/deeper PyTorch models are legacy optional theory extensions. PyTorch checks derivatives but does not perform assessed training.
@@ -68,6 +70,8 @@ The versioned `config_v2.yaml` fixes the experiment before its retrospective eva
 Inference averages each member's sigmoid score, not logits or weights. Platt scaling fits only May 2015–2018. The sensitivity threshold maximizes F2 (recall weighted more heavily), with ties preferring precision then higher threshold. The balanced threshold independently maximizes F1 on the same calibration period. Calibration scores are fitted, not independent performance evidence. An ensemble or Platt scaling does not guarantee calibration.
 
 ## Retrospective results on unchanged ERA5 May targets
+
+Metric interpretation: the primary ANN's 29.4% is alert precision (5 correct alerts out of 17), not accuracy. Accuracy is 233/248 = 94.0%; always-negative predictions score 240/248 = 96.8% but miss all eight positive days. Balanced accuracy is 78.8%. False alarms remain a real limitation; confusion counts, precision, recall, F1 and average precision are the main evidence.
 
 Primary sensitivity policy:
 

@@ -1,9 +1,17 @@
 "use client";
 import { useState } from "react";
-import { Code2 as Github, ExternalLink } from "lucide-react";
-import { useResource, number, type Model, type Experiments } from "@/lib/data";
+import Link from "next/link";
+import { ArrowUpRight, ArrowDown } from "lucide-react";
 import {
-  Tag,
+  useResource,
+  number,
+  percent,
+  type Envelope,
+  type Model,
+  type Experiments,
+} from "@/lib/data";
+import { type FullStudy, type StudyMetric, yearRange } from "@/lib/study";
+import {
   Empty,
   Heading,
   Panel,
@@ -11,596 +19,617 @@ import {
   Download,
   Metric,
 } from "@/components/project-ui";
-import { amber } from "@/components/view-config";
+
+function ScoreTable({ metrics }: { metrics: StudyMetric[] }) {
+  return (
+    <div className="table-scroll" tabIndex={0}>
+      <table>
+        <caption>
+          Measured classification results; accuracy, precision and recall have
+          different denominators.
+        </caption>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Accuracy</th>
+            <th>Balanced accuracy</th>
+            <th>Precision</th>
+            <th>Recall</th>
+            <th>F1</th>
+            <th>Average precision</th>
+            <th>Brier ↓</th>
+            <th>TN / FP / FN / TP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {metrics.map((m) => (
+            <tr
+              key={m.model}
+              className={
+                m.model.toLowerCase().includes("ann") ? "highlight-row" : ""
+              }
+            >
+              <td>{m.model}</td>
+              <td>{percent(m.accuracy)}</td>
+              <td>{percent(m.balanced_accuracy)}</td>
+              <td>{percent(m.precision)}</td>
+              <td>{percent(m.recall)}</td>
+              <td>{number(m.f1, 3)}</td>
+              <td>{number(m.pr_auc, 3)}</td>
+              <td>{number(m.brier, 3)}</td>
+              <td>
+                {[m.tn, m.fp, m.fn, m.tp]
+                  .map((x) => number(x, Number.isInteger(x) ? 0 : 1))
+                  .join(" / ")}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+interface StationComparison extends Envelope {
+  years?: number[];
+  pooled?: {
+    paired_days?: number;
+    sources?: Record<
+      string,
+      { mae_c?: number; bias_c?: number; days_tmax_ge45?: number }
+    >;
+  };
+}
 
 const syllabus = [
-  {
-    exp: 1,
-    title: "Activation functions",
-    connection: "Identity, steps, sigmoids, ramp; controlled activation study",
-    co: "CO1",
-  },
-  {
-    exp: 2,
-    title: "McCulloch–Pitts neuron",
-    connection: "Fixed thresholds; NAND, NOR, and memory in the appendix",
-    co: "CO1",
-  },
-  {
-    exp: 3,
-    title: "Hebbian learning",
-    connection: "Binary and bipolar worked weight-association examples",
-    co: "CO3",
-  },
-  {
-    exp: 4,
-    title: "Perceptron learning",
-    connection: "Single-layer comparison; AND and XOR separability",
-    co: "CO2",
-  },
-  {
-    exp: 5,
-    title: "Delta learning",
-    connection: "Error-driven sigmoid updates; distinct from linear LMS",
-    co: "CO2",
-  },
-  {
-    exp: 6,
-    title: "Multilayer perceptron",
-    connection: "XOR hidden layer linked to the heatwave ANN",
-    co: "CO2",
-  },
-  {
-    exp: 7,
-    title: "Error backpropagation",
-    connection: "Numerical output/hidden errors and weight/bias updates",
-    co: "CO2",
-  },
+  [
+    "01",
+    "Activation functions",
+    "Sigmoid comparisons and interactive activation plots",
+    "CO1",
+  ],
+  [
+    "02",
+    "McCulloch–Pitts neuron",
+    "Fixed-threshold NAND, NOR and memory demonstrations",
+    "CO1",
+  ],
+  [
+    "03",
+    "Hebbian learning",
+    "Binary/bipolar association examples in the notebook",
+    "CO3",
+  ],
+  [
+    "04",
+    "Perceptron learning",
+    "Single-layer weather baseline; AND/XOR separability",
+    "CO2",
+  ],
+  ["05", "Delta learning", "Sigmoid error-driven learning baseline", "CO2"],
+  [
+    "06",
+    "Multilayer perceptron",
+    "Hidden layer for XOR and climate classification",
+    "CO2",
+  ],
+  [
+    "07",
+    "Error backpropagation",
+    "Explicit hidden/output gradients and weight/bias updates",
+    "CO2",
+  ],
 ];
 export function Evidence() {
   const resource = useResource<Model>("model");
   const experiments = useResource<Experiments>("experiments");
-  const model = resource.data;
-  const metrics = model?.metrics ?? [];
-  const [study, setStudy] = useState("all");
-  const runs = (experiments.data?.runs ?? []).filter(
-    (r) => study === "all" || r.activation === study,
-  );
+  const study = useResource<FullStudy>("full_dataset_study");
+  const station = useResource<StationComparison>("station_comparison");
+  const [sourceId, setSource] = useState("era5");
   const [policy, setPolicy] = useState("sensitive");
-  const shownMetrics = metrics.map((m) =>
-    policy === "balanced" && m.balanced ? { ...m, ...m.balanced } : m,
+  const [activation, setActivation] = useState("all");
+  const model = resource.data;
+  const original = model?.metrics?.[0];
+  const total =
+    (original?.tp ?? 0) +
+    (original?.tn ?? 0) +
+    (original?.fp ?? 0) +
+    (original?.fn ?? 0);
+  const accuracy = total
+    ? ((original?.tp ?? 0) + (original?.tn ?? 0)) / total
+    : undefined;
+  const negativeAccuracy = total
+    ? ((original?.tn ?? 0) + (original?.fp ?? 0)) / total
+    : undefined;
+  const source =
+    study.data?.sources?.find((s) => s.id === sourceId) ??
+    study.data?.sources?.[0];
+  const main = source?.metrics?.find((m) =>
+    m.model.toLowerCase().includes("ann"),
   );
-  const previous = model?.previous_version?.metrics;
-  const current = metrics[0];
+  const oldMetrics: StudyMetric[] = (model?.metrics ?? []).map((row) => {
+    const m =
+      policy === "balanced" && row.balanced ? { ...row, ...row.balanced } : row;
+    const n = (m.tp ?? 0) + (m.tn ?? 0) + (m.fp ?? 0) + (m.fn ?? 0);
+    const specificity = (m.tn ?? 0) / Math.max(1, (m.tn ?? 0) + (m.fp ?? 0));
+    return {
+      ...m,
+      accuracy: n ? ((m.tp ?? 0) + (m.tn ?? 0)) / n : undefined,
+      balanced_accuracy: ((m.recall ?? 0) + specificity) / 2,
+    };
+  });
+  const runs = (experiments.data?.runs ?? []).filter(
+    (r) => activation === "all" || r.activation === activation,
+  );
   return (
-    <div className="page">
+    <div className="page evidence-page">
       <Heading
-        eyebrow="EVIDENCE / METHODOLOGY / LIMITATIONS"
+        eyebrow="04 / RESULTS & METHODOLOGY"
         title={
           <>
-            Show the work. <em>All of it.</em>
+            Evidence you can <em>inspect.</em>
           </>
         }
-        description="A reproducible experiment, a clearly bounded application, and honest results. The assessed contribution is the neural learning process—not a claim to replace official forecasts."
+        description="Measured outcomes, the data behind them, and a reproducible account of how the network learns. Start with the full-history study, then inspect the earlier experiment."
       >
-        <Download name="model" />
+        <Download name="full_dataset_study" />
       </Heading>
-      <DataNote
-        data={model}
-        transport={resource.transport}
-        error={resource.error}
-      />
-      <div className="scope-grid">
-        <section>
-          <Tag tone="amber">Assessed core</Tag>
-          <h2>Nagpur · May</h2>
-          <p>
-            From-scratch NumPy backpropagation, activation studies, baselines,
-            and chronological evaluation.
-          </p>
-        </section>
-        <section>
-          <Tag>Product extension</Tag>
-          <h2>Six-city outlook</h2>
-          <p>
-            Provider weather forecasts, hourly profiles, historical context, and
-            a useful regional interface.
-          </p>
-        </section>
-        <section>
-          <Tag>Optional theory</Tag>
-          <h2>Beyond the lab</h2>
-          <p>
-            Fuzzy inference, genetic optimization, and the existing deeper
-            PyTorch ensemble remain independent extensions.
-          </p>
-        </section>
-      </div>
-      {previous && current && (
+      <nav className="evidence-jumps" aria-label="Evidence sections">
+        <a href="#full-history">Full-history study</a>
+        <a href="#metric-definitions">Understanding the metrics</a>
+        <a href="#data-source">Data source</a>
+        <a href="#original-study">Original experiment</a>
+        <a href="#lab-mapping">Lab connection</a>
+      </nav>
+      <section id="full-history">
         <Panel
-          title="What changed, measured on the same May days"
-          subtitle="Frozen ERA5 proxy labels and identical 2019–2026 dates. Previously inspected outcomes make this an exploratory retrospective comparison."
-        >
-          <div className="metric-strip">
-            <Metric
-              label="Proxy events detected"
-              value={`${current.tp ?? 0} / ${(current.tp ?? 0) + (current.fn ?? 0)}`}
-              detail={`Previous version: ${previous.tp} / ${(previous.tp ?? 0) + (previous.fn ?? 0)}`}
-            />
-            <Metric
-              label="Recall"
-              value={`${number((current.recall ?? 0) * 100, 1)}%`}
-              detail={`Previous: ${number((previous.recall ?? 0) * 100, 1)}%`}
-            />
-            <Metric
-              label="Average precision"
-              value={number(current.pr_auc, 3)}
-              detail={`Previous: ${number(previous.pr_auc, 3)}`}
-            />
-            <Metric
-              label="False alarms"
-              value={current.fp}
-              detail={`Previous: ${previous.fp} · sensitivity costs alerts`}
-            />
-          </div>
-          <p className="panel-copy">
-            The revised study trains on April–June, compares positive-class
-            weighting, and averages {model?.ensemble_size} small NumPy networks.
-            The F2 operating point prioritizes recall; the balanced F1 policy is
-            shown separately. Architecture selection uses May 2011–2014, and
-            both thresholds use May 2015–2018.
-          </p>
-        </Panel>
-      )}
-      <Panel
-        title="Retrospective evaluation"
-        subtitle="2019–2026 · Nagpur May · identical target and evaluation dates for every baseline"
-        aside={
-          model?.decision_policy ? (
-            <label className="field compact">
-              Decision policy
-              <select
-                value={policy}
-                onChange={(e) => setPolicy(e.target.value)}
-              >
-                <option value="sensitive">Sensitivity · F2</option>
-                <option value="balanced">Balanced · F1</option>
-              </select>
-            </label>
-          ) : undefined
-        }
-      >
-        <div className="table-scroll" tabIndex={0}>
-          <table>
-            <caption>
-              Measured model comparisons. PR-AUC, precision, recall, F1, and
-              Brier score.
-            </caption>
-            <thead>
-              <tr>
-                <th>Model</th>
-                <th>PR-AUC ↑</th>
-                <th>Precision ↑</th>
-                <th>Recall ↑</th>
-                <th>F1 ↑</th>
-                <th>Brier ↓</th>
-                <th>TN / FP / FN / TP</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shownMetrics.map((m) => (
-                <tr
-                  key={m.model}
-                  className={
-                    m.model.toLowerCase().includes("ann") ? "highlight-row" : ""
-                  }
+          title="Full history. Future-first evaluation."
+          subtitle="All available seasons participate in the workflow. A final model is fitted on the complete dataset after forward-in-time evaluation."
+          aside={
+            <div
+              className="source-switch"
+              role="group"
+              aria-label="Study data source"
+            >
+              {(study.data?.sources ?? []).map((s) => (
+                <button
+                  type="button"
+                  key={s.id}
+                  aria-pressed={s.id === source?.id}
+                  onClick={() => setSource(s.id)}
                 >
-                  <td>{m.model}</td>
-                  <td>{number(m.pr_auc, 3)}</td>
-                  <td>{number(m.precision, 3)}</td>
-                  <td>{number(m.recall, 3)}</td>
-                  <td>{number(m.f1, 3)}</td>
-                  <td>{number(m.brier, 3)}</td>
-                  <td>
-                    {[m.tn, m.fp, m.fn, m.tp]
-                      .map((n) => number(n, 0))
-                      .join(" / ")}
-                  </td>
-                </tr>
+                  {s.label?.includes("NASA") ? "NASA POWER" : "ERA5"}
+                </button>
               ))}
-            </tbody>
-          </table>
-        </div>
-        {!metrics.length && (
-          <Empty>
-            {resource.loading
-              ? "Loading measured results…"
-              : "Results are not published yet. No performance numbers are estimated or invented."}
-          </Empty>
-        )}
-        <p className="fine-print">
-          PR-AUC is average precision. Brier score measures squared probability
-          error; hard-output baselines are evaluated as 0/1 scores. Model
-          selection and calibration precede this retrospective period. Simpler
-          baselines may perform better.
-        </p>
-      </Panel>
-      {experiments.data?.yearly_results && (
-        <Panel
-          title="Every evaluation May, including quiet years"
-          subtitle="Detection and false alarms are reported together; zero-event years remain visible."
-        >
-          <div className="table-scroll" tabIndex={0}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Year</th>
-                  <th>Proxy-positive days</th>
-                  <th>Detected</th>
-                  <th>Missed</th>
-                  <th>False alarms</th>
-                </tr>
-              </thead>
-              <tbody>
-                {experiments.data.yearly_results.map((row) => (
-                  <tr key={row.year}>
-                    <td>{row.year}</td>
-                    <td>{row.positive_days}</td>
-                    <td>{row.detected}</td>
-                    <td>{row.missed}</td>
-                    <td>{row.false_alarms}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {experiments.data.onset && (
-            <p className="fine-print">
-              Event onsets: {experiments.data.onset.detected} detected of{" "}
-              {experiments.data.onset.events}. An onset is a proxy-positive day
-              after a negative day; continuation and onset are not the same
-              task.
-            </p>
-          )}
-          {experiments.data.uncertainty && (
-            <p className="fine-print">
-              May-year block bootstrap 95% interval: average precision{" "}
-              {experiments.data.uncertainty.intervals.pr_auc
-                .map((x) => number(x, 3))
-                .join("–")}
-              ; recall{" "}
-              {experiments.data.uncertainty.intervals.recall
-                .map((x) => `${number(x * 100, 1)}%`)
-                .join("–")}
-              . {experiments.data.uncertainty.limitation}
-            </p>
-          )}
-        </Panel>
-      )}
-      <Panel
-        title="Chronology is part of the method"
-        subtitle="The future must not leak into a historical prediction."
-      >
-        <div className="split-timeline">
-          {(
-            model?.splits ?? [
-              { name: "Training", years: "1981–2010", days: 0, positives: 0 },
-              {
-                name: "Architecture selection",
-                years: "2011–2014",
-                days: 0,
-                positives: 0,
-              },
-              {
-                name: "Calibration & threshold",
-                years: "2015–2018",
-                days: 0,
-                positives: 0,
-              },
-              {
-                name: "Retrospective evaluation",
-                years: "2019–2026",
-                days: 0,
-                positives: 0,
-              },
-            ]
-          ).map((s, i) => (
-            <div key={s.name}>
-              <span>0{i + 1}</span>
-              <strong>{s.years}</strong>
-              <p>{s.name}</p>
-              {s.days > 0 && (
-                <small>
-                  {s.days} days · {s.positives} proxy positives
-                </small>
-              )}
             </div>
-          ))}
-        </div>
-        <ul className="plain-list columns">
-          <li>Normalization fits only the 1981–2010 training data.</li>
-          <li>Reference normals use 1981–2010; later years are excluded.</li>
-          <li>
-            March observations initialize April–June training history; May
-            inputs still end on T−1.
-          </li>
-          <li>
-            Missing or noncontiguous history is rejected, never silently filled.
-          </li>
-          <li>2011–2014 selects architecture and objective.</li>
-          <li>2015–2018 selects calibration and decision threshold.</li>
-        </ul>
-      </Panel>
-      {experiments.data?.provider_benchmark && (
-        <Panel
-          title="Independent NASA POWER benchmark"
-          subtitle="A separate data product and target population. These scores do not replace the ERA5 before/after comparison."
+          }
         >
-          <p className="panel-copy">
-            The NumPy network is also trained on NASA POWER meteorology with its
-            own training-only reference normals. Evaluation covers{" "}
-            {experiments.data.provider_benchmark.evaluation.days} May days in{" "}
-            {experiments.data.provider_benchmark.evaluation.years}, including{" "}
-            {experiments.data.provider_benchmark.evaluation.positive_days}{" "}
-            proxy-positive days. ERA5 has 8 positive days over the same years,
-            so these scores measure a different classification problem.
-          </p>
-          <div className="table-scroll" tabIndex={0}>
-            <table>
-              <thead>
-                <tr>
-                  <th>NASA benchmark model</th>
-                  <th>Average precision</th>
-                  <th>F2-policy recall</th>
-                  <th>F2-policy false alarms</th>
-                  <th>F1-policy recall</th>
-                  <th>F1-policy precision</th>
-                  <th>F1-policy F1</th>
-                  <th>F1-policy false alarms</th>
-                </tr>
-              </thead>
-              <tbody>
-                {experiments.data.provider_benchmark.metrics.map((m) => (
-                  <tr key={m.model}>
-                    <td>{m.model}</td>
-                    <td>{number(m.pr_auc, 3)}</td>
-                    <td>{number(m.recall, 3)}</td>
-                    <td>{m.fp}</td>
-                    <td>{number(m.balanced?.recall, 3)}</td>
-                    <td>{number(m.balanced?.precision, 3)}</td>
-                    <td>{number(m.balanced?.f1, 3)}</td>
-                    <td>{m.balanced?.fp}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="fine-print">
-            {experiments.data.provider_benchmark.time_standard}.{" "}
-            {experiments.data.provider_benchmark.limitations.join(" ")}
-          </p>
-          <a
-            className="text-link"
-            href="/data/provider_benchmark.json"
-            download
-          >
-            Download benchmark records and provenance
-          </a>
+          {source ? (
+            <>
+              <div className="metric-strip">
+                <Metric
+                  label="Out-of-fold accuracy"
+                  value={percent(main?.accuracy)}
+                  detail="Correct predictions / evaluated days"
+                />
+                <Metric
+                  label="Heatwave precision"
+                  value={percent(main?.precision)}
+                  detail="Correct alerts / all alerts"
+                />
+                <Metric
+                  label="Heatwave recall"
+                  value={percent(main?.recall)}
+                  detail="Detected / actual positive days"
+                />
+                <Metric
+                  label="Average precision"
+                  value={number(main?.pr_auc, 3)}
+                  detail="Ranking quality across thresholds"
+                />
+              </div>
+              <p className="study-protocol">
+                {study.data?.protocol?.method} Each evaluation block follows its
+                fitting, selection and calibration years. Results below combine
+                those forward predictions. The final full-data refit is a
+                separate saved model, not the source of these held-out scores.
+              </p>
+              <ScoreTable metrics={source.metrics ?? []} />
+              <p className="fine-print">
+                {source.time_standard} · {source.architecture?.inputs ?? 52}{" "}
+                inputs → {source.architecture?.hidden ?? 16} hidden neurons → 1
+                output. This study is separate from the original 26-input
+                replay. The two providers define their own grid-based targets;
+                their scores do not measure performance against the same station
+                labels.
+              </p>
+              <details className="study-disclosure">
+                <summary>Inspect the chronological folds</summary>
+                <div className="fold-grid">
+                  {source.folds?.map((f, i) => (
+                    <div className="fold-card" key={f.id ?? i}>
+                      <strong>
+                        Evaluation · {yearRange(f.evaluation_years)}
+                      </strong>
+                      <p>
+                        Fit: {yearRange(f.fit_years)}
+                        <br />
+                        Selection: {yearRange(f.selection_years)}
+                        <br />
+                        Calibration: {yearRange(f.calibration_years)}
+                      </p>
+                      <p>Decision threshold: {number(f.threshold, 4)}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="fine-print">
+                  The earliest years initialize the expanding training history.
+                  They are not presented as unseen predictions.{" "}
+                  {study.data?.protocol?.limitation}
+                </p>
+              </details>
+              <div className="full-fit-note">
+                <h3>Final model · fitted on all available seasons</h3>
+                <p>
+                  <strong>
+                    {source.final_fit?.days?.toLocaleString("en-IN") ?? "—"}{" "}
+                    training days
+                  </strong>{" "}
+                  · {yearRange(source.final_fit?.years)} ·{" "}
+                  {source.final_fit?.positive_days ?? "—"} positive targets
+                </p>
+                <p>
+                  After measuring forward predictions, the final weights use the
+                  full historical dataset. Its fit to already-seen dates is
+                  training performance, not an independent test.
+                </p>
+              </div>
+              <div className="panel-bottom">
+                <Link className="text-link" href="/explorer">
+                  Inspect historical predictions <ArrowUpRight size={14} />
+                </Link>
+                <Download name="full_dataset_study" />
+              </div>
+            </>
+          ) : (
+            <Empty>
+              {study.loading
+                ? "Loading the full-history experiment…"
+                : "The full-history experiment is not available in this snapshot. The original measured study is accessible below."}
+            </Empty>
+          )}
         </Panel>
-      )}
-      <Panel
-        title="Controlled experiments"
-        subtitle="Repeated seeds, activation functions, hidden size, and learning settings."
-        aside={
-          <label className="field compact">
-            Activation
-            <select value={study} onChange={(e) => setStudy(e.target.value)}>
-              <option value="all">All activations</option>
-              <option value="binary_sigmoid">Binary sigmoid</option>
-              <option value="bipolar_sigmoid">Bipolar sigmoid</option>
-            </select>
-          </label>
-        }
-      >
-        <div className="table-scroll study-table" tabIndex={0}>
-          <table>
-            <thead>
-              <tr>
-                <th>Activation</th>
-                <th>Hidden</th>
-                <th>Loss</th>
-                <th>Positive weight</th>
-                <th>Training months</th>
-                <th>η</th>
-                <th>μ</th>
-                <th>Seed</th>
-                <th>Selection PR-AUC</th>
-                <th>Selection F1</th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((r, i) => (
-                <tr key={i}>
-                  <td>{r.activation?.replaceAll("_", " ")}</td>
-                  <td>{r.hidden}</td>
-                  <td>{r.loss?.replaceAll("_", " ")}</td>
-                  <td>
-                    {r.positive_weight_mode ?? "none"} ·{" "}
-                    {number(r.positive_weight ?? 1, 2)}
-                  </td>
-                  <td>{r.training_window ?? "May"}</td>
-                  <td>{number(r.learning_rate, 3)}</td>
-                  <td>{number(r.momentum, 2)}</td>
-                  <td>{r.seed}</td>
-                  <td>{number(r.pr_auc, 3)}</td>
-                  <td>{number(r.f1, 3)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      </section>
+      <section className="metric-explainer" id="metric-definitions">
+        <p className="eyebrow">READING THE EARLIER RESULT</p>
+        <h2>
+          29.4% was precision. <em>Not accuracy.</em>
+        </h2>
+        <p>
+          In the original ERA5 sensitivity-policy study, the ANN correctly
+          classified{" "}
+          <strong>
+            {original
+              ? `${(original.tn ?? 0) + (original.tp ?? 0)} of ${total}`
+              : "233 of 248"}{" "}
+            days
+          </strong>
+          . It raised {original ? (original.tp ?? 0) + (original.fp ?? 0) : 17}{" "}
+          positive alerts, of which {original?.tp ?? 5} were correct.
+        </p>
+        <div className="metric-equations">
+          <div>
+            <strong>{percent(accuracy)}</strong>
+            <span>accuracy · correct days / all days</span>
+          </div>
+          <div>
+            <strong>{percent(original?.precision)}</strong>
+            <span>precision · correct alerts / all alerts</span>
+          </div>
+          <div>
+            <strong>{percent(original?.recall)}</strong>
+            <span>recall · detected / actual events</span>
+          </div>
         </div>
-        {!runs.length && (
-          <Empty>
-            Controlled-study results have not been published for this selection.
-          </Empty>
-        )}
-        <div className="panel-bottom">
-          <span>{runs.length} measured runs</span>
-          <Download name="experiments" />
-        </div>
-      </Panel>
-      <div className="two-column">
-        {experiments.data?.source_audit && (
+        <p>
+          A fair coin has expected accuracy of 50%, but an always-negative
+          prediction reaches <strong>{percent(negativeAccuracy)}</strong> on
+          this rare-event dataset while detecting zero heatwave days. That is
+          why accuracy alone cannot establish usefulness. We report missed
+          events, false alarms, precision, recall, average precision and simple
+          baselines together.
+        </p>
+      </section>
+      <section id="data-source">
+        <Panel
+          title="ERA5 or NASA POWER?"
+          subtitle="Compare the data products before interpreting the model scores."
+        >
+          <div className="two-column source-description">
+            <div>
+              <h3>ERA5 · assessed source</h3>
+              <p>
+                Hourly reanalysis aggregated to Nagpur local days. It supports
+                the original 26-feature study and its historical explorer. We
+                retain ERA5 as the primary source, rather than choosing a
+                provider solely because its own labels produce a higher score.
+              </p>
+            </div>
+            <div>
+              <h3>NASA POWER · independent comparison</h3>
+              <p>
+                Daily meteorology with UTC-day boundaries. Its temperatures,
+                reference normals and positive-day counts differ. A larger
+                average precision against NASA-derived labels does not prove
+                more accurate prediction of station heatwaves.
+              </p>
+            </div>
+          </div>
+          {station.data?.pooled && (
+            <>
+              <div className="table-scroll" tabIndex={0}>
+                <table>
+                  <caption>
+                    Limited training-era Nagpur station cross-check
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Paired May days</th>
+                      <th>Temperature MAE ↓</th>
+                      <th>Mean bias</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {["era5", "nasa"].map((id) => (
+                      <tr key={id}>
+                        <td>{id === "era5" ? "ERA5" : "NASA POWER"}</td>
+                        <td>{station.data?.pooled?.paired_days}</td>
+                        <td>
+                          {number(
+                            station.data?.pooled?.sources?.[id]?.mae_c,
+                            3,
+                          )}
+                          °C
+                        </td>
+                        <td>
+                          {number(
+                            station.data?.pooled?.sources?.[id]?.bias_c,
+                            3,
+                          )}
+                          °C
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="fine-print">
+                {station.data.pooled.paired_days} paired days in{" "}
+                {station.data.years?.join(", ")}. Daily reporting windows
+                differ; this limited check is descriptive and does not validate
+                official warning prediction.
+              </p>
+            </>
+          )}
+          <div className="panel-bottom">
+            <a
+              className="text-link"
+              href="/data/station_comparison.json"
+              download
+            >
+              Station comparison <ArrowDown size={14} />
+            </a>
+            <a
+              className="text-link"
+              href="/data/provider_benchmark.json"
+              download
+            >
+              Original NASA benchmark <ArrowDown size={14} />
+            </a>
+          </div>
+        </Panel>
+      </section>
+      <section id="original-study">
+        <details className="study-disclosure">
+          <summary>
+            Original 26-input study · results, years and controlled experiments
+          </summary>
           <Panel
-            title="Weather sources do not define identical targets"
-            subtitle="Training-era sensitivity check; providers were not selected using evaluation scores."
+            title="Original retrospective evaluation"
+            subtitle="May 2019–2026 · 248 Nagpur days · 8 proxy-positive days"
+            aside={
+              <label className="field compact">
+                Decision policy
+                <select
+                  value={policy}
+                  onChange={(e) => setPolicy(e.target.value)}
+                >
+                  <option value="sensitive">Sensitivity · F2</option>
+                  <option value="balanced">Balanced · F1</option>
+                </select>
+              </label>
+            }
           >
-            <p className="panel-copy">
-              {experiments.data.source_audit.source_decision}
-            </p>
+            <ScoreTable metrics={oldMetrics} />
             <p className="fine-print">
-              ERA5 overlap: {experiments.data.source_audit.era5_overlap_days}{" "}
-              days; maximum daily Tmax change{" "}
-              {number(
-                experiments.data.source_audit.max_daily_tmax_difference,
-                4,
-              )}
-              °C; May label changes{" "}
-              {experiments.data.source_audit.may_label_changes}.
+              F2 prioritizes recall; F1 balances precision and recall. Both
+              operating thresholds were chosen on May 2015–2018. These are
+              retrospective results on previously examined years.
             </p>
-            <div className="table-scroll" tabIndex={0}>
+          </Panel>
+          <Panel title="Original chronological partitions">
+            <div className="split-timeline">
+              {model?.splits?.map((s, i) => (
+                <div key={s.name}>
+                  <span>0{i + 1}</span>
+                  <strong>{s.years}</strong>
+                  <p>{s.name}</p>
+                  <small>
+                    {s.days} days · {s.positives} positives
+                  </small>
+                </div>
+              ))}
+            </div>
+            <p className="panel-copy">
+              The scaler and reference normals fit training years only. March
+              initializes lag history; observed inputs always stop at T−1.
+              Missing or noncontiguous history fails explicitly.
+            </p>
+          </Panel>
+          {experiments.data?.yearly_results && (
+            <Panel title="Every evaluation May">
+              <div className="table-scroll" tabIndex={0}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Year</th>
+                      <th>Positive days</th>
+                      <th>Detected</th>
+                      <th>Missed</th>
+                      <th>False alarms</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {experiments.data.yearly_results.map((r) => (
+                      <tr key={r.year}>
+                        <td>{r.year}</td>
+                        <td>{r.positive_days}</td>
+                        <td>{r.detected}</td>
+                        <td>{r.missed}</td>
+                        <td>{r.false_alarms}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
+          )}
+          <Panel
+            title="Controlled architecture and learning studies"
+            subtitle="8/16/32 hidden neurons · two sigmoid activations · two losses · class-weight and learning-factor comparisons"
+            aside={
+              <label className="field compact">
+                Activation
+                <select
+                  value={activation}
+                  onChange={(e) => setActivation(e.target.value)}
+                >
+                  <option value="all">All activations</option>
+                  <option value="binary_sigmoid">Binary sigmoid</option>
+                  <option value="bipolar_sigmoid">Bipolar sigmoid</option>
+                </select>
+              </label>
+            }
+          >
+            <div className="table-scroll study-table" tabIndex={0}>
               <table>
                 <thead>
                   <tr>
-                    <th>May year</th>
-                    <th>NASA − ERA5 mean °C</th>
-                    <th>NASA days ≥45°C</th>
-                    <th>ERA5 days ≥45°C</th>
+                    <th>Activation</th>
+                    <th>Hidden</th>
+                    <th>Loss</th>
+                    <th>Weight</th>
+                    <th>η / μ</th>
+                    <th>Seed</th>
+                    <th>Selection AP</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {experiments.data.source_audit.nasa_samples.map((row) => (
-                    <tr key={row.year}>
-                      <td>{row.year}</td>
-                      <td>{number(row.mean_nasa_minus_era5, 2)}</td>
-                      <td>{row.nasa_days_ge45}</td>
-                      <td>{row.era5_days_ge45}</td>
+                  {runs.map((r, i) => (
+                    <tr key={i}>
+                      <td>{r.activation?.replaceAll("_", " ")}</td>
+                      <td>{r.hidden}</td>
+                      <td>{r.loss?.replaceAll("_", " ")}</td>
+                      <td>
+                        {r.positive_weight_mode} ·{" "}
+                        {number(r.positive_weight, 2)}
+                      </td>
+                      <td>
+                        {r.learning_rate} / {r.momentum}
+                      </td>
+                      <td>{r.seed}</td>
+                      <td>{number(r.pr_auc, 3)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <p className="fine-print">
-              {experiments.data.source_audit.nasa_time_standard} NASA POWER is
-              not substituted for ERA5 merely because it labels more days
-              positive. See the downloadable source audit for station
-              cross-checks and reporting-window limitations.
-            </p>
-            <a className="text-link" href="/data/source_audit.json" download>
-              Download source audit
-            </a>
+            <div className="panel-bottom">
+              <span>{runs.length} recorded runs</span>
+              <Download name="experiments" />
+            </div>
           </Panel>
-        )}
+          <DataNote
+            data={model}
+            transport={resource.transport}
+            error={resource.error}
+          />
+        </details>
+      </section>
+      <section id="lab-mapping">
         <Panel
-          title="What the labels mean"
-          subtitle="A versioned proxy—not an official declaration."
+          title="From the lab to the application"
+          subtitle="The primary ANN uses Experiments 1, 6 and 7 directly. Perceptron and delta learning supply comparison models; the other examples explain the foundation."
         >
-          <p className="panel-copy">
-            The Nagpur plains proxy uses daily maximum ≥45°C, or maximum ≥40°C
-            with departure from the reference normal ≥4.5°C. Thresholds are
-            declared before fitting the model and are not adjusted to target a
-            positive-class prevalence.
-          </p>
-          <p className="panel-copy">
-            Gridded reanalysis approximates local conditions. Official IMD
-            declarations depend on station observations and spatial/persistence
-            requirements that this single-grid study does not reproduce.
-          </p>
+          <div className="table-scroll" tabIndex={0}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Experiment</th>
+                  <th>Concept</th>
+                  <th>Where it connects</th>
+                  <th>Lab CO</th>
+                </tr>
+              </thead>
+              <tbody>
+                {syllabus.map((row) => (
+                  <tr key={row[0]}>
+                    {row.map((s, i) => (
+                      <td key={i}>{s}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Link className="text-link" href="/learn">
+            Explore activation functions and backpropagation{" "}
+            <ArrowUpRight size={14} />
+          </Link>
+        </Panel>
+      </section>
+      <div className="method-footnote">
+        <h3>What the prediction means</h3>
+        <p>
+          The declared proxy is Tmax ≥45°C, or Tmax ≥40°C with departure ≥4.5°C
+          from a historical normal. It approximates grid conditions. Official
+          IMD declarations have station, spatial and persistence requirements
+          beyond this model.
+        </p>
+        <div className="panel-bottom">
           <a
             className="text-link"
             href="https://mausam.imd.gov.in/pdfs/heatcolduser/morning_heat_bulletin.pdf"
             target="_blank"
             rel="noreferrer"
           >
-            Read the IMD criteria <ExternalLink size={13} />
+            IMD criteria <ArrowUpRight size={14} />
           </a>
-        </Panel>
-        <Panel
-          title="What the model cannot claim"
-          subtitle="Limitations belong alongside results."
-        >
-          <ul className="plain-list">
-            {(
-              model?.limitations ?? [
-                "ERA5 reanalysis is delayed and cannot directly provide this model’s live inputs.",
-                "Validation on one Nagpur grid does not establish validity for other cities.",
-                "A calibrated model output can still be uncertain and miscalibrated under distribution shift.",
-                "The previously inspected 2019–2026 period is retrospective evidence.",
-              ]
-            ).map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
           <a
             className="text-link"
-            href="https://open-meteo.com/en/docs/historical-weather-api"
+            href="https://github.com/sohxmm/heatline"
             target="_blank"
             rel="noreferrer"
           >
-            Data availability and provenance <ExternalLink size={13} />
+            Source & reproducibility <ArrowUpRight size={14} />
           </a>
-        </Panel>
+        </div>
       </div>
-      <Panel
-        title="The lab, connected to the project"
-        subtitle="Experiment numbers and COs follow the supplied lab-printed mapping."
-      >
-        <div className="table-scroll" tabIndex={0}>
-          <table>
-            <thead>
-              <tr>
-                <th>Experiment</th>
-                <th>Lab concept</th>
-                <th>Project connection</th>
-                <th>Lab CO</th>
-              </tr>
-            </thead>
-            <tbody>
-              {syllabus.map((s) => (
-                <tr key={s.exp}>
-                  <td>0{s.exp}</td>
-                  <td>{s.title}</td>
-                  <td>{s.connection}</td>
-                  <td>
-                    <span className="co-tag">{s.co}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-      <section className="reproduce">
-        <div>
-          <p className="eyebrow">REPRODUCIBILITY, BUILT IN</p>
-          <h2>
-            From inputs to <em>evidence.</em>
-          </h2>
-          <p>
-            Original outputs are preserved as legacy experiments. Corrected
-            losses, independent gradient checks, seeded training, and versioned
-            artifacts make the new results inspectable.
-          </p>
-        </div>
-        <a
-          className="button outlined"
-          href="https://github.com/sohxmm/heatline"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Explore the repository <Github size={17} />
-        </a>
-      </section>
+      <DataNote
+        data={study.data ?? model}
+        transport={study.data ? study.transport : resource.transport}
+        error={study.data ? study.error : resource.error}
+      />
     </div>
   );
 }

@@ -13,7 +13,7 @@ test("all five views load and remain accessible", async ({ page }) => {
     await page.goto(path);
     await expect(page.locator("h1")).toBeVisible();
     await expect(page.locator(".data-note").first()).toContainText(
-      /Open-Meteo|Heatline/,
+      /Open-Meteo|Heatline|ERA5|NASA POWER/,
     );
     const result = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
@@ -30,6 +30,9 @@ test("all five views load and remain accessible", async ({ page }) => {
 
 test("replay numbers and errors equal published records", async ({ page }) => {
   await page.goto("/explorer");
+  await page
+    .getByRole("button", { name: "Original 26-input replay", exact: true })
+    .click();
   await expect(page.locator(".history-table tbody tr")).toHaveCount(31);
   const expected = history.records.filter((r: { date: string }) =>
     r.date.startsWith("2026"),
@@ -70,7 +73,7 @@ test("provider weather is distinct, with matching values and city controls", asy
     city.daily[0].tmax.toFixed(1),
   );
   await expect(
-    page.getByText("Regional ANN · unavailable", { exact: true }),
+    page.getByText("Historical ANN, separate from weather", { exact: true }),
   ).toBeVisible();
   await page.locator(".day-selector button").nth(2).click();
   await page.getByText("View hourly measurements", { exact: true }).click();
@@ -90,12 +93,63 @@ test("learning fixture and evidence match published data", async ({ page }) => {
   await page.getByRole("tab", { name: "3 Error signals" }).click();
   await expect(page.getByRole("tabpanel")).toContainText("0.101990994");
   await page.goto("/evidence");
-  await expect(page.locator("table").first().locator("tbody tr")).toHaveCount(
-    model.metrics.length,
-  );
-  await expect(page.locator("table").first()).toContainText(
+  await page
+    .getByText(
+      "Original 26-input study · results, years and controlled experiments",
+      { exact: true },
+    )
+    .click();
+  await expect(
+    page.locator("#original-study table").first().locator("tbody tr"),
+  ).toHaveCount(model.metrics.length);
+  await expect(page.locator("#original-study table").first()).toContainText(
     model.metrics[0].pr_auc.toFixed(3),
   );
+});
+
+test("city deep links and comparison controls change actual chart data", async ({
+  page,
+}) => {
+  await page.goto("/outlook?city=mumbai");
+  await expect(
+    page.getByRole("button", { name: "Mumbai", exact: true }).first(),
+  ).toHaveAttribute("aria-pressed", "true");
+  const comparison = page
+    .getByRole("region")
+    .filter({ hasText: "Compare the region" });
+  await page.getByLabel("Comparison measurement").selectOption("apparent_tmax");
+  await expect(page.getByLabel("Comparison measurement")).toHaveValue(
+    "apparent_tmax",
+  );
+  for (const name of ["Nagpur", "Mumbai", "Pune"])
+    await page
+      .getByRole("group", { name: "Cities to compare" })
+      .getByLabel(name, { exact: true })
+      .uncheck();
+  await expect(
+    page.getByText("Select at least one city to draw a comparison."),
+  ).toBeVisible();
+  await page
+    .getByRole("group", { name: "Cities to compare" })
+    .getByLabel("Akola", { exact: true })
+    .check();
+  await expect(page.getByRole("img", { name: /Akola chart/ })).toBeVisible();
+});
+
+test("evidence distinguishes precision from accuracy and offers real downloads", async ({
+  page,
+}) => {
+  await page.goto("/evidence");
+  await expect(page.locator("#metric-definitions")).toContainText(
+    "29.4% was precision.",
+  );
+  await expect(page.locator("#metric-definitions")).toContainText("94.0%");
+  await expect(page.locator("#metric-definitions")).toContainText("96.8%");
+  const response = await page.request.get("/data/model.json");
+  expect(response.ok()).toBeTruthy();
+  await expect(
+    page.getByRole("link", { name: "Station comparison", exact: true }),
+  ).toHaveAttribute("download", "");
 });
 
 test("old snapshots and an unavailable API retain explicit freshness", async ({

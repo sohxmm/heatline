@@ -103,10 +103,12 @@ def test_optional_study_and_metric_audit_are_read_only_and_not_readiness_require
         assert client.get("/health/ready").status_code == 200
         assert client.get("/api/study").status_code == 503
         assert client.get("/api/metric-context").status_code == 503
-        for name, endpoint in (("full_dataset_study", "study"), ("metric_context", "metric-context")):
+        for name, endpoint in (("full_dataset_study", "study"), ("metric_context", "metric-context"), ("station_comparison", "station-comparison")):
             write_snapshot(artifacts / f"{name}.json", {"source": "Test fixture", "availability": "available"})
             assert client.get(f"/api/{endpoint}").json()["source"] == "Test fixture"
             assert client.post(f"/api/{endpoint}").status_code == 405
+        assert client.get("/api/full_dataset_study").status_code == 200
+        assert client.get("/api/station_comparison").status_code == 200
 
 
 def test_cors_is_restricted_to_configured_origins(artifacts, monkeypatch):

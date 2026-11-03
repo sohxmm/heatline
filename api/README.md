@@ -25,6 +25,9 @@ Interactive API documentation: <http://127.0.0.1:8000/docs>.
 | `/api/model` | Architecture, preprocessing, version, metrics and limitations |
 | `/api/experiments` | Measured model comparisons and controlled studies |
 | `/api/learning` | Educational examples and numerical backpropagation trace |
+| `/api/study` | Full-history forward evaluation, source comparison and separate all-data refit |
+| `/api/metric-context` | Accuracy/precision definitions and baselines from v2 confusion counts |
+| `/api/station-comparison` | Small, paired training-era airport temperature audit |
 
 Successful data responses include `source`, `mode`, `issued_at`, `target_date`,
 `model_version`, and `availability` (`available`, `stale`, or `unavailable`).
