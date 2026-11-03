@@ -1,21 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  ArrowUpRight,
-  MapPin,
-  Layers3,
-  Thermometer,
-  Wind,
-  Info,
-} from "lucide-react";
-import {
-  useResource,
-  number,
-  percent,
-  dayLabel,
-  type Outlook,
-  type City,
-} from "@/lib/data";
+import { ArrowUpRight, MapPin, Thermometer } from "lucide-react";
+import { useResource, number, dayLabel, type Outlook } from "@/lib/data";
 import {
   Tag,
   Empty,
@@ -52,19 +38,16 @@ export function Regional() {
   const hours = (city?.hourly ?? []).filter((h) =>
     current ? h.time.startsWith(current.date) : false,
   );
-  const season = current
-    ? [4, 5, 6].includes(Number(current.date.slice(5, 7)))
-    : false;
   return (
     <div className="page">
       <Heading
-        eyebrow="01 / REGIONAL WEATHER · MAHARASHTRA"
+        eyebrow="MAHARASHTRA · PROVIDER FORECAST"
         title={
           <>
-            Six cities. <em>One outlook.</em>
+            Regional <em>weather.</em>
           </>
         }
-        description="Choose a city and a day to inspect the forecast. Compare daily temperatures across the region, then explore the hourly conditions."
+        description="Choose a city and date. Explore daily and hourly temperatures, or compare the region."
       >
         <Tag tone="amber">Weather-provider forecast</Tag>
       </Heading>
@@ -89,20 +72,6 @@ export function Regional() {
         transport={resource.transport}
         error={resource.error}
       />
-      <div className="weather-mode-line">
-        <span className="live-dot" />
-        <p>
-          Open-Meteo forecast ·{" "}
-          {season
-            ? "April–June study season"
-            : "Outside the April–June study season"}{" "}
-          · ANN results are available in the{" "}
-          <a className="text-link" href="/explorer">
-            historical May explorer
-          </a>
-          .
-        </p>
-      </div>
       <div className="metric-strip">
         <Metric
           label={`${city?.name ?? cityNames.find((n) => n.toLowerCase() === selected)} · ${current ? dayLabel(current.date) : "Forecast"}`}
@@ -135,7 +104,7 @@ export function Regional() {
           detail="Daily minimum"
         />
         <Metric
-          label="Difference from overnight low"
+          label="Daily temperature range"
           value={
             <>
               {current?.tmax !== undefined && current?.tmin !== undefined
@@ -147,10 +116,10 @@ export function Regional() {
           detail="Daily temperature range"
         />
       </div>
-      <div className="two-column weather-columns">
+      <div className="weather-week">
         <Panel
           title="Temperature through the week"
-          subtitle="Choose a day below to inspect its hourly profile."
+          subtitle="Select a day for the hourly profile."
           aside={<Thermometer size={18} className="amber-icon" />}
         >
           <Legend series={climateSeries} />
@@ -168,58 +137,6 @@ export function Regional() {
                 <small>{dayLabel(d.date)}</small>
               </Button>
             ))}
-          </div>
-        </Panel>
-        <Panel
-          title="Reading the conditions"
-          subtitle={
-            current
-              ? `${city?.name} · ${dayLabel(current.date)}`
-              : "Select a city"
-          }
-        >
-          <div className="context-item">
-            <div className="context-icon">
-              <Thermometer size={18} />
-            </div>
-            <div>
-              <h3>High temperature screening</h3>
-              <p>
-                {current?.temperature_indicator?.exceeds_threshold
-                  ? `Maximum meets the ${current.temperature_indicator.threshold_c}°C screening threshold.`
-                  : current?.temperature_indicator?.threshold_c
-                    ? `Maximum is below the ${current.temperature_indicator.threshold_c}°C screening threshold.`
-                    : "Temperature screening is not available for this snapshot."}
-              </p>
-              <small>
-                A temperature threshold alone is not a heatwave declaration.
-              </small>
-            </div>
-          </div>
-          <div className="context-item">
-            <div className="context-icon">
-              <Wind size={18} />
-            </div>
-            <div>
-              <h3>Apparent temperature</h3>
-              <p>
-                A separate measure of how hot conditions may feel, combining
-                meteorological influences.
-              </p>
-              <small>Not used as an IMD heatwave label.</small>
-            </div>
-          </div>
-          <div className="context-item">
-            <div className="context-icon">
-              <Layers3 size={18} />
-            </div>
-            <div>
-              <h3>Historical ANN, separate from weather</h3>
-              <p>
-                {city?.ann?.reason ??
-                  "The Nagpur model has not been validated for live provider inputs or these other cities."}
-              </p>
-            </div>
           </div>
         </Panel>
       </div>
@@ -255,7 +172,7 @@ export function Regional() {
             },
           ]}
           xFormat={(v) => v.slice(11, 16)}
-          height={280}
+          height={230}
         />
         <details>
           <summary>View hourly measurements</summary>

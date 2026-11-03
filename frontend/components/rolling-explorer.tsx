@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DayReplay } from "@/components/day-replay";
 import { Plot, Legend } from "@/components/charts";
 import {
@@ -19,6 +19,8 @@ import {
   useResource,
   type Envelope,
   type HistoryRow,
+  type ReplayDetails,
+  type ReplayDay,
 } from "@/lib/data";
 
 interface StudyRecord {
@@ -37,14 +39,29 @@ interface RollingStudy extends Envelope {
     id: string;
     label: string;
     time_standard: string;
+    architecture: { inputs: number; hidden: number; ensemble_size: number };
     records: StudyRecord[];
     folds: {
       id: string;
       fit_years: number[];
       selection_years: number[];
       calibration_years: number[];
+      calibration: { coefficient: number; intercept: number } | null;
     }[];
   }[];
+}
+
+interface StudyTrace extends Envelope {
+  source_id: string;
+  selected_year: number;
+  architecture: ReplayDetails["architecture"];
+  feature_names: string[];
+  fold_model: {
+    fit_years: number[];
+    scaler_mean: number[];
+    scaler_scale: number[];
+  };
+  records: (ReplayDay & { seed?: number })[];
 }
 
 export function RollingExplorer() {
@@ -53,6 +70,49 @@ export function RollingExplorer() {
   const [year, setYear] = useState(2026);
   const [day, setDay] = useState(1);
   const [errorsOnly, setErrorsOnly] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const targetYear = Number(params.get("year"));
+    const targetDay = Number(params.get("day"));
+    if (
+      Number.isInteger(targetYear) &&
+      targetYear >= 1996 &&
+      targetYear <= 2026
+    )
+      setYear(targetYear);
+    if (Number.isInteger(targetDay) && targetDay >= 1 && targetDay <= 31)
+      setDay(targetDay);
+    if (params.get("source") === "nasa_power") setSource("nasa_power");
+  }, []);
+  const trace = useResource<StudyTrace>(`study/${sourceId}/${year}`);
+  const traceData =
+    trace.data?.source_id === sourceId && trace.data.selected_year === year
+      ? trace.data
+      : null;
+  const details: ReplayDetails | null = traceData
+    ? {
+        ...traceData,
+        records: traceData.records.map((r) => ({
+          ...r,
+          trace_member_seed: r.seed,
+        })),
+        normalization: {
+          reference: `April–June ${traceData.fold_model.fit_years.join("–")} only`,
+          mean: Object.fromEntries(
+            traceData.feature_names.map((f, i) => [
+              f,
+              traceData.fold_model.scaler_mean[i],
+            ]),
+          ),
+          scale: Object.fromEntries(
+            traceData.feature_names.map((f, i) => [
+              f,
+              traceData.fold_model.scaler_scale[i],
+            ]),
+          ),
+        },
+      }
+    : null;
   const source = resource.data?.sources?.find((s) => s.id === sourceId);
   const rows: HistoryRow[] = (source?.records ?? [])
     .filter((r) => r.date.startsWith(`${year}-`))
@@ -77,13 +137,9 @@ export function RollingExplorer() {
   return (
     <div className="page">
       <Heading
-        eyebrow="NAGPUR / MAY ARCHIVE"
-        title={
-          <>
-            A prediction. <em>A recorded outcome.</em>
-          </>
-        }
-        description="Inspect predictions made by models fitted on earlier years. The 52-input rolling study covers 31 May seasons; the separate final refit uses all available seasonal rows."
+        eyebrow="NAGPUR / HISTORICAL PREDICTIONS"
+        title={<>May history</>}
+        description="Select a source and date to compare the ANN prediction with the observed day."
       >
         <div className="inline-controls">
           <label className="field">
@@ -111,7 +167,11 @@ export function RollingExplorer() {
       </Heading>
       <div className="view-context">
         <Tag tone="amber">Held-out rolling evaluation</Tag>
-        <span>52 → 16 → 1 · 3 seeded networks</span>
+        <span>
+          {source?.architecture.inputs ?? "—"} →{" "}
+          {source?.architecture.hidden ?? "—"} → 1 ·{" "}
+          {source?.architecture.ensemble_size ?? "—"} networks
+        </span>
         <span>{source?.time_standard}</span>
       </div>
       <DataNote
@@ -119,15 +179,6 @@ export function RollingExplorer() {
         transport={resource.transport}
         error={resource.error}
       />
-      {fold && (
-        <p className="panel-copy">
-          For this block: fit {fold.fit_years.join("–")}, stopping{" "}
-          {fold.selection_years.join("–")}, calibration{" "}
-          {fold.calibration_years.join("–")}. None of May {year} updates the
-          model shown here. These are source-derived proxy outcomes, not
-          official warnings.
-        </p>
-      )}
       <div className="metric-strip">
         <Metric
           label="Observed positive days"
@@ -161,18 +212,24 @@ export function RollingExplorer() {
         day={day}
         years={years}
         rows={rows}
-        details={null}
-        loading={resource.loading}
+        details={details}
+        loading={resource.loading || trace.loading}
         model={null}
         onYear={setYear}
         onDay={setDay}
         sourceLabel={source?.label ?? sourceId}
         firstYear={1996}
-        showComputation={false}
+        showComputation
+        calibrationApplied={!!fold?.calibration}
+        calibrationLabel={
+          fold?.calibration
+            ? `Platt scaling · May ${fold.calibration_years.join("–")}`
+            : "Uncalibrated raw score · insufficient calibration classes"
+        }
       />
       <Panel
-        title="Daily model output"
-        subtitle="The calibrated score and observed binary proxy. The dashed horizontal line is this fold's decision threshold."
+        title="Monthly profile"
+        subtitle="Model score, observed outcome and the decision threshold."
       >
         <Legend series={probabilitySeries} />
         <Plot
@@ -187,8 +244,8 @@ export function RollingExplorer() {
         />
       </Panel>
       <Panel
-        title="Every day, including the errors"
-        subtitle="Select a date to compare its prediction with its measured outcome. Source-specific labels differ."
+        title="Daily results"
+        subtitle="Select a date for the full comparison."
         aside={
           <div className="inline-controls">
             <label className="checkbox">
@@ -262,12 +319,25 @@ export function RollingExplorer() {
           </Empty>
         )}
       </Panel>
-      <p className="fine-print">
-        Warmup 1981–1995 has no independent forward prediction. These
-        exploratory historical results do not validate live forecast inputs.
-        Detailed saved-neuron computations are available in the original
-        26-input replay.
-      </p>
+      <details className="study-details">
+        <summary>Model and data reference</summary>
+        <p className="fine-print">
+          {source?.label} · {source?.time_standard} ·{" "}
+          {source?.architecture.inputs} inputs · source-derived heatwave proxy,
+          not official station warnings.
+        </p>
+        {fold && (
+          <p className="fine-print">
+            Fit {fold.fit_years.join("–")} · stopping{" "}
+            {fold.selection_years.join("–")} · calibration{" "}
+            {fold.calibration_years.join("–")}. Displayed predictions use
+            earlier years; the final all-data fit is separate.
+          </p>
+        )}
+        <a className="text-link" href="/evidence">
+          Model reference and results
+        </a>
+      </details>
     </div>
   );
 }

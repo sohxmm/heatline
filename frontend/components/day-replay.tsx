@@ -1,5 +1,5 @@
 "use client";
-import { ChevronLeft, ChevronRight, ArrowRight, Info } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tag, Empty } from "./project-ui";
 import {
@@ -21,6 +21,7 @@ function outcome(record: HistoryRow) {
       : "False alarm";
 }
 function units(feature: string) {
+  if (feature === "previous_proxy") return "0 / 1";
   if (feature.startsWith("day_")) return "unitless";
   if (feature === "hot_streak_len") return "days";
   if (feature.includes("pressure")) return "hPa";
@@ -44,6 +45,8 @@ export function DayReplay({
   sourceLabel = "ERA5 reanalysis",
   firstYear = 1981,
   showComputation = true,
+  calibrationLabel = "Platt scaling fitted on 2015–2018",
+  calibrationApplied = true,
 }: {
   year: number;
   day: number;
@@ -57,6 +60,8 @@ export function DayReplay({
   sourceLabel?: string;
   firstYear?: number;
   showComputation?: boolean;
+  calibrationLabel?: string;
+  calibrationApplied?: boolean;
 }) {
   const date = `${year}-05-${String(day).padStart(2, "0")}`;
   const selected = rows.find((row) => row.date === date);
@@ -79,11 +84,8 @@ export function DayReplay({
     >
       <div className="panel-heading">
         <div>
-          <h2>Choose a day. Inspect the result.</h2>
-          <p>
-            May calendars from {firstYear}–2026. Earlier inputs, model output
-            and the recorded outcome.
-          </p>
+          <h2>May {year}</h2>
+          <p>Select a day to inspect its prediction and observed outcome.</p>
         </div>
         <Tag tone="amber">Historical replay</Tag>
       </div>
@@ -217,14 +219,17 @@ export function DayReplay({
                     {selected.prediction === 1 ? "Positive" : "Negative"}
                   </strong>
                   <small>
-                    Platt-scaled output {percent(selected.probability)} ·
-                    threshold {number(selected.threshold, 3)}
+                    {calibrationApplied ? "Calibrated score" : "Raw score"}{" "}
+                    {percent(selected.probability, 2)} · threshold{" "}
+                    {percent(selected.threshold, 2)}
                   </small>
                 </div>
                 <div>
                   <span>Actual proxy outcome</span>
                   <strong>
-                    {selected.actual === 1 ? "Heatwave proxy" : "Negative"}
+                    {selected.actual === 1
+                      ? "Heatwave proxy"
+                      : "No heatwave proxy"}
                   </strong>
                   <small>
                     Recorded Tmax {number(selected.tmax)}°C · normal{" "}
@@ -232,6 +237,80 @@ export function DayReplay({
                   </small>
                 </div>
               </div>
+              {typeof selected.probability === "number" &&
+                typeof selected.threshold === "number" && (
+                  <div
+                    className="decision-distance"
+                    data-testid="decision-distance"
+                  >
+                    <div className="decision-distance-head">
+                      <span>Score relative to alert threshold</span>
+                      <strong>
+                        {selected.probability - selected.threshold >= 0
+                          ? "+"
+                          : ""}
+                        {number(
+                          (selected.probability - selected.threshold) * 100,
+                          2,
+                        )}{" "}
+                        percentage points
+                      </strong>
+                    </div>
+                    <div
+                      className="score-track"
+                      role="img"
+                      aria-label={`Model score ${percent(selected.probability, 2)}, threshold ${percent(selected.threshold, 2)}, margin ${number((selected.probability - selected.threshold) * 100, 2)} percentage points`}
+                    >
+                      <span
+                        className="score-fill"
+                        style={{
+                          width: `${Math.max(0, Math.min(100, selected.probability * 100))}%`,
+                        }}
+                      />
+                      <i
+                        className="score-cutoff"
+                        style={{
+                          left: `${Math.max(0, Math.min(100, selected.threshold * 100))}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              {typeof selected.tmax === "number" &&
+                typeof selected.normal_tmax === "number" && (
+                  <dl
+                    className="observed-criteria"
+                    data-testid="observed-criteria"
+                  >
+                    <div>
+                      <dt>Absolute criterion · 45°C</dt>
+                      <dd>
+                        {number(Math.abs(selected.tmax - 45), 2)}°C{" "}
+                        {selected.tmax >= 45 ? "above" : "below"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Departure criterion · +4.5°C, Tmax ≥40°C</dt>
+                      <dd>
+                        {number(
+                          Math.abs(
+                            Number(
+                              (selected.tmax - selected.normal_tmax).toFixed(2),
+                            ) - 4.5,
+                          ),
+                          2,
+                        )}
+                        °C{" "}
+                        {Number(
+                          (selected.tmax - selected.normal_tmax).toFixed(2),
+                        ) >= 4.5
+                          ? "above"
+                          : "below"}
+                        {selected.tmax < 40 ? " · below 40°C floor" : ""}
+                      </dd>
+                    </div>
+                  </dl>
+                )}
               <dl className="day-metadata">
                 <div>
                   <dt>Input observations through</dt>
@@ -273,13 +352,10 @@ export function DayReplay({
                 Model {selected.model_version ?? "Unavailable"} · source:{" "}
                 {sourceLabel} · target {date}
               </p>
-              <div className="notice">
-                <Info size={15} />
-                <p>
-                  The actual outcome uses this day's recorded temperature. That
-                  temperature was excluded from the ANN's inputs for this day.
-                </p>
-              </div>
+              <p className="fine-print">
+                The ANN predicts a class, not a temperature. Observed outcomes
+                use the source's recorded Tmax; inputs stop on the previous day.
+              </p>
             </>
           ) : (
             <Empty>
@@ -398,9 +474,10 @@ export function DayReplay({
               <p className="fine-print">
                 Each standardized input is (value − training mean) / training
                 standard deviation, fitted on{" "}
-                {model?.training_months ? "April–June " : ""}1981–2010. Hidden
-                activations describe computation; they do not establish causal
-                feature importance. Platt scaling does not guarantee
+                {details?.normalization?.reference ??
+                  `${model?.training_months ? "April–June " : ""}1981–2010`}
+                . Hidden activations describe computation; they do not establish
+                causal feature importance. Platt scaling does not guarantee
                 calibration.
               </p>
               <div className="table-scroll day-feature-inputs" tabIndex={0}>
@@ -440,9 +517,7 @@ export function DayReplay({
                 Architecture {details?.architecture?.inputs} →{" "}
                 {details?.architecture?.hidden} → 1 ·{" "}
                 {details?.architecture?.activation.replaceAll("_", " ")} ·{" "}
-                {model?.calibration?.method ??
-                  "Platt scaling fitted on 2015–2018"}
-                .
+                {model?.calibration?.method ?? calibrationLabel}.
               </p>
             </>
           ) : (

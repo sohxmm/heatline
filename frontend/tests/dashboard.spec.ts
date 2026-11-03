@@ -3,7 +3,9 @@ import AxeBuilder from "@axe-core/playwright";
 import fs from "node:fs";
 const history = JSON.parse(fs.readFileSync("public/data/history.json", "utf8"));
 const outlook = JSON.parse(fs.readFileSync("public/data/outlook.json", "utf8"));
-const model = JSON.parse(fs.readFileSync("public/data/model.json", "utf8"));
+const study = JSON.parse(
+  fs.readFileSync("public/data/full_dataset_study.json", "utf8"),
+);
 
 test("all five views load and remain accessible", async ({ page }) => {
   test.setTimeout(90000);
@@ -30,9 +32,7 @@ test("all five views load and remain accessible", async ({ page }) => {
 
 test("replay numbers and errors equal published records", async ({ page }) => {
   await page.goto("/explorer");
-  await page
-    .getByRole("button", { name: "Original 26-input replay", exact: true })
-    .click();
+  await page.getByLabel("Model run").selectOption("archive");
   await expect(page.locator(".history-table tbody tr")).toHaveCount(31);
   const expected = history.records.filter((r: { date: string }) =>
     r.date.startsWith("2026"),
@@ -72,9 +72,6 @@ test("provider weather is distinct, with matching values and city controls", asy
   await expect(page.locator(".metric").first()).toContainText(
     city.daily[0].tmax.toFixed(1),
   );
-  await expect(
-    page.getByText("Historical ANN, separate from weather", { exact: true }),
-  ).toBeVisible();
   await page.locator(".day-selector button").nth(2).click();
   await page.getByText("View hourly measurements", { exact: true }).click();
   await expect(page.locator("table").first().locator("tbody tr")).toHaveCount(
@@ -88,22 +85,20 @@ test("provider weather is distinct, with matching values and city controls", asy
 
 test("learning fixture and evidence match published data", async ({ page }) => {
   await page.goto("/learn");
+  await page
+    .getByText("Lab exercise · 2–2–1 backpropagation", { exact: true })
+    .click();
   await page.getByRole("tab", { name: "2 Forward pass" }).click();
   await expect(page.getByRole("tabpanel")).toContainText("0.581031948");
   await page.getByRole("tab", { name: "3 Error signals" }).click();
   await expect(page.getByRole("tabpanel")).toContainText("0.101990994");
   await page.goto("/evidence");
-  await page
-    .getByText(
-      "Original 26-input study · results, years and controlled experiments",
-      { exact: true },
-    )
-    .click();
-  await expect(
-    page.locator("#original-study table").first().locator("tbody tr"),
-  ).toHaveCount(model.metrics.length);
-  await expect(page.locator("#original-study table").first()).toContainText(
-    model.metrics[0].pr_auc.toFixed(3),
+  const era5 = study.sources.find((s: { id: string }) => s.id === "era5");
+  await expect(page.locator("table").first().locator("tbody tr")).toHaveCount(
+    era5.metrics.length,
+  );
+  await expect(page.locator("table").first()).toContainText(
+    era5.metrics[0].pr_auc.toFixed(3),
   );
 });
 
@@ -114,9 +109,6 @@ test("city deep links and comparison controls change actual chart data", async (
   await expect(
     page.getByRole("button", { name: "Mumbai", exact: true }).first(),
   ).toHaveAttribute("aria-pressed", "true");
-  const comparison = page
-    .getByRole("region")
-    .filter({ hasText: "Compare the region" });
   await page.getByLabel("Comparison measurement").selectOption("apparent_tmax");
   await expect(page.getByLabel("Comparison measurement")).toHaveValue(
     "apparent_tmax",
@@ -136,17 +128,46 @@ test("city deep links and comparison controls change actual chart data", async (
   await expect(page.getByRole("img", { name: /Akola chart/ })).toBeVisible();
 });
 
-test("evidence distinguishes precision from accuracy and offers real downloads", async ({
+test("dashboard city and May-day controls open the selected records", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByLabel("Forecast city").selectOption("mumbai");
+  const mumbai = outlook.cities.find((c: { id: string }) => c.id === "mumbai");
+  await expect(page.locator(".dashboard-temperature")).toContainText(
+    mumbai.daily[0].tmax.toFixed(1),
+  );
+  await page.getByLabel("Year", { exact: true }).selectOption("2019");
+  await page.getByLabel("Day in May").selectOption("17");
+  await page.getByRole("link", { name: "Open day", exact: true }).click();
+  await expect(page.getByTestId("selected-day-result")).toContainText(
+    "17 May 2019",
+  );
+});
+
+test("results switch source-specific architectures and offer real data exports", async ({
   page,
 }) => {
   await page.goto("/evidence");
-  await expect(page.locator("#metric-definitions")).toContainText(
-    "29.4% was precision.",
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Model results",
   );
-  await expect(page.locator("#metric-definitions")).toContainText("94.0%");
-  await expect(page.locator("#metric-definitions")).toContainText("96.8%");
-  const response = await page.request.get("/data/model.json");
+  await expect(
+    page.getByText("29.4% was precision.", { exact: true }),
+  ).toHaveCount(0);
+  for (const sourceId of ["era5", "nasa_power"]) {
+    await page.getByLabel("Climate source").selectOption(sourceId);
+    const source = study.sources.find((s: { id: string }) => s.id === sourceId);
+    await expect(page.locator(".results-context")).toContainText(
+      `${source.architecture.inputs} → ${source.architecture.hidden} → 1`,
+    );
+    await expect(page.locator("table").first()).toContainText(
+      `${(source.metrics[0].precision * 100).toFixed(1)}%`,
+    );
+  }
+  const response = await page.request.get("/data/full_dataset_study.json");
   expect(response.ok()).toBeTruthy();
+  await page.getByText("Dataset & target definition", { exact: true }).click();
   await expect(
     page.getByRole("link", { name: "Station comparison", exact: true }),
   ).toHaveAttribute("download", "");
@@ -214,8 +235,7 @@ test("mobile layout, navigation and reduced motion", async ({ page }) => {
   await page.goto("/");
   expect(
     await page
-      .locator(".ambient span")
-      .first()
+      .locator(".dashboard-page")
       .evaluate((el) => getComputedStyle(el).animationName),
   ).toBe("none");
 });

@@ -272,13 +272,26 @@ export function isStale(data?: Envelope | null) {
 // The packaged snapshot renders first. A cold or unavailable API never leaves a blank page.
 export function useResource<T extends Envelope>(name: string) {
   const [state, setState] = useState<{
+    key: string;
     data: T | null;
     loading: boolean;
     transport: string;
     error: string | null;
-  }>({ data: null, loading: true, transport: "snapshot", error: null });
+  }>({
+    key: name,
+    data: null,
+    loading: true,
+    transport: "snapshot",
+    error: null,
+  });
   useEffect(() => {
-    setState({ data: null, loading: true, transport: "snapshot", error: null });
+    setState({
+      key: name,
+      data: null,
+      loading: true,
+      transport: "snapshot",
+      error: null,
+    });
     let active = true;
     let apiResolved = false;
     let apiSettled = false;
@@ -320,7 +333,13 @@ export function useResource<T extends Envelope>(name: string) {
           apiSettled = true;
           if (active) {
             apiResolved = true;
-            setState({ data, loading: false, transport: "api", error: null });
+            setState({
+              key: name,
+              data,
+              loading: false,
+              transport: "api",
+              error: null,
+            });
           }
         })
         .catch(() => {
@@ -343,5 +362,7 @@ export function useResource<T extends Envelope>(name: string) {
       if (timeout) clearTimeout(timeout);
     };
   }, [name]);
-  return state;
+  return state.key === name
+    ? state
+    : { ...state, data: null, loading: true, error: null };
 }

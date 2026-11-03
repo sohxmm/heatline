@@ -9,9 +9,7 @@ test("calendar selection shows the real daily prediction and forward computation
   page,
 }) => {
   await page.goto("/explorer");
-  await page
-    .getByRole("button", { name: "Original 26-input replay", exact: true })
-    .click();
+  await page.getByLabel("Model run").selectOption("archive");
   await expect(
     page
       .getByRole("group", { name: "May 2026 calendar" })
@@ -29,7 +27,7 @@ test("calendar selection shows the real daily prediction and forward computation
   await expect(selected).toContainText("19 May");
   await expect(selected).toContainText(day.score.toFixed(6));
   await expect(selected).toContainText(
-    `${(day.probability * 100).toFixed(1)}%`,
+    `${(day.probability * 100).toFixed(2)}%`,
   );
   await expect(page.locator('[data-date="2026-05-20"]')).toHaveAttribute(
     "aria-pressed",
@@ -63,9 +61,7 @@ test("changing year cannot display a previous year input trace", async ({
   page,
 }) => {
   await page.goto("/explorer");
-  await page
-    .getByRole("button", { name: "Original 26-input replay", exact: true })
-    .click();
+  await page.getByLabel("Model run").selectOption("archive");
   await expect(page.locator('[data-date="2026-05-20"]')).toBeEnabled();
   await page.locator('[data-date="2026-05-20"]').click();
   await page.getByLabel("Replay year").selectOption("2019");
@@ -94,9 +90,7 @@ test("missing detail files keep published daily results and show unavailability"
     route.fulfill({ status: 404, body: "Unavailable" }),
   );
   await page.goto("/explorer");
-  await page
-    .getByRole("button", { name: "Original 26-input replay", exact: true })
-    .click();
+  await page.getByLabel("Model run").selectOption("archive");
   await expect(page.locator('[data-date="2026-05-20"]')).toBeEnabled();
   await page.locator('[data-date="2026-05-20"]').click();
   await expect(page.getByTestId("selected-day-result")).toContainText(

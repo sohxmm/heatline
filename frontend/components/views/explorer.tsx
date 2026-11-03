@@ -25,32 +25,19 @@ import type { ReplayDetails } from "@/lib/data";
 import { RollingExplorer } from "@/components/rolling-explorer";
 
 export function Explorer() {
-  const [mode, setMode] = useState("rolling");
+  const [mode, setMode] = useState("current");
   return (
     <>
       <div className="page" style={{ paddingBottom: 0 }}>
-        <div
-          className="inline-controls"
-          role="group"
-          aria-label="Prediction experiment"
-        >
-          <button
-            className="button"
-            aria-pressed={mode === "rolling"}
-            onClick={() => setMode("rolling")}
-          >
-            Rolling evaluation
-          </button>
-          <button
-            className="button"
-            aria-pressed={mode === "original"}
-            onClick={() => setMode("original")}
-          >
-            Original 26-input replay
-          </button>
-        </div>
+        <label className="field compact">
+          Model run
+          <select value={mode} onChange={(e) => setMode(e.target.value)}>
+            <option value="current">Current · source-specific models</option>
+            <option value="archive">Archived · ERA5, 1981–2010 fit</option>
+          </select>
+        </label>
       </div>
-      {mode === "rolling" ? <RollingExplorer /> : <OriginalExplorer />}
+      {mode === "current" ? <RollingExplorer /> : <OriginalExplorer />}
     </>
   );
 }
@@ -75,12 +62,8 @@ function OriginalExplorer() {
     <div className="page">
       <Heading
         eyebrow="ASSESSED CORE / NAGPUR · MAY"
-        title={
-          <>
-            Look back. <em>Learn more.</em>
-          </>
-        }
-        description="Replay the ANN against historical reanalysis conditions. Every prediction uses earlier observations; outcomes are a declared grid-based heatwave proxy."
+        title={<>Archived ERA5 run</>}
+        description="26 inputs · fixed 1981–2010 training period · sensitivity decision policy."
       >
         <label className="field">
           Replay year

@@ -6,11 +6,11 @@ import { MotionConfig } from "motion/react";
 import { ArrowUpRight, Code2 as Github, Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 const nav = [
-  { id: "home", href: "/", label: "Overview" },
+  { id: "home", href: "/", label: "Dashboard" },
   { id: "outlook", href: "/outlook", label: "Regional outlook" },
-  { id: "explorer", href: "/explorer", label: "May explorer" },
-  { id: "learn", href: "/learn", label: "How it learns" },
-  { id: "evidence", href: "/evidence", label: "Evidence" },
+  { id: "explorer", href: "/explorer", label: "May history" },
+  { id: "learn", href: "/learn", label: "Network" },
+  { id: "evidence", href: "/evidence", label: "Results" },
 ];
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const view = usePathname().split("/")[1] || "home";
@@ -73,15 +73,11 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="brand">
             heatline<span className="brand-dot">.</span>
           </Link>
-          <p>
-            Nagpur · May heatwave study
-            <br />
-            Historical ANN replay & regional weather
-          </p>
+          <p>Nagpur heatwave model · Regional weather</p>
           <div>
             <span>°C · Asia/Kolkata</span>
             <Link href="/evidence">
-              Methodology <ArrowUpRight size={12} />
+              Model data <ArrowUpRight size={12} />
             </Link>
           </div>
         </footer>
