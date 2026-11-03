@@ -22,7 +22,7 @@ from api.cities import CITIES, CITY_IDS, TIMEZONE
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_ARTIFACTS = ("model", "history", "experiments", "learning", "outlook")
-OPTIONAL_ARTIFACTS = ("metric_context", "full_dataset_study")
+OPTIONAL_ARTIFACTS = ("metric_context", "full_dataset_study", "station_comparison")
 
 
 def utc_now() -> datetime:
@@ -202,12 +202,18 @@ def create_app(data_dir: str | Path | None = None, clock: Callable[[], datetime]
         return read_artifact("learning", "educational")
 
     @application.get("/api/study")
+    @application.get("/api/full_dataset_study", include_in_schema=False)
     def full_dataset_study():
         return read_artifact("full_dataset_study", "rolling evaluation")
 
     @application.get("/api/metric-context")
     def metric_context():
         return read_artifact("metric_context", "retrospective metric audit")
+
+    @application.get("/api/station-comparison")
+    @application.get("/api/station_comparison", include_in_schema=False)
+    def station_comparison():
+        return read_artifact("station_comparison", "training-era station comparison")
 
     return application
 
