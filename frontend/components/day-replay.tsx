@@ -41,6 +41,9 @@ export function DayReplay({
   model,
   onYear,
   onDay,
+  sourceLabel = "ERA5 reanalysis",
+  firstYear = 1981,
+  showComputation = true,
 }: {
   year: number;
   day: number;
@@ -51,6 +54,9 @@ export function DayReplay({
   model: Model | null;
   onYear: (year: number) => void;
   onDay: (day: number) => void;
+  sourceLabel?: string;
+  firstYear?: number;
+  showComputation?: boolean;
 }) {
   const date = `${year}-05-${String(day).padStart(2, "0")}`;
   const selected = rows.find((row) => row.date === date);
@@ -75,8 +81,8 @@ export function DayReplay({
         <div>
           <h2>Choose a day. Inspect the result.</h2>
           <p>
-            May calendars from 1981–2026. Earlier inputs, model output and the
-            recorded outcome.
+            May calendars from {firstYear}–2026. Earlier inputs, model output
+            and the recorded outcome.
           </p>
         </div>
         <Tag tone="amber">Historical replay</Tag>
@@ -257,13 +263,15 @@ export function DayReplay({
                         ? "Architecture selection"
                         : selected.split === "calibration"
                           ? "Calibration / threshold selection"
-                          : "Retrospective evaluation"}
+                          : selected.split === "walk-forward"
+                            ? "Held-out rolling evaluation"
+                            : "Retrospective evaluation"}
                   </dd>
                 </div>
               </dl>
               <p className="day-model-version">
-                Model {selected.model_version ?? "Unavailable"} · source: ERA5
-                reanalysis · target {date}
+                Model {selected.model_version ?? "Unavailable"} · source:{" "}
+                {sourceLabel} · target {date}
               </p>
               <div className="notice">
                 <Info size={15} />
@@ -282,7 +290,7 @@ export function DayReplay({
           )}
         </div>
       </div>
-      {selected && (
+      {selected && showComputation && (
         <details className="day-calculation">
           <summary>How the model calculated this day</summary>
           {trace ? (

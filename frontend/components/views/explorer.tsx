@@ -22,8 +22,40 @@ import { amber, cream, probabilitySeries } from "@/components/view-config";
 import { Plot, Legend } from "@/components/charts";
 import { DayReplay } from "@/components/day-replay";
 import type { ReplayDetails } from "@/lib/data";
+import { RollingExplorer } from "@/components/rolling-explorer";
 
 export function Explorer() {
+  const [mode, setMode] = useState("rolling");
+  return (
+    <>
+      <div className="page" style={{ paddingBottom: 0 }}>
+        <div
+          className="inline-controls"
+          role="group"
+          aria-label="Prediction experiment"
+        >
+          <button
+            className="button"
+            aria-pressed={mode === "rolling"}
+            onClick={() => setMode("rolling")}
+          >
+            Rolling evaluation
+          </button>
+          <button
+            className="button"
+            aria-pressed={mode === "original"}
+            onClick={() => setMode("original")}
+          >
+            Original 26-input replay
+          </button>
+        </div>
+      </div>
+      {mode === "rolling" ? <RollingExplorer /> : <OriginalExplorer />}
+    </>
+  );
+}
+
+function OriginalExplorer() {
   const resource = useResource<History>("history");
   const model = useResource<Model>("model");
   const [year, setYear] = useState(2026);

@@ -22,6 +22,7 @@ from api.cities import CITIES, CITY_IDS, TIMEZONE
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_ARTIFACTS = ("model", "history", "experiments", "learning", "outlook")
+OPTIONAL_ARTIFACTS = ("metric_context", "full_dataset_study", "station_comparison")
 
 
 def utc_now() -> datetime:
@@ -60,7 +61,7 @@ class ArtifactStore:
         self._cache: dict[str, tuple[tuple[int, int], dict]] = {}
 
     def read(self, name: str) -> dict:
-        if name not in REQUIRED_ARTIFACTS and not (name.startswith('replay/') and name[7:].isdigit() and 1981 <= int(name[7:]) <= 2026):
+        if name not in REQUIRED_ARTIFACTS + OPTIONAL_ARTIFACTS and not (name.startswith('replay/') and name[7:].isdigit() and 1981 <= int(name[7:]) <= 2026):
             raise ValueError("Unknown artifact")
         path = self.directory / f"{name}.json"
         stat = path.stat()
@@ -199,6 +200,20 @@ def create_app(data_dir: str | Path | None = None, clock: Callable[[], datetime]
     @application.get("/api/learning")
     def learning():
         return read_artifact("learning", "educational")
+
+    @application.get("/api/study")
+    @application.get("/api/full_dataset_study", include_in_schema=False)
+    def full_dataset_study():
+        return read_artifact("full_dataset_study", "rolling evaluation")
+
+    @application.get("/api/metric-context")
+    def metric_context():
+        return read_artifact("metric_context", "retrospective metric audit")
+
+    @application.get("/api/station-comparison")
+    @application.get("/api/station_comparison", include_in_schema=False)
+    def station_comparison():
+        return read_artifact("station_comparison", "training-era station comparison")
 
     return application
 

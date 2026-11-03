@@ -45,6 +45,23 @@ Current outputs live in `artifacts/heatline/`, with identical public JSON in `fr
 
 ## Method and measured results
 
+### Full-history study and all-data refit
+
+`python -m src.full_dataset_study` generates six expanding-window evaluations covering **961 May days in 1996–2026**, then separately fits three-member NumPy ensembles to **all 4,186 April–June rows from 1981–2026** per source. Calibration, scaling, reference normals and stopping for each evaluated block use only earlier observations. The 1981–1995 warmup is used for training, not claimed as independently tested. The final all-data fit is a research checkpoint; its same-row diagnostics are not test accuracy.
+
+Both sources use the same 52-feature recipe and **52→16→1** network. This is a separately versioned study, `heatline-walk-forward-v1`; it does not silently replace the 26-input v2 replay or establish a new untouched test.
+
+| Held-out May 1996–2026 | Accuracy | Precision | Recall | F1 | Average precision |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ERA5 ANN | 95.21% | 53.57% | 60.00% | 0.5660 | 0.4163 |
+| ERA5 persistence | 95.84% | 60.87% | 56.00% | 0.5833 | 0.3638 |
+| NASA POWER ANN | 84.08% | 71.88% | 78.50% | 0.7504 | 0.8062 |
+| NASA POWER persistence | 85.95% | 76.87% | 77.13% | 0.7700 | 0.6626 |
+
+The ANN improves ranking over persistence but does not beat its F1 on either source. The source-defined positive populations differ, so these scores cannot decide which source matches official warnings. A **92-day, training-era paired airport-station audit** finds temperature MAE 0.956°C for ERA5 and 1.826°C for NASA; the sample is small and reporting windows differ. ERA5 remains primary; NASA remains a source-sensitivity comparison. See [evaluation protocol](docs/EVALUATION.md), `full_dataset_study.json`, `full_dataset_metrics.csv` and `station_comparison.json`. Checkpoints and preprocessing are saved under `artifacts/full-dataset-study/`.
+
+### Original seasonal v2 comparison
+
 Training and preprocessing use **April–June 1981–2010**; selection uses **May 2011–2014**; Platt scaling and F2/F1 threshold selection use **May 2015–2018**. The **May 2019–2026** period is retrospective evaluation because these outcomes were previously examined. Revised gains are exploratory, not an untouched-test claim. Frozen May reference normals and targets remain unchanged. March initializes seasonal lags; missing or duplicate dates fail explicitly.
 
 The versioned `nagpur-grid-proxy-v1` target is Tmax ≥45°C OR (Tmax ≥40°C and reference departure ≥4.5°C). This single-grid daily proxy is inspired by [IMD criteria](https://mausam.imd.gov.in/pdfs/heatcolduser/morning_heat_bulletin.pdf); it is not an official station-based declaration.
@@ -60,6 +77,8 @@ The fixed study compares binary/bipolar sigmoid, 8/16/32 hidden neurons, both co
 | Seasonal logistic regression · F2 | 4 / 8 | 50.0% | 10 | 0.4627 | 0.3636 |
 
 There are only **8 positives in 248 retrospective ERA5 days**. The F2 policy emphasizes recall at a cost in false alarms; both policies are selected only on calibration years. The source audit verifies 2,806 overlapping days, zero changed May labels, and identical May feature vectors. Full confusion counts, raw/transformed Brier scores, reliability bins, yearly outcomes, onset detections, May-year bootstrap intervals and all ablations are published. Simpler models win some metrics; neither sigmoid, averaging nor Platt scaling guarantees calibration.
+
+**Metric interpretation:** the ANN's **29.4% is precision**, not accuracy: 5 correct alerts out of 17 alerts. Its accuracy is **94.0%** (233/248), balanced accuracy **78.8%**, and recall **62.5%**. An always-negative classifier achieves **96.8% accuracy but zero recall**; independent fair coin guesses have expected accuracy 50%. Accuracy alone is therefore a poor measure of rare-event detection. This does not remove the ANN's false-alarm problem. `python scripts/export_metric_context.py` reproduces these calculations from saved confusion counts and publishes `metric_context.json`.
 
 The **independent NASA POWER benchmark** has a different daily product and **45 positive days** in the same evaluation years. Its ANN has average precision **0.8580**, and at the calibration-selected F1 threshold detects **41/45**, with **29 false alarms**, precision **0.5857** and F1 **0.7130**. NASA persistence has F1 **0.8222**, so the ANN does not dominate it. These are not replacements for the harder ERA5 target. NASA UTC-day boundaries, coarser meteorology, its own normals and 52 available lag features are documented separately. A limited training-era NOAA station cross-check further demonstrates source/threshold sensitivity.
 

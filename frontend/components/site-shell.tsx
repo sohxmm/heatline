@@ -6,6 +6,7 @@ import { MotionConfig } from "motion/react";
 import { ArrowUpRight, Code2 as Github, Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 const nav = [
+  { id: "home", href: "/", label: "Overview" },
   { id: "outlook", href: "/outlook", label: "Regional outlook" },
   { id: "explorer", href: "/explorer", label: "May explorer" },
   { id: "learn", href: "/learn", label: "How it learns" },
@@ -72,7 +73,11 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="brand">
             heatline<span className="brand-dot">.</span>
           </Link>
-          <p>A neural learning study. A clearer climate story.</p>
+          <p>
+            Nagpur · May heatwave study
+            <br />
+            Historical ANN replay & regional weather
+          </p>
           <div>
             <span>°C · Asia/Kolkata</span>
             <Link href="/evidence">

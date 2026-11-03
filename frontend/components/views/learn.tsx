@@ -66,14 +66,40 @@ export function Learn() {
   return (
     <div className="page">
       <Heading
-        eyebrow="FROM FIRST PRINCIPLES / LAB EXPERIMENTS 1–7"
+        eyebrow="03 / INSIDE THE NEURAL NETWORK"
         title={
           <>
-            Small updates. <em>Real learning.</em>
+            Follow one <em>weight update.</em>
           </>
         }
-        description="Follow the same ideas from a single artificial neuron to the Nagpur network. The forward pass, errors, gradients, and bias updates are explicit NumPy operations."
+        description="Change an activation, inspect the architecture, then step through a complete backpropagation example. Every sum, error and parameter update is explicit."
       />
+      <div className="learning-facts">
+        <div>
+          <span>Algorithm</span>
+          <strong>Backpropagation + momentum SGD</strong>
+        </div>
+        <div>
+          <span>Initialization</span>
+          <strong>Xavier uniform · zero biases</strong>
+        </div>
+        <div>
+          <span>Learning factors</span>
+          <strong>η = 0.03 · μ = 0.9</strong>
+        </div>
+        <div>
+          <span>Original replay model</span>
+          <strong>26 → 16 → 1 · three seeded members</strong>
+        </div>
+      </div>
+      <p className="learning-version-note">
+        This walkthrough explains the original 26-input network and a 2–2–1
+        teaching example. The full-history study uses the same backpropagation
+        implementation with 52 common lagged inputs.{" "}
+        <Link className="text-link" href="/evidence#full-history">
+          Compare the studies <ArrowUpRight size={13} />
+        </Link>
+      </p>
       <div className="learning-intro">
         <span>INPUTS</span>
         <ArrowRight size={16} />

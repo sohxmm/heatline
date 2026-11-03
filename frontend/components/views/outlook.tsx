@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowUpRight,
   MapPin,
@@ -39,6 +39,13 @@ export function Regional() {
   const resource = useResource<Outlook>("outlook");
   const [selected, setSelected] = useState("nagpur");
   const [day, setDay] = useState(0);
+  const [comparison, setComparison] = useState("tmax");
+  const [compared, setCompared] = useState(["nagpur", "mumbai", "pune"]);
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("city");
+    if (requested && cityNames.some((n) => n.toLowerCase() === requested))
+      setSelected(requested);
+  }, []);
   const city = resource.data?.cities?.find((c) => c.id === selected);
   const days = city?.daily ?? [];
   const current = days[day];
@@ -51,13 +58,13 @@ export function Regional() {
   return (
     <div className="page">
       <Heading
-        eyebrow="PRODUCT EXTENSION / REGIONAL WEATHER"
+        eyebrow="01 / REGIONAL WEATHER · MAHARASHTRA"
         title={
           <>
-            The regional <em>outlook.</em>
+            Six cities. <em>One outlook.</em>
           </>
         }
-        description="Six cities, one clear view. Provider forecasts offer current weather context; the assessed ANN remains a historical Nagpur May study."
+        description="Choose a city and a day to inspect the forecast. Compare daily temperatures across the region, then explore the hourly conditions."
       >
         <Tag tone="amber">Weather-provider forecast</Tag>
       </Heading>
@@ -66,6 +73,7 @@ export function Regional() {
           <Button
             key={name}
             className={selected === name.toLowerCase() ? "selected" : ""}
+            aria-pressed={selected === name.toLowerCase()}
             onClick={() => {
               setSelected(name.toLowerCase());
               setDay(0);
@@ -81,15 +89,20 @@ export function Regional() {
         transport={resource.transport}
         error={resource.error}
       />
-      {!season && current && (
-        <div className="notice">
-          <Info size={17} />
-          <p>
-            Outside the April–June study season. The weather outlook remains
-            available; seasonal ANN coverage is unchanged.
-          </p>
-        </div>
-      )}
+      <div className="weather-mode-line">
+        <span className="live-dot" />
+        <p>
+          Open-Meteo forecast ·{" "}
+          {season
+            ? "April–June study season"
+            : "Outside the April–June study season"}{" "}
+          · ANN results are available in the{" "}
+          <a className="text-link" href="/explorer">
+            historical May explorer
+          </a>
+          .
+        </p>
+      </div>
       <div className="metric-strip">
         <Metric
           label={`${city?.name ?? cityNames.find((n) => n.toLowerCase() === selected)} · ${current ? dayLabel(current.date) : "Forecast"}`}
@@ -122,12 +135,19 @@ export function Regional() {
           detail="Daily minimum"
         />
         <Metric
-          label="ANN prediction"
-          value={<span className="small-value">Unavailable</span>}
-          detail="Timely inputs require separate validation"
+          label="Difference from overnight low"
+          value={
+            <>
+              {current?.tmax !== undefined && current?.tmin !== undefined
+                ? number(current.tmax - current.tmin)
+                : "—"}
+              <span>°C</span>
+            </>
+          }
+          detail="Daily temperature range"
         />
       </div>
-      <div className="two-column">
+      <div className="two-column weather-columns">
         <Panel
           title="Temperature through the week"
           subtitle="Choose a day below to inspect its hourly profile."
@@ -140,6 +160,7 @@ export function Regional() {
               <Button
                 key={d.date}
                 className={i === day ? "selected" : ""}
+                aria-pressed={i === day}
                 onClick={() => setDay(i)}
               >
                 <span>{dayLabel(d.date, { weekday: "short" })}</span>
@@ -150,8 +171,12 @@ export function Regional() {
           </div>
         </Panel>
         <Panel
-          title="Context matters"
-          subtitle="Three signals with different meanings."
+          title="Reading the conditions"
+          subtitle={
+            current
+              ? `${city?.name} · ${dayLabel(current.date)}`
+              : "Select a city"
+          }
         >
           <div className="context-item">
             <div className="context-icon">
@@ -189,7 +214,7 @@ export function Regional() {
               <Layers3 size={18} />
             </div>
             <div>
-              <h3>Regional ANN · unavailable</h3>
+              <h3>Historical ANN, separate from weather</h3>
               <p>
                 {city?.ann?.reason ??
                   "The Nagpur model has not been validated for live provider inputs or these other cities."}
@@ -263,7 +288,100 @@ export function Regional() {
         </details>
       </Panel>
       <Panel
-        title="Across the region"
+        title="Compare the region"
+        subtitle="Choose the cities and measurement to compare over the same forecast dates."
+        aside={
+          <label className="field compact">
+            Comparison measurement
+            <select
+              value={comparison}
+              onChange={(e) => setComparison(e.target.value)}
+            >
+              <option value="tmax">Maximum temperature</option>
+              <option value="apparent_tmax">Apparent maximum</option>
+              <option value="tmin">Overnight low</option>
+            </select>
+          </label>
+        }
+      >
+        <div
+          className="compare-controls"
+          role="group"
+          aria-label="Cities to compare"
+        >
+          {(resource.data?.cities ?? []).map((c) => (
+            <label key={c.id} className="checkbox">
+              <input
+                type="checkbox"
+                checked={compared.includes(c.id)}
+                onChange={(e) =>
+                  setCompared((old) =>
+                    e.target.checked
+                      ? [...old, c.id]
+                      : old.filter((id) => id !== c.id),
+                  )
+                }
+              />
+              {c.name}
+            </label>
+          ))}
+        </div>
+        {compared.length ? (
+          <Plot
+            data={days.map((d) => ({
+              date: d.date,
+              ...Object.fromEntries(
+                (resource.data?.cities ?? [])
+                  .filter((c) => compared.includes(c.id))
+                  .map((c) => [
+                    c.id,
+                    c.daily.find((day) => day.date === d.date)?.[
+                      comparison as "tmax" | "tmin" | "apparent_tmax"
+                    ],
+                  ]),
+              ),
+            }))}
+            x="date"
+            series={(resource.data?.cities ?? [])
+              .filter((c) => compared.includes(c.id))
+              .map((c, i) => ({
+                key: c.id,
+                name: c.name,
+                color: [
+                  amber,
+                  "#eeeae1",
+                  "#8fb8a9",
+                  "#c5a5c7",
+                  "#91accb",
+                  "#d69b83",
+                ][i % 6],
+              }))}
+            xFormat={(v) => dayLabel(v)}
+            yFormat={(v) => `${v}°`}
+            height={270}
+          />
+        ) : (
+          <Empty>Select at least one city to draw a comparison.</Empty>
+        )}
+        <Legend
+          series={(resource.data?.cities ?? [])
+            .filter((c) => compared.includes(c.id))
+            .map((c, i) => ({
+              key: c.id,
+              name: c.name,
+              color: [
+                amber,
+                "#eeeae1",
+                "#8fb8a9",
+                "#c5a5c7",
+                "#91accb",
+                "#d69b83",
+              ][i % 6],
+            }))}
+        />
+      </Panel>
+      <Panel
+        title="The selected day across six cities"
         subtitle="Daily values for the selected date. Forecasts, not ANN predictions."
         aside={<Download name="outlook" />}
       >
@@ -276,7 +394,7 @@ export function Regional() {
                 <th>Maximum °C</th>
                 <th>Minimum °C</th>
                 <th>Apparent max °C</th>
-                <th>Heatwave declaration</th>
+                <th>Temperature screen</th>
               </tr>
             </thead>
             <tbody>
@@ -289,7 +407,6 @@ export function Regional() {
                         className="table-city"
                         onClick={() => {
                           setSelected(c.id);
-                          setDay(0);
                         }}
                       >
                         {c.name}
@@ -301,7 +418,17 @@ export function Regional() {
                     <td>{number(d?.tmin)}</td>
                     <td>{number(d?.apparent_tmax)}</td>
                     <td>
-                      <span className="muted">Unavailable</span>
+                      <span
+                        className={
+                          d?.temperature_indicator?.exceeds_threshold
+                            ? "amber-icon"
+                            : "muted"
+                        }
+                      >
+                        {d?.temperature_indicator?.threshold_c
+                          ? `${d.temperature_indicator.exceeds_threshold ? "Meets" : "Below"} ${d.temperature_indicator.threshold_c}°C`
+                          : "No screen"}
+                      </span>
                     </td>
                   </tr>
                 );
