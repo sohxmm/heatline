@@ -10,7 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DIRECTORIES = ('src/', 'api/', 'tests/', 'docs/', 'data/', 'artifacts/', 'models/', 'frontend/')
 FILES = {'README.md', 'config.yaml', 'config_v2.yaml', 'render.yaml', 'requirements.txt',
          'requirements-api.txt', 'requirements-lock.txt', 'requirements-app.txt',
-         'notebooks/03_heatline_lab.ipynb'}
+         'notebooks/03_heatline_lab.ipynb', 'results/tables/baseline_comparison.csv',
+         'legacy/common-input-study-v1.zip', 'legacy/README.md'}
 SCRIPTS = {'package_heatline.py', 'package_submission.py', 'build_lab_notebook.py',
            'export_evidence.py', 'export_seasonal_evidence.py', 'export_metric_context.py',
            'fetch_weather_snapshot.py', 'audit_station_sources.py'}

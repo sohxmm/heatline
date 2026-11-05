@@ -104,4 +104,4 @@ Data: [Open-Meteo](https://open-meteo.com/), CC BY 4.0, with ECMWF ERA5 reanalys
 
 ## Course submission package
 
-Run `python -m scripts.package_submission --roll TEAM_LEADER_ROLL --report-dir PATH_TO_REPORT_FILES --output PATH_TO_ZIP`. The archive contains `MiniProject<roll>/Report` and `Code`, with a SHA-256 manifest. Local dependencies, credentials, caches, editor instructions, private scripts and previous experiment archives are excluded. Cached data and saved model weights are retained for offline reproduction.
+Run `python -m scripts.package_submission --roll TEAM_LEADER_ROLL --report-dir PATH_TO_REPORT_FILES --output PATH_TO_ZIP`. The archive contains `MiniProject<roll>/Report` and `Code`, with a SHA-256 manifest. Local dependencies, credentials, caches, editor instructions, private scripts and unused archived assets are excluded. Cached data, saved model weights and the historical fixtures needed by regression tests are retained for reproduction.
