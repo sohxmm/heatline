@@ -98,6 +98,10 @@ The [deployment guide](docs/DEPLOYMENT.md) covers Vercel Hobby, Render Free, COR
 
 ## Legacy preservation
 
-`legacy/original-experiment.zip` preserves the original source and results; `legacy/heatline-v1-experiment.zip` preserves the first corrected experiment before seasonal revision. Repository-root `models/`, `results/`, older notebooks and Streamlit are legacy. Do not combine their weights or metrics with current preprocessing. Current entry points are `src.seasonal_experiment`, `src.provider_benchmark`, `api.main` and `frontend/`.
+`legacy/original-experiment.zip` preserves the original source and results; `legacy/heatline-v1-experiment.zip` preserves the first corrected experiment before seasonal revision. Repository-root `models/`, `results/`, older notebooks and Streamlit are legacy. Do not combine their weights or metrics with current preprocessing. Current entry points are `src.full_dataset_study`, `api.main` and `frontend/`. The fixed-fit experiment remains available through `src.seasonal_experiment`.
 
 Data: [Open-Meteo](https://open-meteo.com/), CC BY 4.0, with ECMWF ERA5 reanalysis for the assessed historical study. This educational prototype does not issue official heat warnings.
+
+## Course submission package
+
+Run `python -m scripts.package_submission --roll TEAM_LEADER_ROLL --report-dir PATH_TO_REPORT_FILES --output PATH_TO_ZIP`. The archive contains `MiniProject<roll>/Report` and `Code`, with a SHA-256 manifest. Local dependencies, credentials, caches, editor instructions, private scripts and previous experiment archives are excluded. Cached data and saved model weights are retained for offline reproduction.

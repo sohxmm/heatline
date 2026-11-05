@@ -3,7 +3,6 @@
 Run: python -m src.experiment. Raw hourly observations are cached in data/raw.
 The grid, seeds and selection policy below are fixed before evaluating test years.
 """
-import argparse
 from datetime import datetime, timezone
 import hashlib
 import itertools
@@ -222,12 +221,6 @@ def run(max_epochs=400):
 def main():
     from src.seasonal_experiment import run as run_current
     run_current()
-    return
-    parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--max-epochs',type=int,default=400)
-    args=parser.parse_args()
-    logging.getLogger().setLevel(logging.WARNING)
-    run(args.max_epochs)
 
 
 if __name__ == '__main__':

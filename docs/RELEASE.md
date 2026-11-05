@@ -1,37 +1,9 @@
 # Heatline release
 
-Public frontend: **https://heatline-six.vercel.app**
+Public frontend: https://heatline-six.vercel.app
 
-The first Vercel production release uses the packaged, timestamped weather and
-experiment snapshots. The interface identifies this saved-data mode. The
-FastAPI service is prepared for Render Free; its public origin must be assigned
-and configured in `NEXT_PUBLIC_API_URL` before claiming hosted API integration.
+The current source-specific experiment is `heatline-walk-forward-v2`: ERA5 26–16–1, NASA POWER 52–16–1, independent preprocessing and calibration. The calendar uses saved, held-out fold computations; final all-data research fits are separate. Current provider forecasts display cached issue times and freshness. Hosted ANN live prediction remains unavailable.
 
-The assessed experiment, guided notebook and report are complete. The selected
-ANN is a Nagpur May historical study; public provider forecasts supply current
-regional weather. Live/regional ANN output remains unavailable.
+The API serves read-only artifacts. Published snapshots keep the frontend usable without a hosted backend. Local verification covers gradients, causal inputs, source-specific forward calculations, API behavior, calendar interactions, mobile layout and accessibility.
 
-Local validation: 83 Python tests; nine browser tests covering five views,
-accessibility, mobile/reduced motion, fixture values, forecast/replay distinction,
-stale data and API failure. Next.js production build and TypeScript checks pass.
-GitHub CI additionally checks a fresh Linux checkout.
-The explorer additionally checks day selection, year changes, exact per-day
-network calculations and unavailable detail snapshots. Its calendar covers May
-1981–2026, with inputs and forward computations loaded one year at a time.
-
-The seasonal v2 release expands training to 2,730 April–June days, keeps the
-original May ERA5 targets unchanged, and averages three independently trained
-NumPy networks. The selected configuration uses 16 bipolar hidden units and
-weighted half-squared-error. Sensitivity F2 and balanced F1 policies are fitted
-on calibration years only. The evidence page reports yearly misses/false alarms,
-onsets, bootstrap intervals, source audits and an independent NASA POWER benchmark.
-The original v1 is preserved in `legacy/heatline-v1-experiment.zip`.
-
-Submission archive: run `python scripts/package_heatline.py` to create
-`dist/heatline-submission.zip` with source, cached data, evidence and SHA-256
-manifest. The package excludes credentials, environment overrides, dependency
-folders, build caches and temporary logs.
-
-Scheduled refresh starts after the workflow reaches the default branch. Until
-then, refresh manually and publish both cache copies. Snapshot freshness is
-checked independently in the interface and API.
+Run `python scripts/package_heatline.py` for a source-only ZIP or `python -m scripts.package_submission --roll TEAM_LEADER_ROLL --report-dir PATH --output PATH` for the course folder structure. Both exclude local state and include a SHA-256 source manifest.

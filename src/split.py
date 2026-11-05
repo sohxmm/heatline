@@ -1,22 +1,8 @@
-"""
-Chronological Splitting and Train-Only Standardization Module.
-KJSCE Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech COMP).
+"""Archived chronological splits and training-only standardization utilities.
 
-Soft Computing Connection:
-- In Error Backpropagation Neural Networks (EBPA, Exp 6, 7), unscaled inputs
-  with varying dynamic ranges cause gradient imbalance: features with large
-  variances dominate weight updates (Delta rule: delta_w = eta * delta * x),
-  driving sigmoid/tanh activations into flat saturation regions where f'(x) -> 0.
-- In Single-Layer Perceptron (Exp 4) and Sigmoid Delta Rule (Exp 5), standardizing
-  features to zero mean and unit variance conditions the Hessian error surface,
-  preventing oscillation and ensuring smooth gradient descent.
-- Temporal Integrity: We strictly use chronological splitting (Train 1981-2010,
-  Validation 2011-2018, Test 2019-2026). Random splits (e.g. k-fold or random shuffle)
-  would cause autocorrelated weather patterns to leak between sets, violating
-  causality.
-- Scaler Leakage Prevention: StandardScaler is fit SOLELY on the Training split
-  (1981-2010). Validation and Test splits are transformed using training statistics
-  (mu_train, sigma_train).
+The current expanding-window experiment fits a separate scaler per fold in
+full_dataset_study.py. These functions retain the original fixed-year protocol
+and serialize scalers used by both experiments.
 """
 
 import json

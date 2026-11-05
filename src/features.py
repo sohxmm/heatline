@@ -1,23 +1,8 @@
-"""
-Feature Engineering Module for Nagpur May Heatwave Prediction.
-KJSCE Soft Computing Lab (SVU-KJSCE 2023_1.0 T.Y. B.Tech COMP).
+"""Build 26 ERA5 predictors from weather available through target day T-1.
 
-Soft Computing Connection:
-- In Neural Networks (McCulloch-Pitts, Perceptron, ADALINE, and EBPA), input
-  representation defines whether classes are linearly separable or require
-  nonlinear hidden projections.
-- Excitatory inputs (high lagged temperatures, extreme anomalies, hot streaks)
-  and inhibitory inputs (high humidity, cooling wind) mimic biological dendrites
-  as modeled in McCulloch-Pitts neurons (Exp 2).
-- Time-series lags (L1, L2, L3) and rolling windows capture atmospheric inertia
-  and thermal accumulation, essential for Error Backpropagation ANNs (Exp 6, 7).
-- Linguistic antecedents for Mamdani Fuzzy Inference (Module 4) rely on lagged
-  temperature, departure anomaly, and relative humidity.
-
-Crucial Temporal Integrity Rule:
-To strictly prevent same-day data leakage, any prediction for May day T must ONLY
-use meteorological information observed up to day T-1, plus deterministic
-calendar and frozen 1981-2010 training-reference climatology normals for day T itself.
+Calendar values and the frozen reference normal for T are known in advance.
+The current study supplies fold-local normals; archived experiments use the
+1981–2010 reference. Missing history and calendar gaps are rejected.
 """
 
 import logging

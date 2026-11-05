@@ -12,17 +12,19 @@ def main():
     parser=argparse.ArgumentParser(description="Reproduce the assessed Nagpur May ANN experiment")
     parser.add_argument("--prepare-only",action="store_true",help="Rebuild daily data, frozen reference normals, labels and features")
     parser.add_argument("--fetch",action="store_true",help="Fetch missing historical ERA5 files before processing")
-    parser.add_argument("--max-epochs",type=int,default=400)
     args=parser.parse_args()
-    config=load_config()
     if args.fetch:
         from src.seasonal_data import fetch_all
         fetch_all('era5')
+        fetch_all('nasa')
     if args.prepare_only:
         from src.seasonal_data import prepare_era5
         prepare_era5()
+        from src.provider_benchmark import prepare_nasa
+        daily, _, _ = prepare_nasa()
+        daily.to_csv(Path(__file__).resolve().parents[1] / 'data/processed/nasa_daily.csv', index=False)
     else:
-        from src.seasonal_experiment import run
+        from src.full_dataset_study import run
         run()
 
 
