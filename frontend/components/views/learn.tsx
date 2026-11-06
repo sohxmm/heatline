@@ -477,8 +477,8 @@ export function Learn() {
         <Link href="/explorer" className="text-link">
           Inspect a day’s actual forward calculation <ArrowUpRight size={14} />
         </Link>
-        <Link href="/evidence#full-history" className="text-link">
-          Compare held-out results <ArrowUpRight size={14} />
+        <Link href="/evidence" className="text-link">
+          Compare model results <ArrowUpRight size={14} />
         </Link>
       </div>
       <DataNote

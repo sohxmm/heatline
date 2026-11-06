@@ -473,7 +473,14 @@ export function Evidence() {
           <details className="product-disclosure">
             <summary>Data exports & archived experiments</summary>
             <div className="disclosure-body export-links">
-              <Download name="full_dataset_study" />
+              <Download name={artifact} />
+              <a
+                className="text-link"
+                href="/data/full_dataset_benchmark.json"
+                download
+              >
+                Checkpoint benchmark <ArrowDown size={14} />
+              </a>
               <a className="text-link" href="/data/model.json" download>
                 Archived 26-input experiment <ArrowDown size={14} />
               </a>
