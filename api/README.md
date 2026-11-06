@@ -1,5 +1,7 @@
 # Heatline public API
 
+Primary lab endpoints: `GET /api/full_dataset_fit`, `GET /api/full_fit/{source}/{year}` (1981–2026; sources `era5`, `nasa_power`) and `GET /api/full_dataset_benchmark`. These return in-sample full-dataset results, exact saved forward computations and before/after checkpoints. Existing `/api/study` endpoints retain the separate chronological experiment. Requests never train a model.
+
 `GET /api/metric-context` serves reproducible metric definitions, confusion-count calculations and always-negative/fair-coin comparisons. `GET /api/study` serves the separate expanding-window full-history study when generated. Both are read-only optional artifacts: missing study data returns 503 without preventing the existing replay and weather service from becoming ready. Their packaged equivalents are `metric_context.json` and `full_dataset_study.json`.
 
 The API serves experiment artifacts and cached provider weather. It never trains a

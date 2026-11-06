@@ -1,0 +1,191 @@
+{
+  "model_version": "heatline-full-dataset-v3",
+  "source": "Saved NumPy checkpoints and source-specific cached data",
+  "mode": "experiment comparison",
+  "issued_at": "2026-11-06T11:00:27.675038+00:00",
+  "target_date": null,
+  "availability": "available",
+  "evaluation_kind": "in-sample",
+  "protocol": "Before and after use the identical 1,426 May 1981\u20132026 dates and fixed source-specific 1981\u20132010 target normals. Both models trained on all 4,186 seasonal rows.",
+  "changes": "v3 fits calibration and the F1 threshold on all seasonal rows and trains for a fixed 300 epochs. v2 used pooled earlier out-of-fold calibration and median fold-selected epoch counts.",
+  "calibration_only_note": "The intermediate control keeps the old trained weights and changes only calibration and threshold fitting to the entire seasonal dataset.",
+  "limitation": "These are training-dataset fit comparisons. They do not establish improvement on unseen dates. Earlier chronological results retain their original protocol and are unchanged.",
+  "sources": [
+    {
+      "source": "era5",
+      "same_may_rows": 1426,
+      "before": {
+        "model_version": "heatline-walk-forward-v2",
+        "epochs": 167,
+        "threshold": 0.22779274077507425,
+        "metrics": {
+          "accuracy": 0.9389901823281908,
+          "balanced_accuracy": 0.8369576535925025,
+          "precision": 0.496,
+          "recall": 0.7209302325581395,
+          "f1": 0.5876777251184834,
+          "pr_auc": 0.6297902160530744,
+          "brier": 0.032413915717576215,
+          "tn": 1277,
+          "fp": 63,
+          "fn": 24,
+          "tp": 62,
+          "days": 1426,
+          "positives": 86
+        }
+      },
+      "calibration_only": {
+        "epochs": 167,
+        "threshold": 0.3218434997831508,
+        "metrics": {
+          "accuracy": 0.9579242636746143,
+          "balanced_accuracy": 0.7871832696980215,
+          "precision": 0.6710526315789473,
+          "recall": 0.5930232558139535,
+          "f1": 0.6296296296296297,
+          "pr_auc": 0.6297902160530744,
+          "brier": 0.03353693624052997,
+          "tn": 1315,
+          "fp": 25,
+          "fn": 35,
+          "tp": 51,
+          "days": 1426,
+          "positives": 86
+        }
+      },
+      "after": {
+        "model_version": "heatline-full-dataset-v3",
+        "epochs": 300,
+        "threshold": 0.27014246032805334,
+        "metrics": {
+          "model": "NumPy ANN",
+          "accuracy": 0.9516129032258065,
+          "balanced_accuracy": 0.8055883373828532,
+          "precision": 0.5913978494623656,
+          "recall": 0.6395348837209303,
+          "f1": 0.6145251396648045,
+          "pr_auc": 0.6311926192514401,
+          "brier": 0.03296786942617595,
+          "tn": 1302,
+          "fp": 38,
+          "fn": 31,
+          "tp": 55,
+          "days": 1426,
+          "positives": 86
+        }
+      },
+      "change": {
+        "accuracy": 0.012622720897615736,
+        "precision": 0.09539784946236562,
+        "recall": -0.08139534883720922,
+        "f1": 0.026847414546321113,
+        "pr_auc": 0.0014024031983657093,
+        "brier": 0.0005539537085997373
+      },
+      "earlier_chronological_metrics": {
+        "model": "NumPy ANN",
+        "accuracy": 0.9375650364203955,
+        "balanced_accuracy": 0.8063995609220637,
+        "precision": 0.4342105263157895,
+        "recall": 0.66,
+        "f1": 0.5238095238095238,
+        "pr_auc": 0.4443761010601122,
+        "brier": 0.03545881272280322,
+        "tn": 868,
+        "fp": 43,
+        "fn": 17,
+        "tp": 33,
+        "days": 961,
+        "positives": 50
+      }
+    },
+    {
+      "source": "nasa_power",
+      "same_may_rows": 1426,
+      "before": {
+        "model_version": "heatline-walk-forward-v2",
+        "epochs": 67,
+        "threshold": 0.4620699222269934,
+        "metrics": {
+          "accuracy": 0.8681626928471248,
+          "balanced_accuracy": 0.8574235850341461,
+          "precision": 0.8055009823182712,
+          "recall": 0.8216432865731463,
+          "f1": 0.8134920634920635,
+          "pr_auc": 0.8766584707362461,
+          "brier": 0.09790169212043004,
+          "tn": 828,
+          "fp": 99,
+          "fn": 89,
+          "tp": 410,
+          "days": 1426,
+          "positives": 499
+        }
+      },
+      "calibration_only": {
+        "epochs": 67,
+        "threshold": 0.35967253725945997,
+        "metrics": {
+          "accuracy": 0.861851332398317,
+          "balanced_accuracy": 0.8576581426066805,
+          "precision": 0.7796296296296297,
+          "recall": 0.843687374749499,
+          "f1": 0.8103946102021174,
+          "pr_auc": 0.8766584707362461,
+          "brier": 0.09806448723659303,
+          "tn": 808,
+          "fp": 119,
+          "fn": 78,
+          "tp": 421,
+          "days": 1426,
+          "positives": 499
+        }
+      },
+      "after": {
+        "model_version": "heatline-full-dataset-v3",
+        "epochs": 300,
+        "threshold": 0.2876408026835838,
+        "metrics": {
+          "model": "NumPy ANN",
+          "accuracy": 0.879382889200561,
+          "balanced_accuracy": 0.8928860958162279,
+          "precision": 0.7684729064039408,
+          "recall": 0.9378757515030061,
+          "f1": 0.8447653429602888,
+          "pr_auc": 0.8924293273969972,
+          "brier": 0.08433954257432545,
+          "tn": 786,
+          "fp": 141,
+          "fn": 31,
+          "tp": 468,
+          "days": 1426,
+          "positives": 499
+        }
+      },
+      "change": {
+        "accuracy": 0.011220196353436185,
+        "precision": -0.03702807591433033,
+        "recall": 0.11623246492985972,
+        "f1": 0.031273279468225335,
+        "pr_auc": 0.015770856660751065,
+        "brier": -0.013562149546104588
+      },
+      "earlier_chronological_metrics": {
+        "model": "NumPy ANN",
+        "accuracy": 0.8407908428720083,
+        "balanced_accuracy": 0.825126198115714,
+        "precision": 0.71875,
+        "recall": 0.7849829351535836,
+        "f1": 0.7504078303425775,
+        "pr_auc": 0.8062192290134832,
+        "brier": 0.10644203851355312,
+        "tn": 578,
+        "fp": 90,
+        "fn": 63,
+        "tp": 230,
+        "days": 961,
+        "positives": 293
+      }
+    }
+  ]
+}

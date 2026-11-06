@@ -24,7 +24,7 @@ def main():
         daily, _, _ = prepare_nasa()
         daily.to_csv(Path(__file__).resolve().parents[1] / 'data/processed/nasa_daily.csv', index=False)
     else:
-        from src.full_dataset_study import run
+        from src.full_dataset_fit import run
         run()
 
 

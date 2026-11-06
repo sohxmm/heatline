@@ -23,7 +23,7 @@ from api.cities import CITIES, CITY_IDS, TIMEZONE
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_ARTIFACTS = ("model", "history", "experiments", "learning", "outlook")
-OPTIONAL_ARTIFACTS = ("metric_context", "full_dataset_study", "station_comparison")
+OPTIONAL_ARTIFACTS = ("metric_context", "full_dataset_study", "full_dataset_fit", "full_dataset_benchmark", "station_comparison")
 
 
 def utc_now() -> datetime:
@@ -64,7 +64,8 @@ class ArtifactStore:
     def read(self, name: str) -> dict:
         replay_name = name.startswith('replay/') and name[7:].isdigit() and 1981 <= int(name[7:]) <= 2026
         study_name = re.fullmatch(r'study/(era5|nasa_power)/(199[6-9]|20[01][0-9]|202[0-6])', name)
-        if name not in REQUIRED_ARTIFACTS + OPTIONAL_ARTIFACTS and not replay_name and not study_name:
+        fit_name = re.fullmatch(r'full_fit/(era5|nasa_power)/(198[1-9]|199[0-9]|20[01][0-9]|202[0-6])', name)
+        if name not in REQUIRED_ARTIFACTS + OPTIONAL_ARTIFACTS and not replay_name and not study_name and not fit_name:
             raise ValueError("Unknown artifact")
         path = self.directory / f"{name}.json"
         stat = path.stat()
@@ -208,6 +209,20 @@ def create_app(data_dir: str | Path | None = None, clock: Callable[[], datetime]
     @application.get("/api/full_dataset_study", include_in_schema=False)
     def full_dataset_study():
         return read_artifact("full_dataset_study", "rolling evaluation")
+
+    @application.get("/api/full_dataset_fit")
+    def full_dataset_fit():
+        return read_artifact("full_dataset_fit", "full-dataset lab fit")
+
+    @application.get("/api/full_dataset_benchmark")
+    def full_dataset_benchmark():
+        return read_artifact("full_dataset_benchmark", "experiment comparison")
+
+    @application.get("/api/full_fit/{source}/{year}")
+    def full_fit_details(source: str, year: int = PathParam(ge=1981, le=2026)):
+        if source not in ('era5', 'nasa_power'):
+            return JSONResponse(envelope("replay", reason="Unknown climate source."), status_code=404)
+        return read_artifact(f"full_fit/{source}/{year}", "full-dataset training replay")
 
     @application.get("/api/study/{source}/{year}")
     def study_day_details(source: str, year: int = PathParam(ge=1996, le=2026)):

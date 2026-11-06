@@ -46,7 +46,7 @@ Current outputs live in `artifacts/heatline/`, with identical public JSON in `fr
 
 ## Models and data
 
-The current version is `heatline-walk-forward-v2`. The sources remain independent:
+The primary lab version is `heatline-full-dataset-v3`. The sources remain independent:
 
 | Pipeline | Inputs | Architecture | Daily boundary |
 | --- | ---: | --- | --- |
@@ -55,7 +55,16 @@ The current version is `heatline-walk-forward-v2`. The sources remain independen
 
 Each has its own scaler, weights, source-derived targets, calibration and decision thresholds. Neither source is substituted into the other network. The model-score threshold is distinct from the heatwave proxy rule: Tmax ≥45°C OR (Tmax ≥40°C and departure from the source's reference normal ≥4.5°C). These are grid-based proxy outcomes, not official IMD warning records.
 
-Six chronological folds evaluate **961 May days in 1996–2026** using earlier fitting, stopping and calibration years. Final research ensembles are separately fitted on **all 4,186 April–June rows from 1981–2026** per source. Their training fit is not independent test performance. See [evaluation protocol](docs/EVALUATION.md).
+The same **4,186 April–June rows from 1981–2026** per source fit normalization, class weights, the ANN, score calibration and the F1 threshold. Training uses 300 fixed epochs without reserved stopping years. All rows are checked afterwards; May results filter the fitted data to **1,426 dates**. These are **in-sample training-dataset results**, not estimates of future performance. The 1981–2010 climate normal remains the fixed target definition, not a reserved training partition. See [evaluation protocol](docs/EVALUATION.md).
+
+| Full-dataset May fit | Accuracy | Detected / positive days | False alarms | Precision | Recall | F1 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ERA5 ANN | 95.16% | 55 / 86 | 38 | 59.14% | 63.95% | 0.6145 |
+| NASA POWER ANN | 87.94% | 468 / 499 | 141 | 76.85% | 93.79% | 0.8448 |
+
+`full_dataset_fit_metrics.csv` includes all-season and May results for the ANN, logistic regression, perceptron, sigmoid delta rule, persistence, climatology and reference baselines. `full_dataset_benchmark.json` compares the previous and current full-data checkpoints on identical May rows, including a calibration-only control.
+
+The additional `heatline-walk-forward-v2` experiment remains unchanged. Six chronological folds evaluate **961 May days in 1996–2026** using earlier fitting, stopping and calibration years:
 
 | Held-out May results | Detected / positive days | False alarms | Precision | Recall | F1 | Average precision |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -74,7 +83,7 @@ Source-derived positive populations differ. These scores do not establish which 
 
 The original fixed-fit ERA5 experiment is available through the archived model-run selector. Its 26-input preprocessing and weights remain independent from current fold models. The previous common-input study is preserved in `legacy/common-input-study-v1.zip`.
 
-Current research weights and fold checkpoints live in `artifacts/full-dataset-study/`. Source/year traces live in `artifacts/heatline/study/{source}/{year}.json` and matching public files. The JSON records source, model version, feature order, fit periods, calibration and availability. Page requests never train a model.
+Primary weights and preprocessing live in `artifacts/full-dataset-fit/`; source/year computations cover May 1981–2026 in `artifacts/heatline/full_fit/{source}/{year}.json`. The additional chronological checkpoints remain in `artifacts/full-dataset-study/`, with traces in `artifacts/heatline/study/{source}/{year}.json`. Matching public JSON records source, model version, feature order, fit periods, calibration and availability. Page requests never train a model.
 
 Read-only interfaces include `/api/study`, `/api/study/{source}/{year}`, weather, archive and learning endpoints. See [API documentation](api/README.md). Provider weather remains separate from historical ANN predictions; live ANN prediction is unavailable until compatible timely inputs receive validation. Cached forecasts display their retrieval time and freshness.
 

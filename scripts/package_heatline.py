@@ -14,7 +14,7 @@ FILES = {'README.md', 'config.yaml', 'config_v2.yaml', 'render.yaml', 'requireme
          'legacy/common-input-study-v1.zip', 'legacy/README.md'}
 SCRIPTS = {'package_heatline.py', 'package_submission.py', 'build_lab_notebook.py',
            'export_evidence.py', 'export_seasonal_evidence.py', 'export_metric_context.py',
-           'fetch_weather_snapshot.py', 'audit_station_sources.py'}
+           'fetch_weather_snapshot.py', 'audit_station_sources.py', 'export_full_fit_benchmark.py'}
 EXCLUDED_PARTS = {'.git', '.venv', 'venv', 'node_modules', '.next', '.vercel', '__pycache__',
                   '.pytest_cache', '.ipynb_checkpoints', 'test-results', 'playwright-report',
                   'seasonal-study', 'dist'}

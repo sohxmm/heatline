@@ -8,6 +8,16 @@ Accuracy measures all correctly classified days; precision measures correct posi
 
 ## Using the complete historical dataset
 
+The primary lab run is `heatline-full-dataset-v3`, reproduced with `python -m src.pipeline` or `python -m src.full_dataset_fit`. The identical 4,186 April–June 1981–2026 rows independently fit each source's scaler, class ratio, neural weights, calibration map and F1 decision threshold. No training, stopping, calibration or checking partitions are reserved. Each of three seeded members runs for 300 fixed epochs with no validation inputs or early stopping.
+
+The same rows are checked after fitting. `all_season_metrics` reports all 4,186 dates and `metrics` filters them to the 1,426 May dates required by the problem statement. The May filter does not create an independent test. The fixed 1981–2010 climate normal defines the unchanged label rule and is not a reserved learning subset. Historical input columns still stop at T−1, but the model itself has learned from later dates in the dataset; its historical replay is explicitly in-sample.
+
+Primary baselines are logistic regression, the lab perceptron and sigmoid delta neuron, persistence, calendar-day climatology, always-negative classification and analytical coin expectations. Learned baselines fit and calibrate on all seasonal rows too. Climatology uses the full seasonal calendar-day event frequency. Their scores describe dataset fit only; in-sample calibration does not establish probability reliability on new observations.
+
+`full_dataset_benchmark.json` reproduces the old final checkpoint on the identical source-specific May rows before comparison. An intermediate control retains the old weights and fits only calibration/threshold on the full seasonal dataset. The final comparison also changes the epoch policy from the old fold-derived counts to a fixed 300. Before/after changes must not be attributed solely to adding training rows: both final checkpoints already trained on all rows.
+
+Primary artifacts are `full_dataset_fit.json`, `full_dataset_fit_metrics.csv`, `full_dataset_benchmark.json`, `full_fit/{source}/{year}.json` and weights in `artifacts/full-dataset-fit/`. The application defaults to this workflow; the following chronological experiment is an additional assessment and retains its original results.
+
 Fitting, calibrating and evaluating on the same observations produces an in-sample diagnostic, not an independent estimate of future performance. The separate `heatline-walk-forward-v2` experiment uses every April–June season from 1981–2026 in a final refit and evaluates earlier versions of the model on later, unseen year blocks.
 
 Six evaluation blocks cover May 1996–2000, 2001–2005, 2006–2010, 2011–2015, 2016–2020 and 2021–2026. Each fold uses an expanding earlier fit period, then two earlier May years for stopping and two earlier May years for calibration/threshold selection. No evaluation row updates the model that predicts it. The initial 1981–1995 period supplies warmup history and has no independent forward prediction. April and June provide training conditions; held-out evaluation remains May, matching the problem statement.
