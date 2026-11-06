@@ -22,7 +22,7 @@ import type { FullStudy } from "@/lib/study";
 
 export function Landing() {
   const outlook = useResource<Outlook>("outlook");
-  const study = useResource<FullStudy>("full_dataset_study");
+  const study = useResource<FullStudy>("full_dataset_fit");
   const [cityId, setCity] = useState("nagpur");
   const [year, setYear] = useState(2026);
   const [day, setDay] = useState(20);
@@ -141,7 +141,7 @@ export function Landing() {
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
               >
-                {Array.from({ length: 31 }, (_, i) => 2026 - i).map((y) => (
+                {Array.from({ length: 46 }, (_, i) => 2026 - i).map((y) => (
                   <option key={y}>{y}</option>
                 ))}
               </select>
@@ -193,8 +193,8 @@ export function Landing() {
         </Panel>
       </div>
       <Panel
-        title="Model performance"
-        subtitle="ERA5 · May 1996–2026 · predictions from earlier-year models"
+        title="Lab model fit"
+        subtitle="ERA5 · May 1981–2026 · training-dataset results"
         aside={
           <Link className="text-link" href="/evidence">
             All results <ArrowUpRight size={14} />
@@ -206,7 +206,7 @@ export function Landing() {
             <Metric
               label="Accuracy"
               value={percent(score.accuracy)}
-              detail="All evaluated days"
+              detail="All 1,426 fitted May dates"
             />
             <Metric
               label="Precision"

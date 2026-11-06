@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 
+const full = JSON.parse(
+  fs.readFileSync("public/data/full_dataset_fit.json", "utf8"),
+);
 const study = JSON.parse(
   fs.readFileSync("public/data/full_dataset_study.json", "utf8"),
 );
@@ -10,7 +13,7 @@ test("network source and seed controls display their own architecture and initia
 }) => {
   await page.goto("/learn");
   for (const id of ["era5", "nasa_power"]) {
-    const source = study.sources.find((s: { id: string }) => s.id === id);
+    const source = full.sources.find((s: { id: string }) => s.id === id);
     await page.getByLabel("Network source", { exact: true }).selectOption(id);
     await expect(
       page.getByTestId("network-architecture").locator("b").first(),
@@ -41,6 +44,7 @@ test("run and member controls select recorded curves, while full-data fit has no
   page,
 }) => {
   await page.goto("/learn");
+  await page.getByLabel("Experiment", { exact: true }).selectOption("rolling");
   const source = study.sources.find((s: { id: string }) => s.id === "era5");
   const fold = source.folds[0];
   await page.getByLabel("Training run", { exact: true }).selectOption(fold.id);
@@ -80,7 +84,7 @@ test("run and member controls select recorded curves, while full-data fit has no
 test("missing model metadata never substitutes an older curve and leaves the teaching fixture usable", async ({
   page,
 }) => {
-  await page.route("**/data/full_dataset_study.json", (route) =>
+  await page.route("**/data/full_dataset_fit.json", (route) =>
     route.fulfill({ status: 503, body: "Unavailable" }),
   );
   await page.route("http://127.0.0.1:8999/**", (route) => route.abort());

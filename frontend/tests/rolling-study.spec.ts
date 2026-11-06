@@ -8,7 +8,7 @@ const study = JSON.parse(
 test("rolling calendar shows saved held-out results and switches source", async ({
   page,
 }) => {
-  await page.goto("/explorer");
+  await page.goto("/explorer?run=current");
   for (const sourceId of ["era5", "nasa_power"]) {
     await page.getByLabel("Climate source").selectOption(sourceId);
     const source = study.sources.find((s: { id: string }) => s.id === sourceId);
@@ -36,7 +36,7 @@ test("rolling calendar shows saved held-out results and switches source", async 
 test("rolling history has bounded years and errors are not hidden", async ({
   page,
 }) => {
-  await page.goto("/explorer");
+  await page.goto("/explorer?run=current");
   await expect(page.locator(".history-table tbody tr")).toHaveCount(31);
   await page.getByLabel("Replay year").selectOption("1996");
   await expect(
@@ -64,7 +64,7 @@ test("missing rolling artifact leaves a usable original replay", async ({
     route.fulfill({ status: 503, body: "Unavailable" }),
   );
   await page.route("http://127.0.0.1:8999/**", (route) => route.abort());
-  await page.goto("/explorer");
+  await page.goto("/explorer?run=current");
   await expect(
     page.getByText(
       "Rolling results are unavailable. The original replay remains accessible above.",
@@ -77,7 +77,7 @@ test("missing rolling artifact leaves a usable original replay", async ({
 test("false alarms expose actual outcomes, score margin and source-specific computation", async ({
   page,
 }) => {
-  await page.goto("/explorer");
+  await page.goto("/explorer?run=current");
   for (const sourceId of ["era5", "nasa_power"]) {
     const source = study.sources.find((s: { id: string }) => s.id === sourceId);
     const day = source.records.find(
@@ -121,7 +121,7 @@ test("false alarms expose actual outcomes, score margin and source-specific comp
 test("direct date links choose the requested source and date", async ({
   page,
 }) => {
-  await page.goto("/explorer?source=nasa_power&year=2019&day=17");
+  await page.goto("/explorer?run=current&source=nasa_power&year=2019&day=17");
   await expect(page.getByLabel("Climate source")).toHaveValue("nasa_power");
   await expect(page.getByLabel("Replay year")).toHaveValue("2019");
   await expect(page.getByTestId("selected-day-result")).toContainText(
@@ -136,7 +136,7 @@ test("missing current computation preserves result and distance", async ({
     route.fulfill({ status: 404, body: "Unavailable" }),
   );
   await page.route("http://127.0.0.1:8999/**", (route) => route.abort());
-  await page.goto("/explorer?day=20");
+  await page.goto("/explorer?run=current&day=20");
   await expect(page.getByTestId("decision-distance")).toContainText(
     "percentage points",
   );

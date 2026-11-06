@@ -41,6 +41,7 @@ interface RollingStudy extends Envelope {
     time_standard: string;
     architecture: { inputs: number; hidden: number; ensemble_size: number };
     records: StudyRecord[];
+    final_fit?: { calibration: unknown; threshold: number };
     folds: {
       id: string;
       fit_years: number[];
@@ -56,7 +57,12 @@ interface StudyTrace extends Envelope {
   selected_year: number;
   architecture: ReplayDetails["architecture"];
   feature_names: string[];
-  fold_model: {
+  fold_model?: {
+    fit_years: number[];
+    scaler_mean: number[];
+    scaler_scale: number[];
+  };
+  fit_model?: {
     fit_years: number[];
     scaler_mean: number[];
     scaler_scale: number[];
@@ -64,8 +70,14 @@ interface StudyTrace extends Envelope {
   records: (ReplayDay & { seed?: number })[];
 }
 
-export function RollingExplorer() {
-  const resource = useResource<RollingStudy>("full_dataset_study");
+export function RollingExplorer({
+  fullDataset = false,
+}: {
+  fullDataset?: boolean;
+}) {
+  const resource = useResource<RollingStudy>(
+    fullDataset ? "full_dataset_fit" : "full_dataset_study",
+  );
   const [sourceId, setSource] = useState("era5");
   const [year, setYear] = useState(2026);
   const [day, setDay] = useState(1);
@@ -76,50 +88,54 @@ export function RollingExplorer() {
     const targetDay = Number(params.get("day"));
     if (
       Number.isInteger(targetYear) &&
-      targetYear >= 1996 &&
+      targetYear >= (fullDataset ? 1981 : 1996) &&
       targetYear <= 2026
     )
       setYear(targetYear);
     if (Number.isInteger(targetDay) && targetDay >= 1 && targetDay <= 31)
       setDay(targetDay);
     if (params.get("source") === "nasa_power") setSource("nasa_power");
-  }, []);
-  const trace = useResource<StudyTrace>(`study/${sourceId}/${year}`);
+  }, [fullDataset]);
+  const trace = useResource<StudyTrace>(
+    `${fullDataset ? "full_fit" : "study"}/${sourceId}/${year}`,
+  );
   const traceData =
     trace.data?.source_id === sourceId && trace.data.selected_year === year
       ? trace.data
       : null;
-  const details: ReplayDetails | null = traceData
-    ? {
-        ...traceData,
-        records: traceData.records.map((r) => ({
-          ...r,
-          trace_member_seed: r.seed,
-        })),
-        normalization: {
-          reference: `April–June ${traceData.fold_model.fit_years.join("–")} only`,
-          mean: Object.fromEntries(
-            traceData.feature_names.map((f, i) => [
-              f,
-              traceData.fold_model.scaler_mean[i],
-            ]),
-          ),
-          scale: Object.fromEntries(
-            traceData.feature_names.map((f, i) => [
-              f,
-              traceData.fold_model.scaler_scale[i],
-            ]),
-          ),
-        },
-      }
-    : null;
+  const checkpoint = traceData?.fit_model ?? traceData?.fold_model;
+  const details: ReplayDetails | null =
+    traceData && checkpoint
+      ? {
+          ...traceData,
+          records: traceData.records.map((r) => ({
+            ...r,
+            trace_member_seed: r.seed,
+          })),
+          normalization: {
+            reference: `April–June ${checkpoint.fit_years.join("–")} ${fullDataset ? "· full dataset" : "only"}`,
+            mean: Object.fromEntries(
+              traceData.feature_names.map((f, i) => [
+                f,
+                checkpoint.scaler_mean[i],
+              ]),
+            ),
+            scale: Object.fromEntries(
+              traceData.feature_names.map((f, i) => [
+                f,
+                checkpoint.scaler_scale[i],
+              ]),
+            ),
+          },
+        }
+      : null;
   const source = resource.data?.sources?.find((s) => s.id === sourceId);
   const rows: HistoryRow[] = (source?.records ?? [])
     .filter((r) => r.date.startsWith(`${year}-`))
     .map((r) => ({
       ...r,
       score: r.raw_score,
-      split: "walk-forward",
+      split: fullDataset ? "full-dataset" : "walk-forward",
       model_version: resource.data?.model_version ?? undefined,
       input_cutoff: new Date(Date.parse(`${r.date}T00:00:00Z`) - 86400000)
         .toISOString()
@@ -166,7 +182,11 @@ export function RollingExplorer() {
         </div>
       </Heading>
       <div className="view-context">
-        <Tag tone="amber">Held-out rolling evaluation</Tag>
+        <Tag tone="amber">
+          {fullDataset
+            ? "Full-dataset fit · in-sample"
+            : "Held-out rolling evaluation"}
+        </Tag>
         <span>
           {source?.architecture.inputs ?? "—"} →{" "}
           {source?.architecture.hidden ?? "—"} → 1 ·{" "}
@@ -174,6 +194,12 @@ export function RollingExplorer() {
         </span>
         <span>{source?.time_standard}</span>
       </div>
+      {fullDataset && (
+        <p className="fine-print">
+          All 4,186 seasonal rows train and calibrate this model. These May
+          dates were included in training; this replay shows dataset fit.
+        </p>
+      )}
       <DataNote
         data={resource.data}
         transport={resource.transport}
@@ -218,13 +244,17 @@ export function RollingExplorer() {
         onYear={setYear}
         onDay={setDay}
         sourceLabel={source?.label ?? sourceId}
-        firstYear={1996}
+        firstYear={fullDataset ? 1981 : 1996}
         showComputation
-        calibrationApplied={!!fold?.calibration}
+        calibrationApplied={
+          fullDataset ? !!source?.final_fit?.calibration : !!fold?.calibration
+        }
         calibrationLabel={
-          fold?.calibration
-            ? `Platt scaling · May ${fold.calibration_years.join("–")}`
-            : "Uncalibrated raw score · insufficient calibration classes"
+          fullDataset
+            ? "Platt scaling · all 4,186 seasonal training rows"
+            : fold?.calibration
+              ? `Platt scaling · May ${fold.calibration_years.join("–")}`
+              : "Uncalibrated raw score · insufficient calibration classes"
         }
       />
       <Panel
@@ -263,7 +293,10 @@ export function RollingExplorer() {
         <div className="table-scroll history-table" tabIndex={0}>
           <table>
             <caption>
-              {source?.label} · May {year} · held-out daily results
+              {source?.label} · May {year} ·{" "}
+              {fullDataset
+                ? "training-dataset results"
+                : "held-out daily results"}
             </caption>
             <thead>
               <tr>
@@ -312,10 +345,12 @@ export function RollingExplorer() {
         {!visible.length && (
           <Empty>
             {resource.loading
-              ? "Loading saved rolling predictions…"
+              ? "Loading saved predictions…"
               : errorsOnly && rows.length
                 ? "No errors in this month."
-                : "Rolling results are unavailable. The original replay remains accessible above."}
+                : fullDataset
+                  ? "Full-dataset results are unavailable. Other model runs remain accessible above."
+                  : "Rolling results are unavailable. The original replay remains accessible above."}
           </Empty>
         )}
       </Panel>
@@ -326,6 +361,13 @@ export function RollingExplorer() {
           {source?.architecture.inputs} inputs · source-derived heatwave proxy,
           not official station warnings.
         </p>
+        {fullDataset && (
+          <p className="fine-print">
+            Fit, calibration, threshold selection and checking: April–June
+            1981–2026, all 4,186 rows. Fixed climate reference: 1981–2010. May
+            is a display filter.
+          </p>
+        )}
         {fold && (
           <p className="fine-print">
             Fit {fold.fit_years.join("–")} · stopping{" "}

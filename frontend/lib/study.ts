@@ -20,6 +20,7 @@ export interface StudySource {
   coverage?: Record<string, unknown>;
   folds?: StudyFold[];
   metrics?: StudyMetric[];
+  all_season_metrics?: StudyMetric[];
   final_fit?: {
     years?: unknown;
     days?: number;
@@ -28,6 +29,8 @@ export interface StudySource {
     mode?: string;
     calibration?: unknown;
     in_sample_metrics?: StudyMetric[] | StudyMetric;
+    threshold?: number;
+    calibration_rows?: number;
   };
   records?: {
     date: string;
@@ -48,6 +51,7 @@ export interface FullStudy extends Envelope {
     calibration?: string;
     all_rows_used?: unknown;
     limitation?: string;
+    no_partitions?: boolean;
   };
   sources?: StudySource[];
   source_decision?: unknown;

@@ -85,7 +85,7 @@ The original fixed-fit ERA5 experiment is available through the archived model-r
 
 Primary weights and preprocessing live in `artifacts/full-dataset-fit/`; source/year computations cover May 1981–2026 in `artifacts/heatline/full_fit/{source}/{year}.json`. The additional chronological checkpoints remain in `artifacts/full-dataset-study/`, with traces in `artifacts/heatline/study/{source}/{year}.json`. Matching public JSON records source, model version, feature order, fit periods, calibration and availability. Page requests never train a model.
 
-Read-only interfaces include `/api/study`, `/api/study/{source}/{year}`, weather, archive and learning endpoints. See [API documentation](api/README.md). Provider weather remains separate from historical ANN predictions; live ANN prediction is unavailable until compatible timely inputs receive validation. Cached forecasts display their retrieval time and freshness.
+Read-only interfaces include `/api/full_dataset_fit`, `/api/full_fit/{source}/{year}`, `/api/full_dataset_benchmark`, `/api/study`, `/api/study/{source}/{year}`, weather, archive and learning endpoints. See [API documentation](api/README.md). Provider weather remains separate from historical ANN predictions; live ANN prediction is unavailable until compatible timely inputs receive validation. Cached forecasts display their retrieval time and freshness.
 
 - [Original scientific report](docs/ACADEMIC_REPORT.md)
 - [Academic appendix](docs/ACADEMIC_APPENDIX.md)
@@ -107,7 +107,7 @@ The [deployment guide](docs/DEPLOYMENT.md) covers Vercel Hobby, Render Free, COR
 
 ## Legacy preservation
 
-`legacy/original-experiment.zip` preserves the original source and results; `legacy/heatline-v1-experiment.zip` preserves the first corrected experiment before seasonal revision. Repository-root `models/`, `results/`, older notebooks and Streamlit are legacy. Do not combine their weights or metrics with current preprocessing. Current entry points are `src.full_dataset_study`, `api.main` and `frontend/`. The fixed-fit experiment remains available through `src.seasonal_experiment`.
+`legacy/original-experiment.zip` preserves the original source and results; `legacy/heatline-v1-experiment.zip` preserves the first corrected experiment before seasonal revision. Repository-root `models/`, `results/`, older notebooks and Streamlit are legacy. Do not combine their weights or metrics with current preprocessing. Current entry points are `src.full_dataset_fit`, `api.main` and `frontend/`. `src.full_dataset_study` reproduces the additional chronological experiment. The fixed-fit experiment remains available through `src.seasonal_experiment`.
 
 Data: [Open-Meteo](https://open-meteo.com/), CC BY 4.0, with ECMWF ERA5 reanalysis for the assessed historical study. This educational prototype does not issue official heat warnings.
 

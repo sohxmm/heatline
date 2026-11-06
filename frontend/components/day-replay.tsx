@@ -342,9 +342,11 @@ export function DayReplay({
                         ? "Architecture selection"
                         : selected.split === "calibration"
                           ? "Calibration / threshold selection"
-                          : selected.split === "walk-forward"
-                            ? "Held-out rolling evaluation"
-                            : "Retrospective evaluation"}
+                          : selected.split === "full-dataset"
+                            ? "Full-dataset fit · in-sample"
+                            : selected.split === "walk-forward"
+                              ? "Held-out rolling evaluation"
+                              : "Retrospective evaluation"}
                   </dd>
                 </div>
               </dl>
@@ -377,7 +379,11 @@ export function DayReplay({
                   inputs
                 </span>
                 <ArrowRight size={15} />
-                <span>Training-only normalization</span>
+                <span>
+                  {selected.split === "full-dataset"
+                    ? "Full-dataset normalization"
+                    : "Training-only normalization"}
+                </span>
                 <ArrowRight size={15} />
                 <span>
                   {trace.hidden_activations?.length} hidden activations

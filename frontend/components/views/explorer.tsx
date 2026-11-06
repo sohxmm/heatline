@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Info } from "lucide-react";
 import {
   useResource,
@@ -25,19 +25,30 @@ import type { ReplayDetails } from "@/lib/data";
 import { RollingExplorer } from "@/components/rolling-explorer";
 
 export function Explorer() {
-  const [mode, setMode] = useState("current");
+  const [mode, setMode] = useState("full");
+  useEffect(() => {
+    const mode = new URLSearchParams(window.location.search).get("run");
+    if (mode === "current" || mode === "archive") setMode(mode);
+  }, []);
   return (
     <>
       <div className="page" style={{ paddingBottom: 0 }}>
         <label className="field compact">
           Model run
           <select value={mode} onChange={(e) => setMode(e.target.value)}>
-            <option value="current">Current · source-specific models</option>
+            <option value="full">Lab · full-dataset fit</option>
+            <option value="current">
+              Additional · chronological evaluation
+            </option>
             <option value="archive">Archived · ERA5, 1981–2010 fit</option>
           </select>
         </label>
       </div>
-      {mode === "current" ? <RollingExplorer /> : <OriginalExplorer />}
+      {mode === "archive" ? (
+        <OriginalExplorer />
+      ) : (
+        <RollingExplorer key={mode} fullDataset={mode === "full"} />
+      )}
     </>
   );
 }

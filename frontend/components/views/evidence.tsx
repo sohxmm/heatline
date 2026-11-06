@@ -13,13 +13,17 @@ import {
   Metric,
 } from "@/components/project-ui";
 
-function ScoreTable({ metrics }: { metrics: StudyMetric[] }) {
+function ScoreTable({
+  metrics,
+  caption,
+}: {
+  metrics: StudyMetric[];
+  caption: string;
+}) {
   return (
     <div className="table-scroll" tabIndex={0}>
       <table>
-        <caption>
-          Forward evaluation metrics for the selected climate source
-        </caption>
+        <caption>{caption}</caption>
         <thead>
           <tr>
             <th>Model</th>
@@ -78,15 +82,21 @@ const syllabus = [
   ["7", "Backpropagation", "Explicit gradients and weight/bias updates", "CO2"],
 ];
 export function Evidence() {
-  const study = useResource<FullStudy>("full_dataset_study");
+  const [experiment, setExperiment] = useState("full");
+  const [scope, setScope] = useState("may");
+  const fullDataset = experiment === "full";
+  const artifact = fullDataset ? "full_dataset_fit" : "full_dataset_study";
+  const study = useResource<FullStudy>(artifact);
   const station = useResource<StationComparison>("station_comparison");
   const [sourceId, setSource] = useState("era5");
   const source =
     study.data?.sources?.find((s) => s.id === sourceId) ??
     study.data?.sources?.[0];
-  const main = source?.metrics?.find((m) =>
-    m.model.toLowerCase().includes("ann"),
-  );
+  const metrics =
+    fullDataset && scope === "season"
+      ? source?.all_season_metrics
+      : source?.metrics;
+  const main = metrics?.find((m) => m.model.toLowerCase().includes("ann"));
   const evaluated =
     (main?.tp ?? 0) + (main?.tn ?? 0) + (main?.fp ?? 0) + (main?.fn ?? 0);
   const positives = (main?.tp ?? 0) + (main?.fn ?? 0);
@@ -100,8 +110,25 @@ export function Evidence() {
             Model <em>results.</em>
           </>
         }
-        description="Forward evaluation across May 1996–2026. Compare the neural network with simple baselines."
+        description={
+          fullDataset
+            ? "Full-dataset lab experiment · 1981–2026 · in-sample results."
+            : "Additional chronological evaluation · May 1996–2026 · earlier-year models."
+        }
       >
+        <label className="field">
+          Evaluation protocol
+          <select
+            aria-label="Evaluation protocol"
+            value={experiment}
+            onChange={(e) => setExperiment(e.target.value)}
+          >
+            <option value="full">Lab · full dataset</option>
+            <option value="rolling">
+              Additional · chronological evaluation
+            </option>
+          </select>
+        </label>
         <label className="field">
           Climate source
           <select
@@ -112,6 +139,19 @@ export function Evidence() {
             <option value="nasa_power">NASA POWER · comparison</option>
           </select>
         </label>
+        {fullDataset && (
+          <label className="field">
+            Score dates
+            <select
+              aria-label="Score dates"
+              value={scope}
+              onChange={(e) => setScope(e.target.value)}
+            >
+              <option value="may">May · 1,426 fitted dates</option>
+              <option value="season">April–June · all 4,186 dates</option>
+            </select>
+          </label>
+        )}
       </Heading>
       {source ? (
         <>
@@ -124,6 +164,13 @@ export function Evidence() {
             <span>{positives} positive days</span>
             <span>{source.time_standard}</span>
           </div>
+          {fullDataset && (
+            <p className="fine-print">
+              Training-dataset fit. The same 4,186 rows fit preprocessing,
+              neural weights, calibration and the threshold. May is a reporting
+              filter; these scores do not measure unseen-day performance.
+            </p>
+          )}
           <div className="metric-strip">
             <Metric
               label="Accuracy"
@@ -148,10 +195,21 @@ export function Evidence() {
           </div>
           <Panel
             title="Model comparison"
-            subtitle="Same evaluation days and target within each source. Thresholds maximize F1 on each fold’s earlier calibration years."
-            aside={<Download name="full_dataset_study" />}
+            subtitle={
+              fullDataset
+                ? "Same source and dates for every model. Calibration and F1 thresholds use all 4,186 seasonal rows."
+                : "Same evaluation days and target within each source. Thresholds maximize F1 on each fold’s earlier calibration years."
+            }
+            aside={<Download name={artifact} />}
           >
-            <ScoreTable metrics={source.metrics ?? []} />
+            <ScoreTable
+              metrics={metrics ?? []}
+              caption={
+                fullDataset
+                  ? `${scope === "may" ? "May" : "April–June"} training-dataset results · in-sample`
+                  : "Chronological held-out May results"
+              }
+            />
             <div className="result-counts">
               <span>
                 <strong>{main?.tp}</strong> detected
@@ -164,7 +222,7 @@ export function Evidence() {
               </span>
               <Link
                 className="text-link"
-                href={`/explorer?source=${source.id}`}
+                href={`/explorer?source=${source.id}${fullDataset ? "" : "&run=current"}`}
               >
                 Inspect daily predictions <ArrowUpRight size={14} />
               </Link>
@@ -173,37 +231,66 @@ export function Evidence() {
           <details className="product-disclosure" id="methodology">
             <summary>Evaluation & training protocol</summary>
             <div className="disclosure-body">
-              <p>
-                {study.data?.protocol?.method} Scalers and reference normals use
-                earlier fitting years only.
-              </p>
-              <div className="table-scroll" tabIndex={0}>
-                <table>
-                  <caption>Expanding chronological folds</caption>
-                  <thead>
-                    <tr>
-                      <th>Evaluation</th>
-                      <th>Fit</th>
-                      <th>Selection</th>
-                      <th>Calibration</th>
-                      <th>Threshold</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {source.folds?.map((f, i) => (
-                      <tr key={f.id ?? i}>
-                        <td>{yearRange(f.evaluation_years)}</td>
-                        <td>{yearRange(f.fit_years)}</td>
-                        <td>{yearRange(f.selection_years)}</td>
-                        <td>{yearRange(f.calibration_years)}</td>
-                        <td>{number(f.threshold, 4)}</td>
+              <p>{study.data?.protocol?.method}</p>
+              {fullDataset ? (
+                <div className="table-scroll" tabIndex={0}>
+                  <table>
+                    <caption>
+                      Full-dataset workflow · no data partitions
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th>Step</th>
+                        <th>Rows</th>
+                        <th>Period</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {[
+                        "Standardization",
+                        "ANN training",
+                        "Calibration",
+                        "Threshold selection",
+                        "Checking",
+                      ].map((step) => (
+                        <tr key={step}>
+                          <td>{step}</td>
+                          <td>{refit?.days?.toLocaleString("en-IN")}</td>
+                          <td>April–June 1981–2026</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="table-scroll" tabIndex={0}>
+                  <table>
+                    <caption>Expanding chronological folds</caption>
+                    <thead>
+                      <tr>
+                        <th>Evaluation</th>
+                        <th>Fit</th>
+                        <th>Selection</th>
+                        <th>Calibration</th>
+                        <th>Threshold</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {source.folds?.map((f, i) => (
+                        <tr key={f.id ?? i}>
+                          <td>{yearRange(f.evaluation_years)}</td>
+                          <td>{yearRange(f.fit_years)}</td>
+                          <td>{yearRange(f.selection_years)}</td>
+                          <td>{yearRange(f.calibration_years)}</td>
+                          <td>{number(f.threshold, 4)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               <div className="refit-summary">
-                <h3>Full-data refit</h3>
+                <h3>{fullDataset ? "Lab training run" : "Full-data refit"}</h3>
                 <p>
                   {yearRange(refit?.years)} ·{" "}
                   {refit?.days?.toLocaleString("en-IN")} April–June training
@@ -211,10 +298,9 @@ export function Evidence() {
                   {String(refit?.epochs ?? "—")} epochs.
                 </p>
                 <p>
-                  Final weights are fitted on all available seasons after
-                  evaluation. Their performance on already-seen dates is
-                  training fit; the comparison table uses the earlier held-out
-                  fold predictions.
+                  {fullDataset
+                    ? `Three seeded members train for ${String(refit?.epochs ?? "—")} fixed epochs with no validation split. The 1981–2010 climate normal defines the unchanged target rule; it is not a reserved model-training partition.`
+                    : "Final weights are fitted on all available seasons after evaluation. Their performance on already-seen dates is training fit; the comparison table uses the earlier held-out fold predictions."}
                 </p>
               </div>
               <p className="fine-print">{study.data?.protocol?.limitation}</p>

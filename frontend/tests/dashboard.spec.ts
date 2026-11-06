@@ -4,7 +4,7 @@ import fs from "node:fs";
 const history = JSON.parse(fs.readFileSync("public/data/history.json", "utf8"));
 const outlook = JSON.parse(fs.readFileSync("public/data/outlook.json", "utf8"));
 const study = JSON.parse(
-  fs.readFileSync("public/data/full_dataset_study.json", "utf8"),
+  fs.readFileSync("public/data/full_dataset_fit.json", "utf8"),
 );
 
 test("all five views load and remain accessible", async ({ page }) => {

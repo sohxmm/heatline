@@ -91,7 +91,10 @@ const lossSeries = [
 ];
 
 export function Learn() {
-  const study = useResource<NetworkStudy>("full_dataset_study");
+  const [experiment, setExperiment] = useState("full");
+  const study = useResource<NetworkStudy>(
+    experiment === "full" ? "full_dataset_fit" : "full_dataset_study",
+  );
   const [sourceId, setSource] = useState("era5");
   const [block, setBlock] = useState("final");
   const [seed, setSeed] = useState("42");
@@ -122,9 +125,29 @@ export function Learn() {
         }
         description="Choose a climate source, a training run and a member. Inspect its actual architecture, initial connections and recorded learning curve."
       >
-        <Download name="full_dataset_study" />
+        <Download
+          name={
+            experiment === "full" ? "full_dataset_fit" : "full_dataset_study"
+          }
+        />
       </Heading>
       <div className="inline-controls network-controls">
+        <label className="field">
+          Experiment
+          <select
+            aria-label="Experiment"
+            value={experiment}
+            onChange={(e) => {
+              setExperiment(e.target.value);
+              setBlock("final");
+            }}
+          >
+            <option value="full">Lab · full dataset</option>
+            <option value="rolling">
+              Additional · chronological evaluation
+            </option>
+          </select>
+        </label>
         <label className="field">
           Network source
           <select
@@ -143,7 +166,11 @@ export function Learn() {
             value={block}
             onChange={(e) => setBlock(e.target.value)}
           >
-            <option value="final">Full-data refit</option>
+            <option value="final">
+              {experiment === "full"
+                ? "All rows · 300 epochs"
+                : "Full-data refit"}
+            </option>
             {source?.folds.map((f) => (
               <option key={f.id} value={f.id}>
                 Before evaluation {range(f.evaluation_years)}
@@ -172,7 +199,7 @@ export function Learn() {
       <div className="view-context">
         <Tag tone="amber">
           {block === "final"
-            ? "Full-data training fit"
+            ? "Full-dataset fit · in-sample"
             : "Earlier-years training run"}
         </Tag>
         <span>{source?.label ?? "Loading network metadata"}</span>
@@ -292,7 +319,9 @@ export function Learn() {
                     " · evaluation " +
                     range(fold.evaluation_years) +
                     ". The evaluation days do not guide these updates."
-                  : "This final refit uses every available seasonal training row. Its curve is training fit only; it has no independent validation-loss curve."}
+                  : experiment === "full"
+                    ? "All 4,186 rows fit preprocessing, weights, calibration and the decision threshold. Training runs for 300 fixed epochs without a validation partition. Its curve is training fit only."
+                    : "This final refit uses every available seasonal training row. Its curve is training fit only; it has no independent validation-loss curve."}
               </p>
             </Panel>
           </div>
@@ -627,7 +656,7 @@ function TeachingTrace() {
           <div className="trace-values">
             <span className="eyebrow">NUMERICAL FIXTURE</span>
             {trace ? (
-                <pre tabIndex={0} aria-label="Teaching step values">
+              <pre tabIndex={0} aria-label="Teaching step values">
                 {JSON.stringify(
                   [trace.initial, trace.forward, trace.deltas, trace.updated][
                     step
@@ -648,7 +677,11 @@ function TeachingTrace() {
           <summary>
             Inspect the complete numerical trace and initial weights
           </summary>
-          <pre className="full-trace" tabIndex={0} aria-label="Complete teaching trace">
+          <pre
+            className="full-trace"
+            tabIndex={0}
+            aria-label="Complete teaching trace"
+          >
             {JSON.stringify(trace ?? { availability: "unavailable" }, null, 2)}
           </pre>
         </details>

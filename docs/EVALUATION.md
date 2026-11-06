@@ -45,6 +45,9 @@ Live six-city weather is a separately labeled provider forecast. The all-data re
 ## Reproduction
 
 ```powershell
+.venv/Scripts/python.exe -m src.full_dataset_fit
+.venv/Scripts/python.exe -m scripts.export_full_fit_benchmark
+# Additional chronological assessment
 .venv/Scripts/python.exe -m src.full_dataset_study
 .venv/Scripts/python.exe scripts/export_metric_context.py
 .venv/Scripts/python.exe scripts/audit_station_sources.py
