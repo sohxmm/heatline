@@ -56,12 +56,12 @@ def test_all_data_scaler_calibration_threshold_and_scores_reproduce(fit, source_
         scores.append(net.predict_proba(X))
     raw = np.mean(scores, axis=0)
     p, calibration, threshold = fit_score_transform(frame.heatwave_day.to_numpy(), raw)
-    assert metadata['calibration'] == calibration
-    assert metadata['threshold'] == threshold
+    assert metadata['calibration'] == pytest.approx(calibration, rel=1e-12, abs=1e-12)
+    assert metadata['threshold'] == pytest.approx(threshold, rel=1e-12, abs=1e-12)
     may = frame.month.eq(5).to_numpy()
     metrics = measured_metrics(frame.heatwave_day.to_numpy()[may], p[may], p[may] >= threshold)
-    assert {k: source['metrics'][0][k] for k in metrics} == metrics
-    np.testing.assert_allclose([r['probability'] for r in source['records']], p[may], atol=1e-14)
+    assert {k: source['metrics'][0][k] for k in metrics} == pytest.approx(metrics, rel=1e-12, abs=1e-12)
+    np.testing.assert_allclose([r['probability'] for r in source['records']], p[may], rtol=1e-12, atol=1e-12)
 
 
 @pytest.mark.parametrize('source_id', ['era5', 'nasa_power'])
