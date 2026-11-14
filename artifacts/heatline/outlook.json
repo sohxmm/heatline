@@ -10,8 +10,8 @@
   "provider_run_issued_at": null,
   "target_date": "2026-11-14",
   "model_version": "open-meteo-best-match",
-  "availability": "available",
-  "availability_reason": null,
+  "availability": "stale",
+  "availability_reason": "Weather refresh failed (HTTPError). Last successful timestamps are preserved.",
   "timezone": "Asia/Kolkata",
   "freshness_max_age_hours": 12,
   "units": {
@@ -35,8 +35,8 @@
       "retrieved_at": "2026-11-14T06:13:09.003299+00:00",
       "target_date": "2026-11-14",
       "model_version": "open-meteo-best-match",
-      "availability": "available",
-      "availability_reason": null,
+      "availability": "stale",
+      "availability_reason": "Weather refresh failed (HTTPError). Last successful timestamps are preserved.",
       "grid": {
         "latitude": 21.124779,
         "longitude": 79.11585,
@@ -1379,8 +1379,8 @@
       "retrieved_at": "2026-11-14T06:13:09.003299+00:00",
       "target_date": "2026-11-14",
       "model_version": "open-meteo-best-match",
-      "availability": "available",
-      "availability_reason": null,
+      "availability": "stale",
+      "availability_reason": "Weather refresh failed (HTTPError). Last successful timestamps are preserved.",
       "grid": {
         "latitude": 20.702986,
         "longitude": 77.0,
@@ -2723,8 +2723,8 @@
       "retrieved_at": "2026-11-14T06:13:09.003299+00:00",
       "target_date": "2026-11-14",
       "model_version": "open-meteo-best-match",
-      "availability": "available",
-      "availability_reason": null,
+      "availability": "stale",
+      "availability_reason": "Weather refresh failed (HTTPError). Last successful timestamps are preserved.",
       "grid": {
         "latitude": 20.913883,
         "longitude": 77.78116,
@@ -4067,8 +4067,8 @@
       "retrieved_at": "2026-11-14T06:13:09.003299+00:00",
       "target_date": "2026-11-14",
       "model_version": "open-meteo-best-match",
-      "availability": "available",
-      "availability_reason": null,
+      "availability": "stale",
+      "availability_reason": "Weather refresh failed (HTTPError). Last successful timestamps are preserved.",
       "grid": {
         "latitude": 19.9297,
         "longitude": 79.3007,
@@ -5411,8 +5411,8 @@
       "retrieved_at": "2026-11-14T06:13:09.003299+00:00",
       "target_date": "2026-11-14",
       "model_version": "open-meteo-best-match",
-      "availability": "available",
-      "availability_reason": null,
+      "availability": "stale",
+      "availability_reason": "Weather refresh failed (HTTPError). Last successful timestamps are preserved.",
       "grid": {
         "latitude": 18.523726,
         "longitude": 73.86876,
@@ -6755,8 +6755,8 @@
       "retrieved_at": "2026-11-14T06:13:09.003299+00:00",
       "target_date": "2026-11-14",
       "model_version": "open-meteo-best-match",
-      "availability": "available",
-      "availability_reason": null,
+      "availability": "stale",
+      "availability_reason": "Weather refresh failed (HTTPError). Last successful timestamps are preserved.",
       "grid": {
         "latitude": 19.086115,
         "longitude": 72.85291,
@@ -8088,5 +8088,6 @@
       }
     }
   ],
-  "regional_season_active": false
+  "regional_season_active": false,
+  "last_refresh_attempt": "2026-11-14T15:01:24.800145+00:00"
 }
